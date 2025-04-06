@@ -1,0 +1,58 @@
+.navLink {
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px 10px 0px 0px;
+  max-height: 100%;
+  text-decoration: none;
+}
+
+.navLink.selected {
+  background-color: var(--dark-blue);
+}
+
+.header {
+  margin-top: 20px;
+  /* border-bottom: 3px solid var(--primary-blue); */
+}
+
+.headerGrid {
+  border-bottom: 3px solid var(--dark-blue);
+}
+
+.headerFlex {
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 4px solid var(--dark-blue);
+  /* gap: 5px; */
+  padding-left: 5px;
+}
+
+.body {
+  padding: 10px;
+}
+
+.flexRow {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.flexColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mlAuto {
+  margin-left: auto;
+}
+
+.borderTable td,
+.borderTable th {
+  border: 1px solid grey;
+}
+
+/* .grayRow {
+  background-color: gray;
+} */

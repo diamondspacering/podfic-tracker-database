@@ -1,0 +1,56 @@
+.tooltip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* border-bottom: 1px dotted black; If you want dots under the hoverable text */
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  /* width: 20rem; */
+  overflow: visible;
+  background-color: #444;
+  color: #fff;
+  text-align: center;
+  padding: 5px;
+  border-radius: 6px;
+  font-size: 1rem;
+  position: absolute;
+  z-index: 9999;
+}
+
+.tooltip .tooltiptext.left {
+  right: 105%;
+}
+
+.tooltip .tooltiptext.right {
+  left: 105%;
+}
+
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+}
+
+.closeIcon {
+  position: absolute;
+  background: transparent;
+  top: 0;
+  right: 0;
+  margin: 1rem;
+  width: 32px;
+  cursor: pointer;
+}
+
+.wrapText {
+  /* text-overflow: wrap; */
+  text-wrap: wrap;
+  overflow-wrap: break-word;
+  align-self: flex-start;
+}
+
+.truncatedText {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* max-width: 100%; */
+}

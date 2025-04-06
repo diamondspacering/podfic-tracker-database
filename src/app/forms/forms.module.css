@@ -1,0 +1,38 @@
+.formBody {
+  padding: 10px;
+}
+
+.flexRow {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  width: 100%;
+}
+
+.center {
+  align-items: center;
+}
+
+.flexColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.mt1 {
+  margin-top: 1rem;
+}
+
+.fitContent {
+  width: fit-content;
+}
+
+.chapterDiv {
+  margin-left: 10px;
+}
+
+.mlAuto {
+  margin-left: auto;
+}

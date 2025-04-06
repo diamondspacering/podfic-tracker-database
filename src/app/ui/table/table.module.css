@@ -1,0 +1,123 @@
+.arial {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.table th {
+  padding-right: 10px;
+  padding-bottom: 6px;
+}
+
+/* this could be useful, currently spacing makes it look a bit dreadful */
+/* .table td,
+.table th {
+  border-right: 1px dotted gray;
+  text-align: center;
+} */
+
+.table th {
+  text-align: left;
+}
+
+/* TODO: don't hate this, could re-implement. needs other spacing work tbh */
+/* .table {
+  border-collapse: collapse;
+  border-spacing: 0;
+} */
+
+.tableCell {
+  padding: 6px 10px;
+}
+
+.longTextCell {
+  text-overflow: ellipsis;
+  /* TODO: for some reason that increases the gap between rows?? */
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 500px;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.textCell {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 150px;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.linkCell {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: 50px;
+  display: block;
+}
+
+.colorScaleCell {
+  display: inline-block;
+  text-align: center;
+  width: 75px;
+}
+
+/* font isn't configured here, it needs the custom font classnames in the component */
+.smallMonospaceCell {
+  font-size: 7pt;
+}
+
+/* TODO: figure out how to make the animations on these work maybe */
+.expandButton {
+  transition-duration: 0.4s;
+  transition-property: transform;
+}
+
+.expanded {
+  transform: rotate(90deg);
+}
+
+.smallText {
+  font-size: 7pt;
+}
+
+.extraPadding {
+  padding-bottom: 10px;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.selected {
+  background-color: #e5eefc;
+  border-top: 1px solid #4285f4;
+  border-bottom: 1px solid #4285f4;
+}
+
+.flexRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.flexColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.overflowContainer {
+  max-height: 200px;
+  overflow-y: scroll;
+}
+
+.visibilityToggleContainer {
+  margin-bottom: 5px;
+  border: 1px solid gray;
+  border-radius: 5px;
+  max-width: 500px;
+  padding: 5px;
+}
+
+.alignRight {
+  text-align: right;
+}
