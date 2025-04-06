@@ -1,0 +1,86 @@
+.statusBadge {
+  border-radius: 50px;
+  width: fit-content;
+  padding: 0.25rem 0.5rem;
+  text-wrap: nowrap;
+}
+
+.Planning,
+.Picked {
+  background-color: #fce5cd;
+}
+
+.Recording {
+  background-color: #cfe2f3;
+}
+
+.Recorded {
+  background-color: #c1daf1;
+}
+
+.Editing,
+.VisualEdit,
+.FirstPass,
+.Collab {
+  background-color: #d9d2e9;
+}
+
+.Takes,
+.SFXMusic,
+.ProofListen,
+.NeedsRerecord {
+  background-color: #ead1dc;
+}
+
+.Posting,
+.AskFirst {
+  background-color: #bfefb0;
+}
+
+.Finished,
+.Posted,
+.Unknown {
+  background-color: none;
+}
+
+/* "picked" in podfic tracker spreadsheet */
+/* .Picked {
+  background-color: #fce5cd;
+} */
+
+.Chaptered {
+  background-color: #b4fbf1;
+}
+
+.Music {
+  background-color: #ead1dc;
+}
+
+.Cover,
+.Permission {
+  background-color: #b7e1cd;
+}
+
+.NotPermission {
+  background-color: #f4cccc;
+}
+
+.Asked {
+  background-color: #ffff00;
+}
+
+.Ghosted {
+  background-color: #f6b26b;
+}
+
+.ToAsk, .ToAskFirst {
+  background-color: #6d9eeb;
+}
+
+.No {
+  background-color: #ff0000;
+}
+
+.BP {
+  background-color: #00ff00;
+}
