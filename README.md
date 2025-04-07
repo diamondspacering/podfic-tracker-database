@@ -64,12 +64,13 @@ Helpful links:
 - tanstack table docs
 
 Tech stack:
-NodeJS/NPM/TypeScript/React
-NextJS
-PostgreSQL for database, just using pg for database connection - may upgrade at some point, do have knex installed for a query builder
-TanStack Table for most of the data tables
-Handsontable for the Voiceteam tables
-Reactgrid still installed atm but not using it, was using for Voiceteam but was not full-featured enough. Will be removed at a future point. Works well for less full-featured tables
+
+- NodeJS/NPM/TypeScript/React
+- NextJS
+- PostgreSQL for database, just using pg for database connection - may upgrade at some point, do have knex installed for a query builder
+- TanStack Table for most of the data tables
+- Handsontable for the Voiceteam tables
+- Reactgrid still installed atm but not using it, was using for Voiceteam but was not full-featured enough. Will be removed at a future point. Works well for less full-featured tables
 
 ## Other
 
