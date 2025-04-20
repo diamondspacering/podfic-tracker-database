@@ -158,6 +158,7 @@ export default function PodficTable() {
     return matchesDate;
   };
 
+  // TODO: easily visible submission instructions notes?
   const columns = [
     columnHelper.accessor('podfic_id', {
       header: 'ID',
@@ -218,7 +219,6 @@ export default function PodficTable() {
         columnName: '#',
       },
     }),
-    // TODO: full length when expanded. oh yeah just put it as string then?
     columnHelper.accessor('title', {
       header: 'Title',
       cell: ({ getValue, row, ...rest }) => (
@@ -907,7 +907,6 @@ export default function PodficTable() {
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
-              p
               {headerGroup.headers.map((header) => (
                 <th key={header.id}>
                   {header.isPlaceholder

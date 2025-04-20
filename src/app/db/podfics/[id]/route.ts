@@ -19,7 +19,7 @@ export async function GET(
 
   let podfic = null;
   // TODO: make this more fine-grained
-  if (withCoverArt && withAuthor && withPodficcers) {
+  if (withCoverArt && withAuthor) {
     // console.log('fetching podfic full');
     const result = await client.query(
       `select *,cover_art.status as cover_art_status from podfic
@@ -35,15 +35,6 @@ export async function GET(
       [id]
     );
     podfic.coverArt = coverArtResult.rows[0];
-    const podficcerResult = await client.query(
-      `
-      select * from podficcer
-        inner join podfic_podficcer on podfic_podficcer.podficcer_id = podficcer.podficcer_id
-      where podfic_id = $1
-    `,
-      [id]
-    );
-    podfic.podficcers = podficcerResult.rows ?? [];
     const noteResult = await client.query(
       `select * from note where podfic_id = $1`,
       [id]
@@ -54,6 +45,18 @@ export async function GET(
       `select * from podfic inner join work on podfic.work_id = work.work_id where podfic_id = ${id}`
     );
     podfic = result.rows[0];
+  }
+
+  if (withPodficcers) {
+    const podficcerResult = await client.query(
+      `
+      select * from podficcer
+        inner join podfic_podficcer on podfic_podficcer.podficcer_id = podficcer.podficcer_id
+      where podfic_id = $1
+    `,
+      [id]
+    );
+    podfic.podficcers = podficcerResult.rows ?? [];
   }
 
   const chapterResult = await client.query(

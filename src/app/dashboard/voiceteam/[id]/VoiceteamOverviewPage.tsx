@@ -97,6 +97,33 @@ export default function VoiceteamOverviewPage({
     );
   };
 
+  const updateChallenge = (change: Array<any>) => {
+    const challengeRowIndex = change[0];
+    const columnName = change[1];
+    const newValue = change[3];
+    console.log({ challengeRowIndex, columnName, newValue });
+
+    const challenge = challenges[challengeRowIndex];
+    const roundNumber = challenge.round_number;
+    setRounds((prev) =>
+      prev.map((r) =>
+        r.number === roundNumber
+          ? {
+              ...r,
+              challenges: r.challenges.map((c) =>
+                c.challenge_id === challenge.challenge_id
+                  ? {
+                      ...c,
+                      [columnName]: newValue,
+                    }
+                  : c
+              ),
+            }
+          : r
+      )
+    );
+  };
+
   const handleChallengeCellChange = (changes: CellChange<any>[]) => {
     console.log({ changes });
     changes.forEach((change) => {
@@ -393,6 +420,9 @@ export default function VoiceteamOverviewPage({
       <Button onClick={() => console.log(rounds)} variant='contained'>
         rounds
       </Button>
+      <Button onClick={() => console.log(challenges)} variant='contained'>
+        challenges
+      </Button>
       <Button onClick={() => console.log(rows)} variant='contained'>
         rows
       </Button>
@@ -410,6 +440,13 @@ export default function VoiceteamOverviewPage({
           { type: 'checkbox', data: 'bonus_is_additional' },
           { type: 'numeric', data: 'bonus_points' },
         ]}
+        afterChange={(change) => {
+          // change is of shape [rowIndex, columnName, oldValue, newValue]
+          if (!!change) {
+            const changeArray = change[0] as Array<any>;
+            updateChallenge(changeArray);
+          }
+        }}
       />
       <div className={styles.flexRow}>
         <ReactGrid

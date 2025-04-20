@@ -329,6 +329,8 @@ export const createUpdatePodfic = async (
   if (podficData.length)
     podficData.length = getLengthUpdateString(podficData.length);
 
+  console.log({ podficcers: podficData.podficcers });
+
   const client = await getClient();
   if (!podficData.podfic_id) {
     if (podficData.work_id) {
@@ -481,6 +483,12 @@ export const createUpdatePodfic = async (
         podficData.podfic_id,
       ]
     );
+  }
+  const podficId = podficResult?.rows[0].podfic_id;
+  if (podficData.podficcers) {
+    for (const podficcer of podficData.podficcers ?? []) {
+      await linkPodficcerToPodfic(podficcer.podficcer_id, podficId);
+    }
   }
   return podficResult?.rows[0];
 };
@@ -1102,9 +1110,9 @@ export const createUpdateChallenge = async (challengeData: Challenge) => {
   if (!challengeData.challenge_id) {
     const result = await client.query(
       `INSERT INTO challenge
-        (round_id, name, description, points, bonus_points, created_at)
+        (round_id, name, description, points, bonus_points, bonus_is_additional, created_at)
       VALUES
-        ($1, $2, $3, $4, $5, $6)
+        ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *`,
       [
         challengeData.round_id,
@@ -1112,26 +1120,31 @@ export const createUpdateChallenge = async (challengeData: Challenge) => {
         challengeData.description,
         challengeData.points,
         challengeData.bonus_points,
+        challengeData.bonus_is_additional,
         challengeData.created_at,
       ]
     );
   } else {
+    console.log({ challengeData });
     const result = await client.query(
       `UPDATE challenge SET
         name = $1,
         description = $2,
         points = $3,
-        bonus_points = $4
-      WHERE challenge_id = $5
+        bonus_points = $4,
+        bonus_is_additional = $5
+      WHERE challenge_id = $6
       RETURNING *`,
       [
         challengeData.name,
         challengeData.description,
         challengeData.points,
         challengeData.bonus_points,
+        challengeData.bonus_is_additional,
         challengeData.challenge_id,
       ]
     );
+    // console.log({ result });
   }
 };
 
@@ -1326,6 +1339,11 @@ export const createUpdatePartData = async (partData) => {
   try {
     const client = await getClient();
 
+    if (partData.podficData) {
+      const podfic = await createUpdatePodfic(partData.podficData);
+      partData.podfic_id = podfic.podfic_id;
+    }
+
     if (!partData.part_id) {
       const result = await client.query(
         `insert into part (podfic_id, chapter_id, doc, organizer, words, status, part, deadline, created_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *`,
@@ -1405,4 +1423,17 @@ export const updatePartMinified = async (data: any) => {
     ]
   );
   // console.log(result.rows[0]);
+};
+
+export const linkPodficcerToPodfic = async (
+  podficcerId: number,
+  podficId: number
+) => {
+  const client = await getClient();
+  const result = await client.query(
+    `INSERT INTO podfic_podficcer (podfic_id, podficcer_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *`,
+    [podficId, podficcerId]
+  );
+  // console.log(result.rows[0]);
+  return result.rows[0];
 };

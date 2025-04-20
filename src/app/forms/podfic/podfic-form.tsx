@@ -19,6 +19,8 @@ import { formatDateString, formatDateTimeString } from '@/app/lib/format';
 import StatusSelect from '@/app/ui/StatusSelect';
 import DatePicker from '@/app/ui/DatePicker';
 import SeriesForm from './series-form';
+import { usePodficcers } from '@/app/lib/swrLoaders';
+import PodficcerDialog from '@/app/ui/podficcer/podficcer-dialog';
 
 interface PodficFormProps {
   podfic: Podfic & Work;
@@ -44,9 +46,13 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
   const [wordcount, setWordcount] = useState('');
   const [isBackDated, setIsBackDated] = useState(false);
 
+  const [podficcerDialogOpen, setPodficcerDialogOpen] = useState(false);
+
   const [authors, setAuthors] = useState<Author[]>([]);
   const [authorsLoading, setAuthorsLoading] = useState(true);
   const [isNewAuthor, setIsNewAuthor] = useState(false);
+
+  const { podficcers, isLoading: podficcersLoading } = usePodficcers();
 
   // TODO: make it default type of podfic
 
@@ -177,6 +183,17 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
   // TODO: consider a full FormControl for required fields & stuff?
   return (
     <div>
+      <PodficcerDialog
+        isOpen={podficcerDialogOpen}
+        onClose={() => setPodficcerDialogOpen(false)}
+        submitCallback={(podficcer) => {
+          setPodfic((prev) => ({
+            ...prev,
+            podficcers: [...(prev.podficcers ?? []), podficcer],
+          }));
+          setPodficcerDialogOpen(false);
+        }}
+      />
       <Button variant='contained' onClick={() => console.log({ podfic })}>
         Log podfic
       </Button>
@@ -588,25 +605,57 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
             </>
           )}
         </div>
+        <TextField
+          size='small'
+          select
+          sx={{
+            width: '200px',
+          }}
+          label={'Type'}
+          value={podfic.type}
+          onChange={(e) =>
+            setPodfic((prev) => ({
+              ...prev,
+              type: e.target.value as PodficType,
+            }))
+          }
+        >
+          {Object.values(PodficType).map((type) => (
+            <MenuItem key={type} value={type}>
+              <span>{type}</span>
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <Autocomplete
+          size='small'
+          options={podficcers ?? []}
+          loading={podficcersLoading}
+          getOptionLabel={(option) => option?.username ?? ''}
+          multiple
+          value={podfic.podficcers ?? []}
+          onChange={(_, newValue) => {
+            setPodfic((prev) => ({
+              ...prev,
+              podficcers: newValue,
+            }));
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              size='small'
+              label='Podficcers&nbsp;&nbsp;'
+            />
+          )}
+        />
+        <Button
+          onClick={() => setPodficcerDialogOpen(true)}
+          startIcon={<Add />}
+        >
+          New Podficcer
+        </Button>
       </div>
-      <TextField
-        size='small'
-        select
-        sx={{
-          width: '200px',
-        }}
-        label={'Type'}
-        value={podfic.type}
-        onChange={(e) =>
-          setPodfic((prev) => ({ ...prev, type: e.target.value as PodficType }))
-        }
-      >
-        {Object.values(PodficType).map((type) => (
-          <MenuItem key={type} value={type}>
-            <span>{type}</span>
-          </MenuItem>
-        ))}
-      </TextField>
+
       <div className={styles.flexRow}>
         <FormControlLabel
           label='Backdate podfic?'

@@ -104,7 +104,7 @@ export default function PartsTable() {
       header: 'Title',
       cell: TableCell,
       meta: {
-        type: 'string',
+        type: 'text',
         immutable: true,
       },
     }),
@@ -112,7 +112,7 @@ export default function PartsTable() {
       header: 'Part',
       cell: TableCell,
       meta: {
-        type: 'string',
+        type: 'text',
       },
     }),
     columnHelper.accessor('words', {

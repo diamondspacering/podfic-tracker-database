@@ -91,6 +91,7 @@ export default function VoiceteamRoundPage({
       );
       const challenge_points = challenge?.points ?? 0;
       const bonusPoints = challenge?.bonus_points ?? 0;
+      const bonusIsAdditional = challenge?.bonus_is_additional;
       const universalValue = bonus_values.universal ?? 0;
       const projectLeadValue = bonus_values.project_lead ?? 0;
       console.log({ length_bonus_options });
@@ -107,11 +108,11 @@ export default function VoiceteamRoundPage({
       console.log({ bonusManual: project.bonus_manual });
 
       const newPoints =
-        challenge_points +
+        (!bonusIsAdditional && project.bonus ? bonusPoints : challenge_points) +
         (project.universal_bonus ? universalValue : 0) +
         (project.project_lead_bonus ? projectLeadValue : 0) +
         (project.byo_bonus ? 5 : 0) +
-        (project.bonus ? bonusPoints : 0) +
+        (project.bonus && bonusIsAdditional ? bonusPoints : 0) +
         lengthBonus +
         parseInt(project.bonus_manual ?? 0);
 

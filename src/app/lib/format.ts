@@ -211,7 +211,8 @@ export const generateHTMLAzdaema = (
   podfic: Podfic & Work & Author & CoverArt,
   files: File[],
   resources: Resource[],
-  defaultPodficcer: Podficcer
+  defaultPodficcer: Podficcer,
+  chapter?: Chapter
 ) => {
   let htmlString = ``;
   htmlString += `<div class="podfic">`;
@@ -299,12 +300,51 @@ export const generateHTMLAzdaema = (
         // }
       });
     }
+  } else if (!!chapter) {
+    // TODO: may need to filter the files for this chapter
+    const filteredFiles = files.filter((file) => Boolean(file));
+    // this is assuming just direct links for now we will work on it. also more code needs to be shared don't worry about it
+    if (filteredFiles.length) {
+      htmlString += `<h3>Chapter ${chapter.chapter_number}${
+        chapter.chapter_title ? `: ${chapter.chapter_title}` : ''
+      }</h3>`;
+      if (filteredFiles.length === 1) {
+        htmlString += `<ul>`;
+        htmlString += `<li><b>Length:</b> ${getLengthText(
+          filteredFiles[0].length
+        )}</li>`;
+        const filetype = Object.entries(FileType).find(
+          ([_key, value]) => value === filteredFiles[0].filetype
+        )?.[0];
+        htmlString += `<li><b>File type:</b> ${filetype} (${filteredFiles[0].size} MB)</li>`;
+        htmlString += `</ul>`;
+        const directLinks =
+          filteredFiles[0].links?.filter((link) => link.is_direct) ?? [];
+        htmlString += `<audio>`;
+        directLinks.forEach((link) => {
+          htmlString += `<source src="${link.link}">`;
+        });
+        htmlString += `</audio>`;
+
+        directLinks.forEach((link) => {
+          htmlString += `<p><a href="${link.link}">Download from ${link.host}</a></p>`;
+        });
+      }
+    }
   }
 
   htmlString += `<h3>Credits</h3>`;
   htmlString += `<ul>`;
   // TODO: chapter titles as well? might just be a different largely copied function lol
-  htmlString += `<li><b>Text:</b> <a href="${podfic.link}">${podfic.title}</a></li>`;
+  htmlString += `<li><b>Text:</b> <a href="${
+    chapter ? chapter.link : podfic.link
+  }">${
+    chapter
+      ? `${podfic.title} Chapter ${chapter.chapter_number}${
+          chapter.chapter_title ? `: ${chapter.chapter_title}` : ''
+        }`
+      : podfic.title
+  }</a></li>`;
   // TODO: support multiple authors, if only by manually looking at string
   htmlString += `<li><b>Author:</b> <a href="${podfic.ao3}">${podfic.username}</a></li>`;
   // TODO: support multiple readers, need to be able to pull from the podficcer thing. do links too

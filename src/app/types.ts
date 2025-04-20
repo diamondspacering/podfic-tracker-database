@@ -60,6 +60,15 @@ export const getDefaultLength = () => {
   return { hours: null, minutes: null, seconds: null };
 };
 
+export const getDefaultFile = (existingLength?: Length) => {
+  return {
+    label: '',
+    size: null,
+    length: existingLength ?? getDefaultLength(),
+    filetype: FileType.MP3,
+  } as File;
+};
+
 export const getEmptyLength = () => {
   return { hours: 0, minutes: 0, seconds: 0 };
 };

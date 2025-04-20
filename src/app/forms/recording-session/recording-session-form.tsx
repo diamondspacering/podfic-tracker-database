@@ -131,7 +131,11 @@ export default function RecordingSessionForm({
   useEffect(() => {
     console.log({ selectedPodfic });
     if (selectedPodfic.chaptered) {
-      setSelectedPodficChapters(selectedPodfic.chapters ?? ([] as Chapter[]));
+      setSelectedPodficChapters(
+        selectedPodfic.chapters?.sort((a, b) =>
+          a.chapter_number < b.chapter_number ? -1 : 1
+        ) ?? ([] as Chapter[])
+      );
     }
     if (selectedPodfic.parts) {
       setSelectedPodficParts(selectedPodfic.parts);

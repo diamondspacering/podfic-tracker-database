@@ -8,7 +8,7 @@ import {
 import FileForm from './file-form';
 import { useCallback, useEffect, useState } from 'react';
 import { createUpdateFile } from '@/app/lib/updaters';
-import { getDefaultLength } from '@/app/types';
+import { FileType, getDefaultFile, getDefaultLength } from '@/app/types';
 
 interface FileDialogProps {
   isOpen: boolean;
@@ -31,17 +31,10 @@ export default function FileDialog({
   chapterId,
   file: fileProp,
 }: FileDialogProps) {
-  const [file, setFile] = useState(
-    fileProp ??
-      ({
-        label: '',
-        size: null,
-        length: existingLength ?? getDefaultLength(),
-        filetype: 'mp3',
-      } as File)
-  );
+  const [file, setFile] = useState(fileProp ?? getDefaultFile(existingLength));
 
-  useEffect(() => setFile(fileProp ?? ({} as File)), [fileProp]);
+  // useEffect(() => setFile(fileProp ?? ({} as File)), [fileProp]);
+  // useEffect(() => console.log({ length: file.length }), [file.length]);
 
   const submitFile = useCallback(async () => {
     const _id = await createUpdateFile({
@@ -61,7 +54,7 @@ export default function FileDialog({
       label: '',
       size: null,
       length: existingLength ?? getDefaultLength(),
-      filetype: 'mp3',
+      filetype: FileType.MP3,
     } as File);
   }, [
     file.file_id,

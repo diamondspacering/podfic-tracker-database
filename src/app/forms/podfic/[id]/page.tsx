@@ -11,11 +11,16 @@ import { useRouter } from 'next/navigation';
 import { LoadingButton } from '@mui/lab';
 import DurationPicker from '@/app/ui/DurationPicker';
 import { PodficType } from '@/app/types';
+import { usePodficcer } from '@/app/lib/swrLoaders';
 
 export default function Page({ params }: { params: { id: any } }) {
+  const { podficcer: defaultPodficcer } = usePodficcer(1);
+
   // TODO: use swr instead
-  const [podfic, setPodfic] = useState({ type: PodficType.PODFIC } as Podfic &
-    Work);
+  const [podfic, setPodfic] = useState({
+    type: PodficType.PODFIC,
+    podficcers: [defaultPodficcer],
+  } as Podfic & Work);
   // TODO: loading state
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -23,9 +28,12 @@ export default function Page({ params }: { params: { id: any } }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch(`/db/podfics/${params.id}`).then((res) => {
+    fetch(`/db/podfics/${params.id}?with_podficcers=true`).then((res) => {
       res.json().then((data) => {
-        setPodfic(data);
+        if (Object.keys(data).length && params.id !== 'new') {
+          console.log({ data });
+          setPodfic(data);
+        }
         setLoading(false);
       });
     });

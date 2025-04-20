@@ -218,7 +218,8 @@ export default function Page() {
         podfic,
         files,
         filteredResources,
-        defaultPodficcer
+        defaultPodficcer,
+        chapter
       );
       setGeneratedHTML(beautify.html(generated));
     } else if (selectedTemplate === 'bluedreaming') {
@@ -334,6 +335,17 @@ export default function Page() {
               </span>
             </p>
           ))}
+        <p>
+          <b>Est. total length: </b>
+          {Math.round(
+            (typeof podfic.wordcount === 'string'
+              ? parseInt(podfic.wordcount)
+              : podfic.wordcount) /
+              130 /
+              60
+          )}{' '}
+          hours
+        </p>
       </div>
 
       <TextField

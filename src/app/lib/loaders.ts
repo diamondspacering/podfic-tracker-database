@@ -28,7 +28,7 @@ export const fetchPodficsFull = async () => {
   );
   const chapterResult = await client.query('select * from chapter');
   const partResult = await client.query('select * from part');
-  console.log('parts', partResult.rows);
+  // console.log('parts', partResult.rows);
   const noteResult = await client.query(
     'select * from note where podfic_id is not null'
   );
