@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 import json
 import requests
 import psycopg
@@ -9,12 +8,12 @@ from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 
 load_dotenv()
-# CONNECTION_STRING = (
-#     os.getenv("CONNECTION_STRING_LOCAL")
-#     if os.getenv("USE_LOCAL") == "0"
-#     else os.getenv("CONNECTION_STRING")
-# )
-CONNECTION_STRING = os.getenv("CONNECTION_STRING")
+CONNECTION_STRING = (
+    os.getenv("CONNECTION_STRING_LOCAL")
+    if os.getenv("USE_LOCAL") == "1"
+    else os.getenv("CONNECTION_STRING")
+)
+print(CONNECTION_STRING)
 session = requests.Session()  # stores cookies so that we can login
 
 fandom_mapping = {}
@@ -25,8 +24,8 @@ stored_fandom_mapping = {}
 stored_relationship_mapping = {}
 stored_character_mapping = {}
 
-# load mappings from json files
-with open("fandom_mapping.json", "r") as f:
+# load mappings from json file
+with open("src/scripts/tag_mappings.json", encoding="utf-8") as f:
     mappings = json.load(f)
     fandom_mapping = mappings["fandom_mapping"]
     relationship_mapping = mappings["relationship_mapping"]
@@ -57,9 +56,7 @@ def login():
         "User-Agent": "ozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36",
         "Content-Type": "application/x-www-form-urlencoded",
     }
-    print("Logging in")
     the_page = session.post(url=url, data=data, headers=headers)
-    print(BeautifulSoup(the_page.text, "html.parser"))
 
     if ("users/" + username) not in the_page.url:
         print("Login error!")
@@ -96,7 +93,6 @@ def create_fandom_if_not_exists(fandom_name):
     conn = psycopg.connect(CONNECTION_STRING)
     cur = conn.cursor()
     cur.execute("SELECT * from fandom WHERE name = %s", (fandom_name,))
-    # conn.commit()
     if cur.rowcount == 0:
         print("add new fandom")
         category_name = input(f"Enter category name for fandom {fandom_name}: ")
@@ -128,7 +124,6 @@ def create_fandom_if_not_exists(fandom_name):
                 print(data)
                 if cur.rowcount != 0:
                     category_id = data[0]
-        print(category_id)
         cur.execute(
             "INSERT INTO fandom (category_id, name) VALUES (%s, %s) RETURNING *",
             (category_id, fandom_name),
@@ -271,7 +266,6 @@ def update_chapters_in_db(chapter_data, podfic_id):
 def main():
     print("main")
     login()
-    print(CONNECTION_STRING)
     conn = psycopg.connect(CONNECTION_STRING)
     cur = conn.cursor()
 
@@ -281,7 +275,6 @@ def main():
     cur.execute(
         "SELECT work.work_id as id,podfic_id,title,link,author_id,fandom_id,wordcount,chapter_count,rating,category,relationship,main_character FROM work inner join podfic on podfic.work_id = work.work_id WHERE work.needs_update = true"
     )
-    print(cur.rowcount)
     data = cur.fetchall()
     for record in data:
         print(record)
