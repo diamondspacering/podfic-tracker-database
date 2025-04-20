@@ -629,6 +629,9 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
 
         <Autocomplete
           size='small'
+          sx={{
+            minWidth: '200px',
+          }}
           options={podficcers ?? []}
           loading={podficcersLoading}
           getOptionLabel={(option) => option?.username ?? ''}

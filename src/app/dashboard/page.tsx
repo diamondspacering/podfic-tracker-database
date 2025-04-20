@@ -43,9 +43,19 @@ export default async function Page() {
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
+            gap: '5px',
           }}
         >
-          {podfic.title} - <StatusBadge status={podfic.status} />
+          <div>{`${podfic.title} - `}</div>
+          <StatusBadge
+            status={podfic.status}
+            clickable
+            linkTo={
+              podfic.chaptered
+                ? `/dashboard/chapters/${podfic.podfic_id}`
+                : `/forms/podfic/${podfic.podfic_id}`
+            }
+          />
         </div>
       ))}
     </div>

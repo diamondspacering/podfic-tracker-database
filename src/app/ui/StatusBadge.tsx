@@ -10,7 +10,19 @@ import { useMemo } from 'react';
 import styles from './ui.module.css';
 import { PermissionStatus, PodficStatus } from '../types';
 
-export default function StatusBadge({ status }) {
+interface StatusBadgeProps {
+  status: PodficStatus | PermissionStatus;
+  clickable?: boolean;
+  onClick?: () => void;
+  linkTo?: string;
+}
+
+export default function StatusBadge({
+  status,
+  clickable,
+  onClick,
+  linkTo,
+}: StatusBadgeProps) {
   const className = useMemo(() => {
     switch (status) {
       case PodficStatus.PLANNING:
@@ -62,5 +74,20 @@ export default function StatusBadge({ status }) {
     }
   }, [status]);
 
-  return <div className={`${styles.statusBadge} ${className}`}>{status}</div>;
+  return (
+    <div
+      className={`${styles.statusBadge} ${
+        clickable ? styles.clickable : ''
+      } ${className}`}
+      onClick={onClick}
+    >
+      {linkTo ? (
+        <a href={linkTo} className={styles.invisibleLink}>
+          {status}
+        </a>
+      ) : (
+        status
+      )}
+    </div>
+  );
 }

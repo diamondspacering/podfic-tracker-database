@@ -5,6 +5,19 @@
   text-wrap: nowrap;
 }
 
+.clickable {
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 2px 2px 2px gray;
+  }
+}
+
+.invisibleLink {
+  color: black;
+  text-decoration: none;
+}
+
 .Planning,
 .Picked {
   background-color: #fce5cd;
