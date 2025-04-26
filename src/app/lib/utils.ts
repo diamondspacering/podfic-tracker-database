@@ -1,7 +1,13 @@
-import { useEffect, useState } from 'react';
-import { formatDateString, formatDateStringMonthFirst } from './format';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  format2Digits,
+  formatDateString,
+  formatDateStringMonthFirst,
+  getLengthValue,
+} from './format';
 import { Column } from '@tanstack/react-table';
-import { FilterType } from '../types';
+import { FilterType, getDefaultLength } from '../types';
+import ColorScale from 'color-scales';
 
 // TODO: this complains about localStorage not being defined, but it does still work
 export const usePersistentState = <T>(
@@ -67,4 +73,95 @@ export const filterActivated = (column, filterType: FilterType) => {
           !!Object.values(column.getFilterValue().range).some((f) => !!f)
       : true;
   }
+};
+
+export const useColorScale = (data: any[], propertyName: string) => {
+  const colorScale = useMemo(
+    () =>
+      new ColorScale(
+        0,
+        data.length
+          ? Math.max(Math.max(...data.map((d) => d[propertyName] ?? 0)), 1)
+          : 1,
+        ['#ffffff', '#4285f4']
+      ),
+    [data, propertyName]
+  );
+
+  return colorScale;
+};
+
+export const useLengthColorScale = (data: any[], propertyName: string) => {
+  const colorScale = useMemo(
+    () =>
+      new ColorScale(
+        0,
+        data.length
+          ? Math.max(
+              Math.max(
+                ...data.map((d) =>
+                  getLengthValue(d[propertyName] ?? getDefaultLength())
+                )
+              ),
+              1
+            )
+          : 1,
+        ['#ffffff', '#4285f4']
+      ),
+    [data, propertyName]
+  );
+
+  return colorScale;
+};
+
+export const dateFilter = (row, columnId, filterValue) => {
+  if (!filterValue) return false;
+  // TODO: the range stuff, will need more logging for that prob
+  // also make it work when values removed???
+
+  // check for falsy values
+  if (
+    !filterValue.year &&
+    !filterValue.month &&
+    !filterValue.day &&
+    (!filterValue.range ||
+      !Object.keys(filterValue.range).length ||
+      (!filterValue.range.start && !filterValue.range.end))
+  )
+    return true;
+
+  let matchesDate = false;
+
+  if (Object.keys(filterValue).includes('range')) {
+    const { start, end } = filterValue.range;
+    const postedDate = new Date(row.getValue(columnId));
+    if (start && end) {
+      matchesDate =
+        postedDate >= new Date(start) && postedDate <= new Date(end);
+    } else if (start) {
+      matchesDate = postedDate >= new Date(start);
+    } else if (end) {
+      matchesDate = postedDate <= new Date(end);
+    }
+  } else {
+    if (Object.keys(filterValue).includes('year') && !!filterValue.year) {
+      matchesDate =
+        row.original.posted_year?.toString() === filterValue.year ||
+        row.getValue(columnId)?.split('-')?.[0] === filterValue.year;
+    }
+    if (Object.keys(filterValue).includes('month') && !!filterValue.month) {
+      matchesDate =
+        matchesDate &&
+        row.getValue(columnId)?.split('-')?.[1] ===
+          format2Digits(filterValue.month);
+    }
+    if (Object.keys(filterValue).includes('day') && !!filterValue.day) {
+      matchesDate =
+        matchesDate &&
+        row.getValue(columnId)?.split('-')?.[2] ===
+          format2Digits(filterValue.day);
+    }
+  }
+
+  return matchesDate;
 };

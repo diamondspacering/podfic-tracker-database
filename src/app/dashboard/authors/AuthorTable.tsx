@@ -5,6 +5,7 @@ import AddMenu from '@/app/ui/AddMenu';
 import { EditCell } from '@/app/ui/table/EditCell';
 import { TableCell } from '@/app/ui/table/TableCell';
 import {
+  ColumnFiltersState,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -19,15 +20,22 @@ import { socialMedia } from '@/app/lib/data';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import AdditionalContentRows from '@/app/ui/table/AdditionalContentRows';
-import { arrayIncludesFilter, formatTableDate } from '@/app/lib/utils';
+import {
+  arrayIncludesFilter,
+  dateFilter,
+  formatTableDate,
+} from '@/app/lib/utils';
 import { HeaderCell } from '@/app/ui/table/HeaderCell';
 import { FilterType } from '@/app/types';
+import { resetAllColumnsToDefault } from '../podfic/defaultColumnFilters';
 
 export default function AuthorTable() {
   const { authors } = useAuthors();
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editingRow, setEditingRow] = useState<Author | null>(null);
+
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const updateAuthor = async (author: Author) => {
     try {
@@ -52,11 +60,13 @@ export default function AuthorTable() {
       },
     }),
     columnHelper.accessor('username', {
-      header: 'Username',
+      header: (props) => <HeaderCell text='Username' {...props} />,
       cell: TableCell,
       meta: {
         type: 'string',
+        filterType: FilterType.STRING,
       },
+      filterFn: arrayIncludesFilter,
     }),
     columnHelper.accessor('ao3', {
       header: 'AO3',
@@ -83,8 +93,8 @@ export default function AuthorTable() {
       },
     }),
     columnHelper.accessor('permission_status', {
-      // header: (props) => <HeaderCell text='Permission' {...props} />,
-      header: 'Permission',
+      header: (props) => <HeaderCell text='Permission' {...props} />,
+      // header: 'Permission',
       cell: TableCell,
       meta: {
         type: 'status',
@@ -92,10 +102,10 @@ export default function AuthorTable() {
         filterType: FilterType.PERMISSION,
         columName: 'Permission',
       },
-      // filterFn: arrayIncludesFilter,
+      filterFn: arrayIncludesFilter,
     }),
     columnHelper.accessor('asked_date', {
-      header: 'Asked Date',
+      header: (props) => <HeaderCell text='Asked Date' {...props} />,
       cell: ({ getValue, ...rest }) => (
         <TableCell
           getValue={() =>
@@ -110,10 +120,11 @@ export default function AuthorTable() {
       ),
       meta: {
         type: 'date',
+        filterType: FilterType.DATE,
       },
     }),
     columnHelper.accessor('permission_date', {
-      header: 'Permission Date',
+      header: (props) => <HeaderCell text='Permission Date' {...props} />,
       cell: ({ getValue, ...rest }) => (
         <TableCell
           getValue={() =>
@@ -128,7 +139,9 @@ export default function AuthorTable() {
       ),
       meta: {
         type: 'date',
+        filterType: FilterType.DATE,
       },
+      filterFn: dateFilter,
     }),
     columnHelper.display({
       id: 'edit',
@@ -187,7 +200,43 @@ export default function AuthorTable() {
         return acc;
       }, {}),
     },
+    state: {
+      columnFilters: columnFilters,
+    },
+    onColumnFiltersChange: (updaterOrValue) => {
+      setColumnFilters(updaterOrValue);
+    },
     meta: {
+      columnFilters,
+      setColumnFilters,
+      filterActivated: (column, filterType) => {
+        if (!columnFilters.some((f) => f.id === column.id)) return false;
+        if (filterType === FilterType.STATUS) {
+          return !Object.values(PodficStatus).every((f) =>
+            (column.getFilterValue() ?? []).includes(f)
+          );
+        }
+        if (filterType === FilterType.PERMISSION) {
+          return !Object.values(PermissionStatus).every((f) =>
+            (column.getFilterValue() ?? []).includes(f)
+          );
+        }
+        if (filterType === FilterType.TYPE) {
+          return !Array.from(column.getFacetedUniqueValues().keys()).every(
+            (f) => (column.getFilterValue() ?? []).includes(f)
+          );
+        }
+        // so should list as activated if there's non-truthy keys in there
+        if (filterType === FilterType.DATE) {
+          return !!column.getFilterValue() &&
+            !!Object.keys(column.getFilterValue()).length &&
+            !!Object.values(column.getFilterValue()).some((f) => !!f) &&
+            column.getFilterValue().range
+            ? !!Object.keys(column.getFilterValue().range).length &&
+                !!Object.values(column.getFilterValue().range).some((f) => !!f)
+            : true;
+        }
+      },
       editingRowId,
       setEditingRowId,
       editingRow,
@@ -232,6 +281,7 @@ export default function AuthorTable() {
       />
       <br />
       <br />
+      <b>Displaying {table.getFilteredRowModel().rows.length}</b>
       <table className={tableStyles.table}>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (

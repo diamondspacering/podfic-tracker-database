@@ -1,7 +1,7 @@
 'use client';
 
 import { useParts } from '@/app/lib/swrLoaders';
-import { usePersistentState } from '@/app/lib/utils';
+import { useLengthColorScale, usePersistentState } from '@/app/lib/utils';
 import { EditCell } from '@/app/ui/table/EditCell';
 import { TableCell } from '@/app/ui/table/TableCell';
 import { Mic, OpenInNew } from '@mui/icons-material';
@@ -30,6 +30,9 @@ export default function PartsTable() {
   const [columnFilters, setColumnFilters] =
     usePersistentState<ColumnFiltersState>('PARTS_TABLE_COLUMN_FILTERS', []);
   useEffect(() => console.log({ columnFilters }), [columnFilters]);
+
+  const rawColorScale = useLengthColorScale(parts, 'raw_length');
+  const lengthColorScale = useLengthColorScale(parts, 'length');
 
   // TODO: make this a general imported thing
   const arrayIncludesFilter = (row, columnId, filterValue) => {
@@ -136,6 +139,7 @@ export default function PartsTable() {
       cell: TableCell,
       meta: {
         type: 'length',
+        colorScale: lengthColorScale,
       },
     }),
     columnHelper.accessor('raw_length', {
@@ -143,6 +147,7 @@ export default function PartsTable() {
       cell: TableCell,
       meta: {
         type: 'length',
+        colorScale: rawColorScale,
         immutable: true,
       },
     }),

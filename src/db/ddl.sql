@@ -1,8 +1,6 @@
 create database "podfic-tracker-db"
     with owner "podfic-tracker-db_owner";
 
-grant connect, create, temporary on database "podfic-tracker-db" to neon_superuser;
-
 create sequence public.author_podficcer_id_seq
     as integer;
 

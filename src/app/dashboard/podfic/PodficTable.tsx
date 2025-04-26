@@ -51,7 +51,11 @@ import {
 } from '@mui/icons-material';
 import { sourceCodePro } from '@/app/fonts/fonts';
 import { HeaderCell } from '@/app/ui/table/HeaderCell';
-import { arrayIncludesFilter, usePersistentState } from '@/app/lib/utils';
+import {
+  arrayIncludesFilter,
+  dateFilter,
+  usePersistentState,
+} from '@/app/lib/utils';
 import { usePathname } from 'next/navigation';
 import { usePodficsFull } from '@/app/lib/swrLoaders';
 import { mutate } from 'swr';
@@ -104,59 +108,6 @@ export default function PodficTable() {
   );
 
   useEffect(() => setExcludingMultivoice(excludeMultivoice), []);
-
-  // TODO: extract to util
-  const dateFilter = (row, columnId, filterValue) => {
-    if (!filterValue) return false;
-    // TODO: the range stuff, will need more logging for that prob
-    // also make it work when values removed???
-
-    // check for falsy values
-    if (
-      !filterValue.year &&
-      !filterValue.month &&
-      !filterValue.day &&
-      (!filterValue.range ||
-        !Object.keys(filterValue.range).length ||
-        (!filterValue.range.start && !filterValue.range.end))
-    )
-      return true;
-
-    let matchesDate = false;
-
-    if (Object.keys(filterValue).includes('range')) {
-      const { start, end } = filterValue.range;
-      const postedDate = new Date(row.getValue(columnId));
-      if (start && end) {
-        matchesDate =
-          postedDate >= new Date(start) && postedDate <= new Date(end);
-      } else if (start) {
-        matchesDate = postedDate >= new Date(start);
-      } else if (end) {
-        matchesDate = postedDate <= new Date(end);
-      }
-    } else {
-      if (Object.keys(filterValue).includes('year') && !!filterValue.year) {
-        matchesDate =
-          row.original.posted_year?.toString() === filterValue.year ||
-          row.getValue(columnId)?.split('-')?.[0] === filterValue.year;
-      }
-      if (Object.keys(filterValue).includes('month') && !!filterValue.month) {
-        matchesDate =
-          matchesDate &&
-          row.getValue(columnId)?.split('-')?.[1] ===
-            format2Digits(filterValue.month);
-      }
-      if (Object.keys(filterValue).includes('day') && !!filterValue.day) {
-        matchesDate =
-          matchesDate &&
-          row.getValue(columnId)?.split('-')?.[2] ===
-            format2Digits(filterValue.day);
-      }
-    }
-
-    return matchesDate;
-  };
 
   // TODO: easily visible submission instructions notes?
   const columns = [
@@ -1050,6 +1001,7 @@ export default function PodficTable() {
                       >
                         <RecordingSessionTable
                           podficId={row.original.podfic_id}
+                          full
                           returnUrl={pathname}
                         />
                       </td>
