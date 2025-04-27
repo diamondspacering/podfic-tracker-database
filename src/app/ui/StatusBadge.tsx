@@ -8,10 +8,10 @@
 
 import { useMemo } from 'react';
 import styles from './ui.module.css';
-import { PermissionStatus, PodficStatus } from '../types';
+import { PartStatus, PermissionStatus, PodficStatus } from '../types';
 
 interface StatusBadgeProps {
-  status: PodficStatus | PermissionStatus;
+  status: PodficStatus | PermissionStatus | PartStatus;
   clickable?: boolean;
   onClick?: () => void;
   linkTo?: string;

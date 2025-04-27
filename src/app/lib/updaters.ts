@@ -1395,13 +1395,17 @@ export const createUpdatePartData = async (partData) => {
 
 export const updatePartMinified = async (data: any) => {
   const partData = JSON.parse(data);
-  // console.log({ partData });
+  console.log({ partData });
 
   if (partData.length) partData.length = getLengthUpdateString(partData.length);
 
+  console.log({ partData });
+
+  if (typeof partData.part_id !== 'number')
+    partData.part_id = parseInt(partData.part_id);
+
   const client = await getClient();
-  const result = await client.query(
-    `UPDATE part SET
+  const updateString = `UPDATE part SET
       doc = $1,
       audio_link = $2,
       part = $3,
@@ -1409,20 +1413,22 @@ export const updatePartMinified = async (data: any) => {
       type = $5,
       length = $6,
       status = $7
-    WHERE part_id = 8
-    RETURNING *`,
-    [
-      partData.doc,
-      partData.audio_link,
-      partData.part,
-      partData.words,
-      partData.type,
-      partData.length,
-      partData.status,
-      partData.part_id,
-    ]
-  );
-  // console.log(result.rows[0]);
+    WHERE part_id = $8
+    RETURNING *`;
+  const parameterArray = [
+    partData.doc,
+    partData.audio_link ? partData.audio_link : null,
+    partData.part,
+    partData.words,
+    partData.type ? partData.type : null,
+    partData.length,
+    partData.status,
+    partData.part_id,
+  ];
+  console.log({ parameterArray });
+  console.log(parameterArray.length);
+  const result = await client.query(updateString, parameterArray);
+  console.log(result.rows[0]);
 };
 
 export const linkPodficcerToPodfic = async (

@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  formatDateString,
-  formatDateStringMonthFirst,
-  getLengthValue,
-} from '@/app/lib/format';
+import { formatDateString, formatDateStringMonthFirst } from '@/app/lib/format';
 import { getDefaultLength, PodficStatus } from '@/app/types';
 import {
   ArrowRight,
@@ -37,7 +33,12 @@ import Link from 'next/link';
 import { mutate } from 'swr';
 import { useChaptersForPodfic } from '@/app/lib/swrLoaders';
 import AdditionalContentRows from '@/app/ui/table/AdditionalContentRows';
-import { formatTableDate } from '@/app/lib/utils';
+import {
+  formatTableDate,
+  useColorScale,
+  useLengthColorScale,
+} from '@/app/lib/utils';
+import { getLengthValue } from '@/app/lib/lengthHelpers';
 
 // TODO: general chapter table for all chapters?
 export default function ChapterTable({ podficId, podficTitle }) {
@@ -48,59 +49,11 @@ export default function ChapterTable({ podficId, podficTitle }) {
 
   const pathname = usePathname();
 
-  const rawColorScale = useMemo(
-    () =>
-      new ColorScale(
-        0,
-        originalChapters.length
-          ? Math.max(
-              Math.max(
-                ...originalChapters.map((chapter) =>
-                  getLengthValue(chapter.raw_length ?? getDefaultLength())
-                )
-              ),
-              1
-            )
-          : 1,
-        ['#ffffff', '#4285f4']
-      ),
-    [originalChapters]
-  );
-  const lengthColorScale = useMemo(
-    () =>
-      new ColorScale(
-        0,
-        originalChapters.length
-          ? Math.max(
-              Math.max(
-                ...originalChapters.map((chapter) =>
-                  getLengthValue(chapter.length ?? getDefaultLength())
-                )
-              ),
-              1
-            )
-          : 1,
-        ['#ffffff', '#4285f4']
-      ),
-    [originalChapters]
-  );
+  const rawColorScale = useLengthColorScale(originalChapters, 'raw_length');
+  const lengthColorScale = useLengthColorScale(originalChapters, 'length');
+
   // TODO: wordcount global color scale??
-  const wordcountColorScale = useMemo(
-    () =>
-      new ColorScale(
-        0,
-        originalChapters.length
-          ? Math.max(
-              Math.max(
-                ...originalChapters.map((chapter) => chapter.wordcount ?? 0)
-              ),
-              1
-            )
-          : 1,
-        ['#ffffff', '#4285f4']
-      ),
-    [originalChapters]
-  );
+  const wordcountColorScale = useColorScale(originalChapters, 'wordcount');
 
   const columnHelper = createColumnHelper<Chapter>();
 

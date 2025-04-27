@@ -1,12 +1,10 @@
 'use client';
 
 import {
-  addLengths,
   format2Digits,
   formatDateString,
   formatDateStringMonthFirst,
   getLengthText,
-  getLengthValue,
 } from '@/app/lib/format';
 import {
   FilterType,
@@ -66,7 +64,8 @@ import RecordingSessionTable from '@/app/ui/table/RecordingSessionTable';
 import {
   resetAllColumns,
   resetAllColumnsToDefault,
-} from './defaultColumnFilters';
+} from '../../lib/defaultColumnFilters';
+import { addLengths, getLengthValue } from '@/app/lib/lengthHelpers';
 
 export default function PodficTable() {
   const { podfics, isLoading } = usePodficsFull();

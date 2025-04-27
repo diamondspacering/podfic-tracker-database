@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import StatusBadge from '../StatusBadge';
-import { getLengthText, getLengthValue } from '@/app/lib/format';
+import { getLengthText } from '@/app/lib/format';
 import tableStyles from './table.module.css';
 import { MenuItem, TextField } from '@mui/material';
 import {
@@ -12,6 +12,7 @@ import {
 import DurationPicker from '../DurationPicker';
 import DatePicker from '../DatePicker';
 import { sourceCodePro } from '@/app/fonts/fonts';
+import { getLengthValue } from '@/app/lib/lengthHelpers';
 
 type Option = {
   label: string;

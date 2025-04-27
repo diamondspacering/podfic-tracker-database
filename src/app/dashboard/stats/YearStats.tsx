@@ -27,12 +27,12 @@ import {
   getWithMusic,
   getWorksCount,
 } from '@/app/lib/stats';
+import { getLengthText } from '@/app/lib/format';
 import {
-  addLengths,
   getLengthFromValue,
-  getLengthText,
   getLengthValue,
-} from '@/app/lib/format';
+  addLengths,
+} from '@/app/lib/lengthHelpers';
 
 export default async function YearStats({ year }) {
   const totalLen = await getTotalPodficLength(year);

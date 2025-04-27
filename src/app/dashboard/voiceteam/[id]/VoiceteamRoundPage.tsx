@@ -1,19 +1,10 @@
 import { Button, Menu, MenuItem, Typography } from '@mui/material';
-import {
-  CellChange,
-  Column,
-  OptionType,
-  ReactGrid,
-  Row,
-} from '@silevis/reactgrid';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import ProjectPointsCell from './ProjectPointsCell';
-import { Add, Save } from '@mui/icons-material';
-import { HotColumn, HotTable } from '@handsontable/react';
+import { Add } from '@mui/icons-material';
+import { HotTable } from '@handsontable/react';
 import tableStyles from '@/app/ui/table/table.module.css';
-import vtStyles from '@/app/dashboard/voiceteam/voiceteam.module.css';
 import './vt-css.css';
-import { getLengthBonus } from '@/app/lib/format';
+import { getLengthBonus } from '@/app/lib/vtHelpers';
 import Handsontable from 'handsontable';
 
 export default function VoiceteamRoundPage({
@@ -82,6 +73,7 @@ export default function VoiceteamRoundPage({
   useEffect(() => console.log({ projects }), [projects]);
 
   // the origIndex method is wretched and badly named actually
+  // TODO: try improving this I'm scared of breaking it though
   const updatePoints = useCallback(
     (projectIndex) => {
       const project = projects[projectIndex];
@@ -200,7 +192,7 @@ export default function VoiceteamRoundPage({
     }
   );
 
-  // TODO: figure out a checkbox renderer (might have to do something more involved/specialized for the checkbox?)
+  // TODO: figure out a checkbox renderer (might have to do something more involved/specialized for the checkbox so it can be crossed out?)
 
   // is it possible to have a number at the bottom of a checkbox row?
   // const bottomRow = useMemo(() => ({  }), [projects])

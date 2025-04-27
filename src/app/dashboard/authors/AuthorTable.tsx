@@ -27,7 +27,7 @@ import {
 } from '@/app/lib/utils';
 import { HeaderCell } from '@/app/ui/table/HeaderCell';
 import { FilterType } from '@/app/types';
-import { resetAllColumnsToDefault } from '../podfic/defaultColumnFilters';
+import { resetAllColumnsToDefault } from '../../lib/defaultColumnFilters';
 
 export default function AuthorTable() {
   const { authors } = useAuthors();

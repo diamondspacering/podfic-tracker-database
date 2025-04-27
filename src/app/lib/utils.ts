@@ -3,11 +3,10 @@ import {
   format2Digits,
   formatDateString,
   formatDateStringMonthFirst,
-  getLengthValue,
 } from './format';
-import { Column } from '@tanstack/react-table';
 import { FilterType, getDefaultLength } from '../types';
 import ColorScale from 'color-scales';
+import { getLengthValue } from './lengthHelpers';
 
 // TODO: this complains about localStorage not being defined, but it does still work
 export const usePersistentState = <T>(
@@ -40,6 +39,7 @@ export const formatTableDate = (
       )
     );
   else if (!!date) formattedDate = formatDateStringMonthFirst(new Date(date));
+  console.log({ formattedDate });
   return formattedDate;
 };
 
