@@ -3,7 +3,7 @@
 
 import { getEmptyLength } from '../types';
 import { getClient } from './db-helpers';
-import { addLengths, getLengthValue } from './format';
+import { addLengths, getLengthValue } from './lengthHelpers';
 
 // TODO: revamp these a bit because there's something deeply wrong w/ your numbers
 

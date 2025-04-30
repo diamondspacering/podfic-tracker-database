@@ -1,47 +1,18 @@
 'use client';
 
 import { useVoiceteamEvent } from '@/app/lib/swrLoaders';
-import { Add, Save } from '@mui/icons-material';
-import {
-  Box,
-  Button,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  Menu,
-  MenuItem,
-  Tab,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ReactGrid,
-  Column,
-  Row,
-  CellChange,
-  TextCell,
-  Cell,
-} from '@silevis/reactgrid';
+import { Save } from '@mui/icons-material';
+import { Box, Tab, Typography } from '@mui/material';
+import { useCallback, useEffect, useState } from 'react';
 import '@silevis/reactgrid/styles.css';
-import styles from '@/app/dashboard/voiceteam/voiceteam.module.css';
-import vtStyles from './voiceteam-table.module.css';
-import {
-  createUpdateChallenge,
-  createUpdateProject,
-  createUpdateRound,
-} from '@/app/lib/updaters';
+import { createUpdateChallenge, createUpdateProject } from '@/app/lib/updaters';
 import { mutate } from 'swr';
-import DescriptionCell from './DescriptionCell';
 import { LoadingButton, TabContext, TabList, TabPanel } from '@mui/lab';
 import VoiceteamRoundPage from './VoiceteamRoundPage';
 import VoiceteamOverviewPage from './VoiceteamOverviewPage';
 import 'handsontable/dist/handsontable.full.min.css';
 import { registerAllModules } from 'handsontable/registry';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 registerAllModules();
 
@@ -52,6 +23,24 @@ export default function VoiceteamPage({ voiceteamId }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [currentTab, setCurrentTab] = useState('0');
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tabParam = searchParams.get('round');
+
+  useEffect(() => setCurrentTab(tabParam ?? '0'), []);
+
+  const setRoundParam = useCallback(
+    (roundNum: string | number) => {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('round', roundNum.toString());
+
+      router.replace(
+        `/dashboard/voiceteam/${voiceteamId}?${params.toString()}`
+      );
+    },
+    [searchParams, router, voiceteamId]
+  );
 
   useEffect(() => {
     if (!isLoading) {
@@ -89,7 +78,6 @@ export default function VoiceteamPage({ voiceteamId }) {
     setIsSubmitting(false);
   }, [updateChallengeData, voiceteamId]);
 
-  // TODO: have separate smaller table that display all rounds, or information about rounds similarly? figure out fancy styling later?
   return (
     <div>
       <Typography variant='h2'>{voiceteamEvent.name}</Typography>
@@ -98,9 +86,13 @@ export default function VoiceteamPage({ voiceteamId }) {
       <TabContext value={currentTab}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <TabList
-            onChange={(_, value) => setCurrentTab(value)}
+            onChange={(_, value) => {
+              setCurrentTab(value);
+              setRoundParam(value);
+            }}
             aria-label='voiceteam-round-tabs'
           >
+            {/* oh no u put the onclick here or in the tab list pls,, hold */}
             <Tab label='Overview' value='0' />
             {rounds.map((round) => (
               <Tab

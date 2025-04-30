@@ -2,9 +2,9 @@ import { hosts } from '@/app/lib/data';
 import {
   formatDateString,
   generateAADate,
-  generateAALink,
   transformDropboxLink,
 } from '@/app/lib/format';
+import { generateAALink } from '@/app/lib/html';
 import {
   Button,
   Checkbox,

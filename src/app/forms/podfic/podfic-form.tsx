@@ -445,6 +445,14 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
             />
           )}
         </div>
+        <TextField
+          size='small'
+          label='AO3 link'
+          value={podfic.ao3_link ?? ''}
+          onChange={(e) =>
+            setPodfic((prev) => ({ ...prev, ao3_link: e.target.value }))
+          }
+        />
         <div className={styles.flexColumn}>
           <Autocomplete
             size='small'

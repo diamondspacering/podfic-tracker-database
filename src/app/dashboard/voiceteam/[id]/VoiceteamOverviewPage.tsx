@@ -11,12 +11,8 @@ import {
   Menu,
   MenuItem,
   TextField,
-  Tooltip,
 } from '@mui/material';
-import { CellChange, Column, ReactGrid, Row } from '@silevis/reactgrid';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import styles from '@/app/dashboard/voiceteam/voiceteam.module.css';
-import vtStyles from './voiceteam-table.module.css';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import HotTable, { HotTableClass } from '@handsontable/react';
 
 export default function VoiceteamOverviewPage({
@@ -40,6 +36,18 @@ export default function VoiceteamOverviewPage({
   };
   const handleClose = () => {
     setAnchorEl(null);
+  };
+  const [anchorElBtm, setAnchorElBtm] = useState<null | HTMLElement>(null);
+  const addChallengeBtmOpen = useMemo(
+    () => Boolean(anchorElBtm),
+    [anchorElBtm]
+  );
+  const handleClickBtm = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setAnchorElBtm(event.currentTarget);
+  };
+  const handleCloseBtm = () => {
+    setAnchorElBtm(null);
   };
 
   const hotRef = useRef<HotTableClass>(null);
@@ -124,189 +132,6 @@ export default function VoiceteamOverviewPage({
     );
   };
 
-  const handleChallengeCellChange = (changes: CellChange<any>[]) => {
-    console.log({ changes });
-    changes.forEach((change) => {
-      const roundNumber = parseInt(
-        change.rowId.toString().match(/round-(\d)/)[1]
-      );
-      console.log({ roundNumber });
-      const challengeIndex = parseInt(
-        change.rowId.toString().match(/challenge-(\d)/)[1]
-      );
-      console.log({ challengeIndex });
-      const round = rounds.find((round) => round.number === roundNumber);
-      console.log({ round });
-      console.log(change.newCell.type === 'number');
-      const challenges = round.challenges.map((challenge, i) =>
-        i === challengeIndex
-          ? {
-              ...challenge,
-              [change.columnId]:
-                change.newCell.type === 'number'
-                  ? change.newCell.value
-                  : change.newCell.text,
-            }
-          : challenge
-      );
-      console.log({ challenges });
-      setRounds((prev) =>
-        prev.map((round) =>
-          round.number === roundNumber
-            ? {
-                ...round,
-                challenges: challenges.map((challenge, i) =>
-                  i === challengeIndex
-                    ? {
-                        ...challenge,
-                        [change.columnId]:
-                          change.newCell.type === 'number'
-                            ? change.newCell.value
-                            : change.newCell.text,
-                      }
-                    : challenge
-                ),
-              }
-            : round
-        )
-      );
-    });
-  };
-
-  const updateChallenges = useCallback((changeArray) => {
-    // get round number
-    // get round
-    // update challenge in that round
-    // change is of shape [rowIndex, columnName, oldValue, newValue]
-    const challenge = challenges[changeArray[0]];
-    const round = rounds.find(
-      (round) => round.number === challenge.round_number
-    );
-
-    setRounds((prev) =>
-      prev.map((r) =>
-        r.round_id === round.round_id
-          ? {
-              ...r,
-              challenges: r.challenges?.map((c) =>
-                c.challenge_id === challenge.challenge_id
-                  ? { ...c, [changeArray[1]]: changeArray[3] }
-                  : c
-              ),
-            }
-          : r
-      )
-    );
-  }, []);
-
-  const headerRow: Row = useMemo(
-    () => ({
-      rowId: 'header',
-      cells: [
-        { type: 'header', text: 'Rd' },
-        { type: 'header', text: 'Challenge' },
-        { type: 'header', text: 'Description' },
-        { type: 'header', text: 'Pts' },
-        { type: 'header', text: 'Bonus Pts' },
-      ],
-    }),
-    []
-  );
-
-  // TODO: strong top line divider in between rows? custom classes...?
-  const rows: Row[] = useMemo(
-    () => [
-      headerRow,
-      ...(rounds ?? []).flatMap<Row>((round) => {
-        // TODO: header row that just has the name of the round?
-        const challengeRows =
-          round.challenges?.map<Row>((challenge, i) => ({
-            rowId: `round-${round.number}-challenge-${i}`,
-            key: challenge.challenge_id,
-            // height: 100,
-            cells: [
-              {
-                type: 'text',
-                text: round.number?.toString() ?? '',
-                nonEditable: true,
-              },
-              // and then like making that??? the description i mean
-              // anyways the tooltip does NOT work very well i should look up better how to do a custom modal like that
-              {
-                type: 'text',
-                text: challenge.name ?? '',
-                // TODO: custom to make text bigger?
-                renderer: (text) => (
-                  <Tooltip title={challenge.description} placement='right-end'>
-                    <span>{text}</span>
-                  </Tooltip>
-                ),
-                // renderer: (text) => (
-                //   <DescriptionCell
-                //     text={text}
-                //     description={challenge.description ?? ''}
-                //   />
-                // ),
-              },
-              {
-                type: 'text',
-                text: challenge.description ?? '',
-                // style: { overflow: 'visible' },
-                // className: vtStyles.wrapText,
-                // renderer: (text) => (
-                //   <span className={vtStyles.wrapText}>{text}</span>
-                // ),
-              },
-              { type: 'number', value: challenge.points ?? null },
-              { type: 'number', value: challenge.bonus_points ?? null },
-            ],
-          })) ?? [];
-        return challengeRows;
-        // return {
-        //   rowId: round.round_id,
-        //   cells: [
-        //     { type: 'text', text: round.number?.toString() ?? '' },
-        //     { type: 'text', text: 'figure out challenges' },
-        //   ],
-        // };
-      }),
-    ],
-    [headerRow, rounds]
-  );
-
-  // TODO: capitalize name of bonus
-  // TODO: how to make non editable
-  const bonusRows: Row[] = [
-    {
-      rowId: 'header',
-      cells: Object.keys(voiceteam.bonus_values ?? {}).map((key) => ({
-        type: 'header',
-        text: String(key).charAt(0).toUpperCase() + String(key).slice(1),
-      })),
-    },
-    {
-      rowId: 'values',
-      cells: Object.values(voiceteam.bonus_values ?? {}).map((value) => ({
-        type: 'number',
-        value: value,
-        nonEditable: true,
-      })),
-    },
-  ];
-
-  const columns: Column[] = [
-    { columnId: 'Rd', width: 100 },
-    { columnId: 'name', width: 400 },
-    { columnId: 'description', resizable: true, width: 200 },
-    { columnId: 'points', width: 50 },
-    { columnId: 'bonus_points', width: 50 },
-  ];
-
-  const bonusColumns: Column[] = Object.keys(voiceteam.bonus_values ?? {}).map(
-    (key) => ({ columnId: key, width: 100 })
-  );
-
-  // TODO: convert to HOT?
   return (
     <div>
       <Dialog open={roundDialogOpen} onClose={() => setRoundDialogOpen(false)}>
@@ -371,6 +196,7 @@ export default function VoiceteamOverviewPage({
           </Button>
         </DialogActions>
       </Dialog>
+      {/* TODO: figure out how to make these sticky instead of replicating challenge button at the bottom? */}
       <Button
         onClick={() => setRoundDialogOpen(true)}
         variant='contained'
@@ -378,9 +204,6 @@ export default function VoiceteamOverviewPage({
       >
         Add Round
       </Button>
-      {/* <Button onClick={addChallenge} variant='contained' startIcon={<Add />}>
-        Add Challenge
-      </Button> */}
       <Button
         variant='contained'
         startIcon={<Add />}
@@ -414,18 +237,13 @@ export default function VoiceteamOverviewPage({
           </MenuItem>
         ))}
       </Menu>
-      {/* <Button onClick={() => console.log(data)} variant='contained'>
-        log data
-      </Button> */}
       <Button onClick={() => console.log(rounds)} variant='contained'>
         rounds
       </Button>
       <Button onClick={() => console.log(challenges)} variant='contained'>
         challenges
       </Button>
-      <Button onClick={() => console.log(rows)} variant='contained'>
-        rows
-      </Button>
+
       <HotTable
         data={challenges}
         ref={hotRef}
@@ -448,14 +266,41 @@ export default function VoiceteamOverviewPage({
           }
         }}
       />
-      <div className={styles.flexRow}>
-        <ReactGrid
-          rows={rows}
-          columns={columns}
-          onCellsChanged={handleChallengeCellChange}
-        />
-        <ReactGrid rows={bonusRows} columns={bonusColumns} />
-      </div>
+
+      <Button
+        variant='contained'
+        startIcon={<Add />}
+        id='add-challenge-button-btm'
+        aria-controls={addChallengeBtmOpen ? 'basic-menu' : undefined}
+        aria-haspopup={true}
+        aria-expanded={addChallengeBtmOpen ? 'true' : undefined}
+        onClick={handleClickBtm}
+        style={{ marginTop: '1rem' }}
+      >
+        Add Challenge
+      </Button>
+      <Menu
+        id='add-challenge-menu-btm'
+        anchorEl={anchorElBtm}
+        open={addChallengeBtmOpen}
+        onClose={handleCloseBtm}
+        MenuListProps={{
+          'aria-labelledby': 'add-challenge-button-btm',
+        }}
+      >
+        {rounds.map((round) => (
+          <MenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              addChallenge(round.number);
+              handleCloseBtm();
+            }}
+            key={round.round_id}
+          >
+            {round.number}
+          </MenuItem>
+        ))}
+      </Menu>
     </div>
   );
 }

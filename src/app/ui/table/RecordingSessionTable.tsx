@@ -2,7 +2,6 @@ import {
   format2Digits,
   formatDateString,
   getLengthText,
-  getLengthValue,
 } from '@/app/lib/format';
 import { useRecordingSessions } from '@/app/lib/swrLoaders';
 import { getDefaultLength } from '@/app/types';
@@ -27,6 +26,7 @@ import {
 import { Delete, Edit, OpenInNew } from '@mui/icons-material';
 import { mutate } from 'swr';
 import tableStyles from '@/app/ui/table/table.module.css';
+import { getLengthValue } from '@/app/lib/lengthHelpers';
 
 interface RecordingSessionTableProps {
   podficId: number | string;

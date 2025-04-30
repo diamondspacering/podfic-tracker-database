@@ -16,13 +16,13 @@ import { htmlTemplates } from '@/app/lib/data';
 import {
   formatDateString,
   generateAADate,
-  generateAALink,
-  generateHTMLAudioficArchive,
-  generateHTMLAzdaema,
-  generateHTMLBluedreaming,
-  generateHTMLBluedreamingChapter,
   getLengthText,
 } from '@/app/lib/format';
+import { generateHTMLBluedreaming } from '@/app/lib/html';
+import { generateHTMLBluedreamingChapter } from '@/app/lib/html';
+import { generateHTMLAzdaema } from '@/app/lib/html';
+import { generateHTMLAudioficArchive } from '@/app/lib/html';
+import { generateAALink } from '@/app/lib/html';
 import { CopyAll, Save } from '@mui/icons-material';
 import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { html } from '@codemirror/lang-html';
@@ -82,7 +82,7 @@ export default function Page() {
     );
     const data = await response.json();
     setPodfic(data);
-    if (podfic.html_string) {
+    if (data.html_string) {
       console.log('setting generated html from podfic html');
       setGeneratedHTML(podfic.html_string);
     }
@@ -93,7 +93,10 @@ export default function Page() {
     const response = await fetch(`/db/chapters?chapter_id=${chapterId}`);
     const data = await response.json();
     setChapter(data);
-    if (chapter.html_string) setGeneratedHTML(chapter.html_string);
+    if (data.html_string) {
+      console.log('setting generated html from chapter html');
+      setGeneratedHTML(chapter.html_string);
+    }
   }, []);
 
   const fetchFiles = useCallback(async (podficId, chapterId) => {
@@ -247,6 +250,7 @@ export default function Page() {
     } else {
       await savePodficHTML(podfic.podfic_id, generatedHTML);
     }
+    console.log('saved html');
   }, [podfic, chapter, generatedHTML]);
 
   // TODO:

@@ -5,7 +5,7 @@ import { PermissionStatus, PodficStatus } from '@/app/types';
 import {
   getFilterValues,
   getResetFilterForColumn,
-} from '@/app/dashboard/podfic/defaultColumnFilters';
+} from '@/app/lib/defaultColumnFilters';
 
 // TODO: be able to provide data types for the header cell? with <T>? not needed but cool prob
 export const HeaderCell = ({
