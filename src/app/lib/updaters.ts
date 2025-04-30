@@ -1155,12 +1155,14 @@ export const createUpdateProject = async (projectData: Project) => {
   if (!projectData.vt_project_id) {
     // TODO: insert the other things as well......
     const result = await client.query(
-      `INSERT INTO vt_project (challenge_id, name, notes, link, points_manual, universal_bonus, project_lead_bonus, byo_bonus, length, length_bonus, finished, submitted, abandoned, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+      `INSERT INTO vt_project (challenge_id, name, notes, link, bonus, bonus_manual, points_manual, universal_bonus, project_lead_bonus, byo_bonus, length, length_bonus, finished, submitted, abandoned, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
       [
         projectData.challenge_id,
         projectData.name,
         projectData.notes,
         projectData.link,
+        projectData.bonus,
+        projectData.bonus_manual,
         projectData.points_manual,
         projectData.universal_bonus,
         projectData.project_lead_bonus,
@@ -1181,22 +1183,26 @@ export const createUpdateProject = async (projectData: Project) => {
         name = $2,
         notes = $3,
         link = $4,
-        points_manual = $5,
-        universal_bonus = $6,
-        project_lead_bonus = $7,
-        byo_bonus = $8,
-        length = $9,
-        length_bonus = $10,
-        finished = $11,
-        submitted = $12,
-        abandoned = $13
-      WHERE vt_project_id = $14
+        bonus = $5,
+        bonus_manual = $6,
+        points_manual = $7,
+        universal_bonus = $8,
+        project_lead_bonus = $9,
+        byo_bonus = $10,
+        length = $11,
+        length_bonus = $12,
+        finished = $13,
+        submitted = $14,
+        abandoned = $15
+      WHERE vt_project_id = $16
       RETURNING *`,
       [
         projectData.challenge_id,
         projectData.name,
         projectData.notes,
         projectData.link,
+        projectData.bonus,
+        projectData.bonus_manual,
         projectData.points_manual,
         projectData.universal_bonus,
         projectData.project_lead_bonus,

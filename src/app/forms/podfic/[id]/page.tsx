@@ -59,14 +59,6 @@ export default function Page({ params }: { params: { id: any } }) {
         {podfic.podfic_id ? 'Edit' : 'New'} Podfic
       </Typography>
       <PodficForm podfic={podfic} setPodfic={setPodfic} />
-      <TextField
-        size='small'
-        label='AO3 link'
-        value={podfic.ao3_link ?? ''}
-        onChange={(e) =>
-          setPodfic((prev) => ({ ...prev, ao3_link: e.target.value }))
-        }
-      />
       {podfic.chaptered && (
         <TextField
           size='small'

@@ -6,6 +6,9 @@ import tableStyles from '@/app/ui/table/table.module.css';
 import './vt-css.css';
 import { getLengthBonus } from '@/app/lib/vtHelpers';
 import Handsontable from 'handsontable';
+import { addLengthStringToLength } from '@/app/lib/lengthHelpers';
+import { getEmptyLength } from '@/app/types';
+import { getLengthText } from '@/app/lib/format';
 
 export default function VoiceteamRoundPage({
   round,
@@ -72,11 +75,42 @@ export default function VoiceteamRoundPage({
 
   useEffect(() => console.log({ projects }), [projects]);
 
+  const updatePointsManual = useCallback(
+    (projectIndex, newValue) => {
+      console.log('updating points manually');
+      const project = projects[projectIndex];
+      console.log({ project });
+      if (!project) return;
+      const origIndex = project.origIndex;
+
+      const manualPointsValue = parseInt(newValue ?? 0);
+      console.log({ manualPointsValue });
+
+      setRound({
+        ...round,
+        challenges: round.challenges.map((c) =>
+          c.challenge_id === project.challenge_id
+            ? {
+                ...c,
+                projects: c.projects.map((p, i) =>
+                  i === origIndex
+                    ? { ...p, points_manual: manualPointsValue }
+                    : p
+                ),
+              }
+            : c
+        ),
+      });
+    },
+    [projects, round, setRound]
+  );
+
   // the origIndex method is wretched and badly named actually
   // TODO: try improving this I'm scared of breaking it though
   const updatePoints = useCallback(
     (projectIndex) => {
       const project = projects[projectIndex];
+      if (!project) return;
       const origIndex = project.origIndex;
       const challenge = round.challenges.find(
         (c) => c.challenge_id === project.challenge_id
@@ -98,15 +132,19 @@ export default function VoiceteamRoundPage({
         : lengthBonusManual;
       console.log({ lengthBonusFromLength, lengthBonusManual, lengthBonus });
       console.log({ bonusManual: project.bonus_manual });
+      const bonusManual = parseInt(project.bonus_manual ?? 0);
 
       const newPoints =
         (!bonusIsAdditional && project.bonus ? bonusPoints : challenge_points) +
         (project.universal_bonus ? universalValue : 0) +
         (project.project_lead_bonus ? projectLeadValue : 0) +
         (project.byo_bonus ? 5 : 0) +
-        (project.bonus && bonusIsAdditional ? bonusPoints : 0) +
-        lengthBonus +
-        parseInt(project.bonus_manual ?? 0);
+        (project.bonus && bonusIsAdditional
+          ? bonusManual
+            ? bonusManual
+            : bonusPoints
+          : 0) +
+        lengthBonus;
 
       console.log({ newPoints });
       console.log({ origPoints });
@@ -253,6 +291,7 @@ export default function VoiceteamRoundPage({
           - so abandoned not counted for anything, real only counting submitted
         - better project selection, actually link it to challenge id?
         - how best to add rows, etc. do it similarly to other one of adding new at end? or something?
+        - have the alternating colors so it's easier to follow lines?
       */}
       <HotTable
         data={[...projects, {}]}
@@ -276,10 +315,16 @@ export default function VoiceteamRoundPage({
               changeArray[1] === 'challenge_id' ||
               changeArray[1] === 'length' ||
               changeArray[1] === 'length_bonus' ||
-              changeArray[1] === 'bonus'
+              changeArray[1] === 'bonus' ||
+              changeArray[1] === 'bonus_manual'
             ) {
               console.log('updating points');
               updatePoints(changeArray[0]);
+            } else if (
+              changeArray[1] === 'points_manual' &&
+              source === 'edit'
+            ) {
+              updatePointsManual(changeArray[0], changeArray[3]);
             }
           }
         }}
@@ -505,7 +550,45 @@ export default function VoiceteamRoundPage({
         ]}
         // hmmm just a custom row on the bottom might be best lol i want my own functions
         // these are not lined up. why are they not lined up.
+        // TODO: render these all bold perhaps?
         columnSummary={[
+          {
+            sourceColumn: 7,
+            type: 'custom',
+            destinationRow: projects.length,
+            destinationColumn: 7,
+            customFunction: () => {
+              const count = projects
+                ?.filter((p) => !!p?.length)
+                ?.reduce(
+                  (acc, proj) => addLengthStringToLength(acc, proj.length),
+                  getEmptyLength()
+                );
+              return getLengthText(count);
+            },
+          },
+          {
+            sourceColumn: 11,
+            type: 'custom',
+            destinationRow: projects.length,
+            destinationColumn: 11,
+            customFunction: () => {
+              const count =
+                projects?.map((p) => p.finished)?.filter(Boolean)?.length ?? 0;
+              return count;
+            },
+          },
+          {
+            sourceColumn: 12,
+            type: 'custom',
+            destinationRow: projects.length,
+            destinationColumn: 12,
+            customFunction: () => {
+              const count =
+                projects?.map((p) => p.submitted)?.filter(Boolean)?.length ?? 0;
+              return count;
+            },
+          },
           {
             sourceColumn: 13,
             type: 'custom',
@@ -543,19 +626,6 @@ export default function VoiceteamRoundPage({
               return count;
             },
           },
-          // {
-          //   sourceColumn: 15,
-          //   type: 'custom',
-          //   destinationRow: projects.length,
-          //   destinationColumn: 15,
-          //   customFunction: () => {
-          //     const count = projects
-          //       ?.filter((p) => p.submitted)
-          //       ?.reduce((acc, proj) => acc + (proj.points_manual ?? 0), 0);
-          //     console.log({ submittedCount: count });
-          //     return count;
-          //   },
-          // },
         ]}
       />
 

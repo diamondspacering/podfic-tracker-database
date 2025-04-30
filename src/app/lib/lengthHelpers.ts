@@ -10,6 +10,18 @@ export const addLengths = (length1: Length, length2: Length) => {
   return totalLength;
 };
 
+export const addLengthStringToLength = (
+  length: Length,
+  lengthString: string
+) => {
+  const lengthArray = lengthString.split(':');
+  const hours = parseInt(lengthArray[0]);
+  const minutes = parseInt(lengthArray[1]);
+  const seconds = parseInt(lengthArray[2]);
+
+  return addLengths(length, { hours, minutes, seconds });
+};
+
 // returns a Length as a numeric value in seconds
 export const getLengthValue = (length: Length | null) => {
   if (!length) return 0;

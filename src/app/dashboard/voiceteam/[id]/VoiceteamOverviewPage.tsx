@@ -37,6 +37,18 @@ export default function VoiceteamOverviewPage({
   const handleClose = () => {
     setAnchorEl(null);
   };
+  const [anchorElBtm, setAnchorElBtm] = useState<null | HTMLElement>(null);
+  const addChallengeBtmOpen = useMemo(
+    () => Boolean(anchorElBtm),
+    [anchorElBtm]
+  );
+  const handleClickBtm = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    setAnchorElBtm(event.currentTarget);
+  };
+  const handleCloseBtm = () => {
+    setAnchorElBtm(null);
+  };
 
   const hotRef = useRef<HotTableClass>(null);
 
@@ -184,6 +196,7 @@ export default function VoiceteamOverviewPage({
           </Button>
         </DialogActions>
       </Dialog>
+      {/* TODO: figure out how to make these sticky instead of replicating challenge button at the bottom? */}
       <Button
         onClick={() => setRoundDialogOpen(true)}
         variant='contained'
@@ -252,6 +265,41 @@ export default function VoiceteamOverviewPage({
           }
         }}
       />
+
+      <Button
+        variant='contained'
+        startIcon={<Add />}
+        id='add-challenge-button-btm'
+        aria-controls={addChallengeBtmOpen ? 'basic-menu' : undefined}
+        aria-haspopup={true}
+        aria-expanded={addChallengeBtmOpen ? 'true' : undefined}
+        onClick={handleClickBtm}
+        style={{ marginTop: '1rem' }}
+      >
+        Add Challenge
+      </Button>
+      <Menu
+        id='add-challenge-menu-btm'
+        anchorEl={anchorElBtm}
+        open={addChallengeBtmOpen}
+        onClose={handleCloseBtm}
+        MenuListProps={{
+          'aria-labelledby': 'add-challenge-button-btm',
+        }}
+      >
+        {rounds.map((round) => (
+          <MenuItem
+            onClick={(e) => {
+              e.stopPropagation();
+              addChallenge(round.number);
+              handleCloseBtm();
+            }}
+            key={round.round_id}
+          >
+            {round.number}
+          </MenuItem>
+        ))}
+      </Menu>
     </div>
   );
 }
