@@ -12,8 +12,18 @@ import {
   MenuItem,
   TextField,
 } from '@mui/material';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import HotTable, { HotTableClass } from '@handsontable/react';
+import styles from '@/app/dashboard/dashboard.module.css';
+import { useEventResources } from '@/app/lib/swrLoaders';
+import AddMenu from '@/app/ui/AddMenu';
+import { mutate } from 'swr';
+
+const lengthBonusOptions = {
+  '>10m': 10,
+  '>30m': 15,
+  '>1h': 20,
+};
 
 export default function VoiceteamOverviewPage({
   voiceteam,
@@ -50,7 +60,23 @@ export default function VoiceteamOverviewPage({
     setAnchorElBtm(null);
   };
 
+  const { resources } = useEventResources(voiceteam.event_id);
+
+  const bonusData = useMemo(() => {
+    return Object.entries({
+      ...voiceteam.bonus_values,
+      ...lengthBonusOptions,
+    }).map(([key, value]) => {
+      return {
+        name: key,
+        points: value,
+      };
+    });
+  }, [voiceteam.bonus_values]);
+
   const hotRef = useRef<HotTableClass>(null);
+  const bonusHotRef = useRef<HotTableClass>(null);
+  const resourceHotRef = useRef<HotTableClass>(null);
 
   const challenges = useMemo(() => {
     return rounds.flatMap(
@@ -83,7 +109,7 @@ export default function VoiceteamOverviewPage({
     } catch (e) {
       console.error('Error adding round:', e);
     }
-  }, [voiceteam.voiceteam_event_id, newRound]);
+  }, [newRound, voiceteam.voiceteam_event_id, setRounds]);
 
   const addChallenge = (roundNumber) => {
     console.log(`adding challenge for round ${roundNumber}`);
@@ -244,28 +270,81 @@ export default function VoiceteamOverviewPage({
         challenges
       </Button>
 
-      <HotTable
-        data={challenges}
-        ref={hotRef}
-        licenseKey='non-commercial-and-evaluation'
-        // className={tableStyles.arial}
-        colHeaders={['Rd', 'Challenge', 'Description', 'Pts', '+', 'Bonus Pts']}
-        columns={[
-          { type: 'text', data: 'round_number' },
-          { type: 'text', data: 'name' },
-          { type: 'text', data: 'description', width: 400 },
-          { type: 'numeric', data: 'points' },
-          { type: 'checkbox', data: 'bonus_is_additional' },
-          { type: 'numeric', data: 'bonus_points' },
-        ]}
-        afterChange={(change) => {
-          // change is of shape [rowIndex, columnName, oldValue, newValue]
-          if (!!change) {
-            const changeArray = change[0] as Array<any>;
-            updateChallenge(changeArray);
-          }
-        }}
-      />
+      <div className={styles.flexRow}>
+        <HotTable
+          data={challenges}
+          ref={hotRef}
+          licenseKey='non-commercial-and-evaluation'
+          // className={tableStyles.arial}
+          colHeaders={[
+            'Rd',
+            'Challenge',
+            'Description',
+            'Pts',
+            '+',
+            'Bonus Pts',
+          ]}
+          columns={[
+            { type: 'text', data: 'round_number' },
+            { type: 'text', data: 'name' },
+            { type: 'text', data: 'description', width: 400 },
+            { type: 'numeric', data: 'points' },
+            { type: 'checkbox', data: 'bonus_is_additional' },
+            { type: 'numeric', data: 'bonus_points' },
+          ]}
+          afterChange={(change) => {
+            // change is of shape [rowIndex, columnName, oldValue, newValue]
+            if (!!change) {
+              const changeArray = change[0] as Array<any>;
+              updateChallenge(changeArray);
+            }
+          }}
+        />
+
+        <div className={styles.flexColumn}>
+          <HotTable
+            data={bonusData}
+            ref={bonusHotRef}
+            licenseKey='non-commercial-and-evaluation'
+            title='Bonus Values'
+            colHeaders={['Name', 'Points']}
+          />
+          <br />
+          <AddMenu
+            eventId={voiceteam.event_id}
+            options={['resource']}
+            submitCallback={() =>
+              mutate(
+                (key) =>
+                  Array.isArray(key) &&
+                  key[0] === '/db/resources' &&
+                  key[1] === voiceteam.event_id
+              )
+            }
+          />
+          <HotTable
+            data={resources}
+            ref={resourceHotRef}
+            licenseKey='non-commercial-and-evaluation'
+            title='Resources'
+            colHeaders={['Type', 'Label', 'Link', 'Notes']}
+            columns={[
+              { type: 'text', data: 'resource_type' },
+              { type: 'text', data: 'label' },
+              {
+                data: 'link',
+                width: 50,
+                autoWrapCol: false,
+                allowHtml: true,
+                renderer: (instance, td, row, col, prop, value) => {
+                  td.innerHTML = `<span class="truncated-text"><a href="${value}" target="_blank">${value}</a></span>`;
+                },
+              },
+              { type: 'text', data: 'notes' },
+            ]}
+          />
+        </div>
+      </div>
 
       <Button
         variant='contained'

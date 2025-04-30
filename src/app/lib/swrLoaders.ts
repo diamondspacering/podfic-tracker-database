@@ -27,6 +27,18 @@ export const useResources = (resourceType = null) => {
   };
 };
 
+export const useEventResources = (eventId) => {
+  const { data, error, isLoading } = useSWR(['/db/resources', eventId], () =>
+    fetcher(`/db/resources?event_id=${eventId}`)
+  );
+
+  return {
+    resources: (data as Resource[]) ?? ([] as Resource[]),
+    error,
+    isLoading,
+  };
+};
+
 export const useEventPodfics = (eventId) => {
   const { data, error, isLoading } = useSWR(
     `/db/podfics?event_id=${eventId}`,

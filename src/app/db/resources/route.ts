@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
   // console.log({ isFull });
   const chapterId = searchParams.get('chapter_id');
   // TODO: author & event
+  const eventId = searchParams.get('event_id');
 
   let resourceResult = null;
   if (!!resourceType) {
@@ -47,8 +48,15 @@ export async function GET(request: NextRequest) {
     //   );
     //   resourceResult = [...resourceResult, ...(chapterResult.rows ?? [])];
     // }
+  } else if (!!eventId) {
+    // console.log('fetching resources for event');
+    const eventResult = await client.query(
+      `select * from resource inner join resource_event on resource.resource_id = resource_event.resource_id where resource_event.event_id = $1`,
+      [eventId]
+    );
+    resourceResult = eventResult.rows ?? [];
   }
-  // TODO: author & event ids
+  // TODO: author id
 
   return NextResponse.json(resourceResult ?? []);
 }

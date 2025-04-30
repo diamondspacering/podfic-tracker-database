@@ -80,6 +80,7 @@ export default function AddMenu({
         podfic_id={podficId}
         chapter_id={chapterId}
         author_id={authorId}
+        event_id={eventId}
       />
       <NoteDialog
         isOpen={noteFormOpen}
