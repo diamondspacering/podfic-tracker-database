@@ -136,13 +136,22 @@ export const usePodficsFull = () => {
   };
 };
 
-export const useScheduledEvents = () => {
-  const { data, error, isLoading } = useSWR('/db/schedule_events', fetcher);
+export const useScheduleEvents = ({
+  minDate,
+  maxDate,
+}: {
+  minDate?: string;
+  maxDate?: string;
+}) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/schedule_events?min_date=${minDate || ''}&max_date=${maxDate || ''}`,
+    fetcher
+  );
 
-  const scheduledEvents = data ?? [];
+  const scheduleEvents = data ?? [];
 
   return {
-    scheduledEvents,
+    scheduleEvents,
     error,
     isLoading,
   };

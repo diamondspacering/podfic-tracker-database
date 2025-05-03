@@ -11,7 +11,7 @@ import {
 import { TableCell } from './TableCell';
 import { sourceCodePro } from '@/app/fonts/fonts';
 import ColorScale from 'color-scales';
-import { getLengthValue } from '@/app/lib/format';
+import { getLengthValue } from '@/app/lib/lengthHelpers';
 import { getDefaultLength } from '@/app/types';
 import { Edit, OpenInNew } from '@mui/icons-material';
 import { IconButton } from '@mui/material';

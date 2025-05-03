@@ -1371,7 +1371,7 @@ export const createUpdatePartData = async (partData) => {
           partData.words,
           partData.status,
           partData.part,
-          partData.deadline,
+          partData.deadline ? partData.deadline : null,
           new Date(),
         ]
       );

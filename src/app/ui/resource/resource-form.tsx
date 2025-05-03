@@ -1,5 +1,5 @@
 import styles from '@/app/forms/forms.module.css';
-import { resourceTypes } from '@/app/lib/data';
+import { resourceTypes } from '@/app/lib/dataGeneral';
 import { useResources } from '@/app/lib/swrLoaders';
 import {
   Autocomplete,

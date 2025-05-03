@@ -30,10 +30,11 @@ Some stuff will need to be manually set up:
 - Create a podficcer in the `podficcer` table for yourself. Some things assume a podficcer with the id of `1` already exists, and this is treated as you/the default podficcer, so this is why.
 - It is possible some pages will crash if there's nothing in the database, you may need to manually create some podfics, etc.
 - For Voiceteams, you need to manually create a `voiceteam_event` for each `event` that is a Voiceteam that you want to do voiceteam-specific things for. If you don't, when you try to click into that Voiceteam the app will rerender infinitely and probably crash. Yes this is bad no I don't currently have plans to fix it. TODO: add a dummy Voiceteam event to base yours off of?
+- TODO: `tag_mappings.json`
 
 ### App
 
-Have node and npm installed. In the project root directory, run `npm install`. Run `npm run dev` to run the project. Probably possible to build? Haven't done that yet. Project is at `http://localhost:3001`.
+Have node and npm (or whatever other package manager you want to use) installed. In the project root directory, run `npm install`. Run `npm run dev` to run the project. Probably possible to build? Haven't done that yet. Project is at `http://localhost:3001`.
 
 ## Usage
 
@@ -66,7 +67,7 @@ To run the script:
   - When asking to "map" relationships/fandoms/characters, this is asking if you want to provide a different name to be displayed and used for these AO3 tags - often useful for very long tag names or if you want to use a smushname for a ship. The original tag will not be displayed anywhere in the application, only what you enter for the mapped name.
   - Mapped tags will be printed out at the end after the script has finished updating all metadata. If you wish to keep using these mappings automatically, paste them into the correct locations in `tag_mappings.json`, and the script will use them automatically and not prompt you again. TODO: make this automatically update the file
   - If the fic has chapters, it will ask if you want to fetch the chapters; this will fetch all chapters and chapter names, along with word counts.
-- When the script has finished running, all the fics for which you checked that box will have updated metadata. If you need to update metadata again, edit the podfic and check the box again before running hte script so they will be marked as needing it.
+- When the script has finished running, all the fics for which you checked that box will have updated metadata. If you need to update metadata again, edit the podfic and check the box again before running the script so they will be marked as needing it.
   - If the script crashes, all the works that were completely updated before the crash should have these changes saved. Anything partially done will not be saved. Tag mapping also will not be displayed. TODO: better crash handling lol.
 
 ### Code
@@ -89,15 +90,16 @@ Helpful links:
 
 Tech stack:
 
-- NodeJS/NPM/TypeScript/React
+- NodeJS/TypeScript/React
 - NextJS
-- PostgreSQL for database, just using pg for database connection - may upgrade at some point, do have knex installed for a query builder
+- PostgreSQL for database, just using pg for database connection - may upgrade to something fancier at some point
 - TanStack Table for most of the data tables
 - Handsontable for the Voiceteam tables
 - Reactgrid still installed atm but not using it, was using for Voiceteam but was not full-featured enough. Will be removed at a future point. Works well for less full-featured tables
+- SWR for most data fetching
 
 ## Other
 
 This was mostly created for me specifically, but if other people are interested in messing around with it, feel free to get in contact with me about issues or feature requests or anything.
 
-Huge credit to MistbornHero for the [podfic spreadsheet template](https://archiveofourown.org/works/42051816/), which I used for a good while before this and gave me most of my mental model for podfic tracking and what it should look like. Anything cool in what this looks like is because of the spreadsheet haha
+Huge credit to MistbornHero for the [podfic spreadsheet template](https://archiveofourown.org/works/42051816/), which I used for a good while before this and gave me most of my mental model for podfic tracking and what it should look like. Anything cool in the UI I owe to that spreadsheet.

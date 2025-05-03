@@ -1,4 +1,4 @@
-import { resourceTypes } from '@/app/lib/data';
+import { resourceTypes } from '@/app/lib/dataGeneral';
 import { TableCell } from '@/app/ui/table/TableCell';
 import {
   createColumnHelper,

@@ -12,7 +12,7 @@ import {
   MenuItem,
   TextField,
 } from '@mui/material';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import HotTable, { HotTableClass } from '@handsontable/react';
 import styles from '@/app/dashboard/dashboard.module.css';
 import { useEventResources } from '@/app/lib/swrLoaders';
@@ -327,9 +327,8 @@ export default function VoiceteamOverviewPage({
             ref={resourceHotRef}
             licenseKey='non-commercial-and-evaluation'
             title='Resources'
-            colHeaders={['Type', 'Label', 'Link', 'Notes']}
+            colHeaders={['Label', 'Link', 'Notes']}
             columns={[
-              { type: 'text', data: 'resource_type' },
               { type: 'text', data: 'label' },
               {
                 data: 'link',

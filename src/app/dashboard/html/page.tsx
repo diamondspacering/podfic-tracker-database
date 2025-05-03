@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { htmlTemplates } from '@/app/lib/data';
+import { htmlTemplates } from '@/app/lib/dataGeneral';
 import {
   formatDateString,
   generateAADate,
