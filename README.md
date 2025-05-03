@@ -27,10 +27,10 @@ If you want to be able to log in to AO3 to get metadata for user-locked works, p
 
 Some stuff will need to be manually set up:
 
+- There are a few files that are needed but are not version controlled since they can contain personal information - the `.env` file, `tag_mappings.json` and `dataPersonal.ts`, which contains information about your mics, devices you use to record, and locations you record in (used for stats purposes). To generate these, run `npm run setup-data` and paste in your database connection string when prompted. All the files will be created with basic information. Feel free to modify the data in `dataPersonal.ts` especially to match the equipment and locations relevant to you.
 - Create a podficcer in the `podficcer` table for yourself. Some things assume a podficcer with the id of `1` already exists, and this is treated as you/the default podficcer, so this is why.
 - It is possible some pages will crash if there's nothing in the database, you may need to manually create some podfics, etc.
 - For Voiceteams, you need to manually create a `voiceteam_event` for each `event` that is a Voiceteam that you want to do voiceteam-specific things for. If you don't, when you try to click into that Voiceteam the app will rerender infinitely and probably crash. Yes this is bad no I don't currently have plans to fix it. TODO: add a dummy Voiceteam event to base yours off of?
-- TODO: `tag_mappings.json`
 
 ### App
 
@@ -41,8 +41,6 @@ Have node and npm (or whatever other package manager you want to use) installed.
 TODO: separate md file for this? wiki?
 
 App performance is kinda suboptimal right now, it's a work in progress. Data will almost certainly load faster if you are using a local database. Pages will take a little while to render when you first go to them after running the app, but should load more quickly thereafter. Some changes to data can take a little while to show up, and loading state is not always clear on new pages; be patient.
-
-TODO: mention the update metadata script & env variables & json file for it
 
 ### UI
 
@@ -93,6 +91,7 @@ Tech stack:
 - NodeJS/TypeScript/React
 - NextJS
 - PostgreSQL for database, just using pg for database connection - may upgrade to something fancier at some point
+- Material UI for most UI components
 - TanStack Table for most of the data tables
 - Handsontable for the Voiceteam tables
 - Reactgrid still installed atm but not using it, was using for Voiceteam but was not full-featured enough. Will be removed at a future point. Works well for less full-featured tables

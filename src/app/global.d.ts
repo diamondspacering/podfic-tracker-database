@@ -280,7 +280,7 @@ enum ScheduledEventType {
   ROUND = 'Round',
 }
 
-interface ScheduledEvent {
+interface ScheduleEvent {
   scheduled_event_id?: number;
   podfic_id?: number;
   chapter_id?: number;
@@ -302,6 +302,7 @@ interface ScheduledEvent {
 
   part?: string;
   part_wordcount?: number;
+  part_status?: PartStatus;
 
   round_number?: number;
 }
