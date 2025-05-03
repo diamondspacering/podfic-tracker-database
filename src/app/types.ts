@@ -81,3 +81,10 @@ export enum FilterType {
   STRING = 'string',
   NUMBER = 'number',
 }
+
+export enum ScheduledEventType {
+  PODFIC = 'Podfic',
+  CHAPTER = 'Chapter',
+  PART = 'Part',
+  ROUND = 'Round',
+}

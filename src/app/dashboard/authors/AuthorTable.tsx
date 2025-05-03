@@ -16,7 +16,7 @@ import { Fragment, useState } from 'react';
 import tableStyles from '@/app/ui/table/table.module.css';
 import { mutate } from 'swr';
 import { createUpdateAuthor } from '@/app/lib/updaters';
-import { socialMedia } from '@/app/lib/data';
+import { socialMedia } from '@/app/lib/dataGeneral';
 import { IconButton, InputAdornment, TextField } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import AdditionalContentRows from '@/app/ui/table/AdditionalContentRows';

@@ -40,3 +40,4 @@ next-env.d.ts
 
 # misc
 /src/scripts/tag_mappings.json
+/src/app/lib/dataPersonal.ts

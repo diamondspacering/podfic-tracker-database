@@ -698,6 +698,16 @@ export const createUpdateResource = async ({
       }
     }
     // TODO: author & event (check functionality first)
+    if (event_id) {
+      const eventJoinResult = await client.query(
+        `select * from resource_event where resource_id = $1 and event_id = $2`,
+        [resourceId, event_id]
+      );
+      // console.log({ eventJoinResult });
+      if (!eventJoinResult.rows?.length) {
+        await joinResourceEvent(resourceId, event_id, client);
+      }
+    }
   }
 
   return resourceResult.resource_id;
@@ -885,7 +895,7 @@ const joinResourceAuthor = async (resourceId, authorId, client) => {
 
 const joinResourceEvent = async (resourceId, eventId, client) => {
   const joinResult = await client.query(
-    `INSERT INTO resource_event (resource_Id, event_id) VALUES ($1, $2)`,
+    `INSERT INTO resource_event (resource_id, event_id) VALUES ($1, $2)`,
     [resourceId, eventId]
   );
 };
@@ -1361,7 +1371,7 @@ export const createUpdatePartData = async (partData) => {
           partData.words,
           partData.status,
           partData.part,
-          partData.deadline,
+          partData.deadline ? partData.deadline : null,
           new Date(),
         ]
       );

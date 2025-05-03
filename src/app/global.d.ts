@@ -273,6 +273,39 @@ interface Event {
   year?: string | number;
 }
 
+enum ScheduledEventType {
+  PODFIC = 'Podfic',
+  CHAPTER = 'Chapter',
+  PART = 'Part',
+  ROUND = 'Round',
+}
+
+interface ScheduledEvent {
+  scheduled_event_id?: number;
+  podfic_id?: number;
+  chapter_id?: number;
+  part_id?: number;
+  round_id?: number;
+  type?: ScheduledEventType;
+  start?: string | Date;
+  end?: string | Date;
+  allDay?: boolean;
+
+  title?: string;
+  wordcount?: number;
+  status?: PodficStatus;
+
+  chapter_title?: string;
+  chapter_number?: number;
+  chapter_wordcount?: number;
+  chapter_status?: PodficStatus;
+
+  part?: string;
+  part_wordcount?: number;
+
+  round_number?: number;
+}
+
 // --VOICETEAM--
 
 interface VoiceteamEvent {

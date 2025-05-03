@@ -1,124 +1,65 @@
 'use client';
 
-import { Button, Typography } from '@mui/material';
 import { Calendar, luxonLocalizer, View, Views } from 'react-big-calendar';
-import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
-import { DateTime, Settings } from 'luxon';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './schedule.css';
 import styles from './schedule.module.css';
-import { useEventPodfics, useScheduledEvents } from '@/app/lib/swrLoaders';
-import EventContent from '@/app/lib/EventContent';
-import { createUpdateScheduleEvent } from '@/app/lib/updaters';
+import { DateTime, Settings } from 'luxon';
+import { useScheduleEvents } from '@/app/lib/swrLoaders';
 import { usePathname, useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import EventContent from '@/app/lib/EventContent';
+import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
+import { Button, Typography } from '@mui/material';
+import { ScheduledEventType } from '@/app/types';
 
 const timezone = DateTime.local().zoneName;
-const defaultDateStr = '2024-12-01';
 
 function getDate(str, DateTimeObj) {
   return DateTimeObj.fromISO(str).toJSDate();
 }
 
+/* TODO:
+  - figure out how to represent deadline events (have it start like 30 minutes before, show end time as time? does it work well on the month view? all day option for deadlines? or set it as all day if 11:59 PM?)
+  - set up automatic triggers to create schedule events for deadlines
+    - make sure you know how date is being sent
+  - make query that automatically pulls in info for the podfic/chapter/part/round that it's linked to so the info is already there and you don't have to find it or whatever
+  - relevant link to thing based on its properties
+*/
 export default function SchedulePage() {
-  // TODO: make this not hardcoded for scheduling for one event, make it more general. also fix event sizing better
-  const { podfics, isLoading } = useEventPodfics(2);
-  const { scheduledEvents, isLoading: scheduledEventsLoading } =
-    useScheduledEvents();
+  // TODO: use it just for this month or whatever other view? bc we do not need ALL of them lol
+  const { scheduleEvents, isLoading: scheduleEventsLoading } =
+    useScheduleEvents({});
   const router = useRouter();
   const pathname = usePathname();
 
   const [localEvents, setLocalEvents] = useState([]);
-  const [draggedEvent, setDraggedEvent] = useState(null);
+
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState<Date>(new Date());
 
-  const handleDragStart = useCallback((event) => setDraggedEvent(event), []);
-
-  const dragFromOutsideItem = useCallback(
-    () => (draggedEvent === 'undroppable' ? null : draggedEvent),
-    [draggedEvent]
-  );
+  useEffect(() => console.log({ scheduleEvents }), [scheduleEvents]);
 
   useEffect(() => {
-    if (!scheduledEventsLoading && !localEvents.length && !isLoading)
+    if (!scheduleEventsLoading && !localEvents.length) {
       setLocalEvents(
-        scheduledEvents?.map((event) => ({
+        scheduleEvents?.map((event) => ({
           ...event,
           start: new Date(event.start),
           end: new Date(event.end),
-          podfic: podfics.find(
-            (podfic) => podfic.podfic_id === event.podfic_id
-          ),
-          title: (
-            <EventContent
-              podfic={podfics.find(
-                (podfic) => podfic.podfic_id === event.podfic_id
-              )}
-            />
-          ),
+          title: <EventContent scheduleEvent={event} />,
         }))
       );
-  }, [
-    scheduledEvents,
-    scheduledEventsLoading,
-    localEvents,
-    podfics,
-    isLoading,
-  ]);
+    }
+  }, [localEvents.length, scheduleEvents, scheduleEventsLoading]);
 
-  const eventPropGetter = useCallback(
-    () => ({ style: { height: '150px' } }),
-    []
-  );
-
-  const moveEvent = useCallback(({ event, start, end, isAllDay }) => {
-    setLocalEvents((prev) => {
-      const existing =
-        prev.find((ev) => ev.podfic_id === event.podfic_id) ?? {};
-      const filtered = prev.filter((ev) => ev.podfic_id !== event.podfic_id);
-      createUpdateScheduleEvent({
-        ...existing,
-        title: '',
-        start,
-        end,
-        allday: isAllDay ?? true,
-      });
-      return [...filtered, { ...existing, start, end, allDay: isAllDay }];
-    });
-  }, []);
-
-  const onDropFromOutside = useCallback(
-    async ({ start, end }) => {
-      if (draggedEvent === 'undroppable') {
-        setDraggedEvent(null);
-        return;
-      }
-
-      const event = {
-        title: draggedEvent.title,
-        podfic_id: draggedEvent.podfic_id,
-        start,
-        end,
-        allDay: true,
-      };
-      setDraggedEvent(null);
-      const id = await createUpdateScheduleEvent({
-        ...event,
-        title: '',
-        allday: true,
-      });
-      setLocalEvents((prev) => [...prev, { ...event, schedule_event_id: id }]);
-    },
-    [draggedEvent]
-  );
+  // TODO: add changing deadlines on things by dragging?
 
   const { getNow, localizer, scrollToTime } = useMemo(() => {
     Settings.defaultZone = timezone;
     return {
-      defaultDate: getDate(defaultDateStr, DateTime),
+      defaultDate: new Date(),
       getNow: () => DateTime.local().toJSDate(),
       localizer: luxonLocalizer(DateTime),
       myEvents: [...localEvents],
@@ -126,68 +67,46 @@ export default function SchedulePage() {
     };
   }, [localEvents]);
 
+  const eventPropGetter = useCallback((event) => {
+    const seType = event.type;
+    switch (seType) {
+      case ScheduledEventType.ROUND:
+        return { style: { backgroundColor: 'purple' } };
+      case ScheduledEventType.PART:
+        return { style: { backgroundColor: 'blue' } };
+      case ScheduledEventType.CHAPTER:
+        return { style: { backgroundColor: 'green' } };
+      case ScheduledEventType.PODFIC:
+        return { style: { backgroundColor: 'orange' } };
+      default:
+        return { style: { backgroundColor: 'red' } };
+    }
+  }, []);
+
   const DnDCalendar = withDragAndDrop(Calendar);
 
   return (
     <div>
       <Typography variant='h3'>Schedule</Typography>
-      {/* TODO: colors based on...something? */}
-      <Button onClick={() => console.log(localEvents)} variant='contained'>
-        log local events
-      </Button>
-      <div className={styles.flexBox}>
-        {podfics
-          .filter(
-            (podfic) =>
-              !localEvents.find(
-                (event) => event.podfic_id === podfic.podfic_id
-              ) &&
-              (podfic.permission_status as unknown as string) !== 'asked' &&
-              (podfic.permission_status as unknown as string) !== 'to ask'
-          )
-          .map((podfic) => (
-            <div
-              key={podfic.podfic_id}
-              className='rbc-event'
-              draggable='true'
-              style={{
-                width: 'fit-content',
-              }}
-              onDragStart={() =>
-                handleDragStart({
-                  title: <EventContent podfic={podfic} />,
-                  podfic_id: podfic.podfic_id,
-                  podfic: podfic,
-                })
-              }
-            >
-              <EventContent podfic={podfic} />
-            </div>
-          ))}
-      </div>
-      {!scheduledEventsLoading && localEvents.length && (
+      <Button onClick={() => console.log(localEvents)}>Log local events</Button>
+      {!scheduleEventsLoading && localEvents.length && (
         <DnDCalendar
           view={view}
           date={date}
           onView={(view) => setView(view)}
-          onNavigate={(date) => {
-            setDate(new Date(date));
-          }}
-          dragFromOutsideItem={dragFromOutsideItem}
+          onNavigate={(date) => setDate(new Date(date))}
           localizer={localizer}
           events={localEvents}
           getNow={getNow}
           scrollToTime={scrollToTime}
           style={{ height: '90vh' }}
-          draggableAccessor={() => true}
-          onDropFromOutside={onDropFromOutside}
-          onEventDrop={moveEvent}
+          // draggableAccessor={() => true}
+          // dragFromOutsideItem={dragFromOutsideItem}
+          // onDropFromOutside={onDropFromOutside}
+          // onEventDrop={moveEvent}
           onDoubleClickEvent={(event) => {
-            router.push(
-              `/dashboard/html?podfic_id=${
-                (event as any).podfic_id
-              }&return_url=${pathname}`
-            );
+            console.log('double click event', event);
+            // TODO: switch statement for appropriate action based on event type
           }}
           selectable
           eventPropGetter={eventPropGetter}

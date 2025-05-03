@@ -1,4 +1,4 @@
-import { hosts } from '@/app/lib/data';
+import { hosts } from '@/app/lib/dataGeneral';
 import {
   formatDateString,
   generateAADate,
