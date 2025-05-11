@@ -33,6 +33,7 @@ export async function DELETE(
     `select * from file_link where file_id = $1`,
     [id]
   );
+  // ?? that seems like an incorrect way to do it. surely you only need to delete once
   for (const link of links.rows) {
     await client.query(`DELETE FROM file_link WHERE file_id = $1`, [id]);
   }

@@ -18,7 +18,8 @@ export async function GET(request: NextRequest) {
         left join podfic on schedule_event.podfic_id = podfic.podfic_id left join work on podfic.work_id = work.work_id
         left join round on schedule_event.round_id = round.round_id
         left join chapter on schedule_event.chapter_id = chapter.chapter_id
-        left join part on schedule_event.part_id = part.part_id; 
+        left join part on schedule_event.part_id = part.part_id
+    where (podfic.status is null or (podfic.status != 'Finished' and podfic.status != 'Posted')) and (part.status is null or (part.status != 'Submitted')) and (chapter.status is null or chapter.status != 'Posted'); 
   `;
   // TODO: more thorough stuff here
   if (min_date) {
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
   if (max_date) {
     queryString += ` and start <= '${max_date}'`;
   }
+  // TODO: have the limiting to unfinished things be a query param
 
   const result = await client.query(queryString);
   return NextResponse.json(

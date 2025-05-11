@@ -18,6 +18,8 @@ import styles from '@/app/dashboard/dashboard.module.css';
 import { useEventResources } from '@/app/lib/swrLoaders';
 import AddMenu from '@/app/ui/AddMenu';
 import { mutate } from 'swr';
+import BonusValuesTable from './BonusValuesTable';
+import VoiceteamResourcesTable from './VoiceteamResourcesTable';
 
 const lengthBonusOptions = {
   '>10m': 10,
@@ -302,46 +304,10 @@ export default function VoiceteamOverviewPage({
         />
 
         <div className={styles.flexColumn}>
-          <HotTable
-            data={bonusData}
-            ref={bonusHotRef}
-            licenseKey='non-commercial-and-evaluation'
-            title='Bonus Values'
-            colHeaders={['Name', 'Points']}
+          <BonusValuesTable
+            bonusValues={{ ...voiceteam.bonus_values, ...lengthBonusOptions }}
           />
-          <br />
-          <AddMenu
-            eventId={voiceteam.event_id}
-            options={['resource']}
-            submitCallback={() =>
-              mutate(
-                (key) =>
-                  Array.isArray(key) &&
-                  key[0] === '/db/resources' &&
-                  key[1] === voiceteam.event_id
-              )
-            }
-          />
-          <HotTable
-            data={resources}
-            ref={resourceHotRef}
-            licenseKey='non-commercial-and-evaluation'
-            title='Resources'
-            colHeaders={['Label', 'Link', 'Notes']}
-            columns={[
-              { type: 'text', data: 'label' },
-              {
-                data: 'link',
-                width: 50,
-                autoWrapCol: false,
-                allowHtml: true,
-                renderer: (instance, td, row, col, prop, value) => {
-                  td.innerHTML = `<span class="truncated-text"><a href="${value}" target="_blank">${value}</a></span>`;
-                },
-              },
-              { type: 'text', data: 'notes' },
-            ]}
-          />
+          <VoiceteamResourcesTable eventId={voiceteam.event_id} />
         </div>
       </div>
 

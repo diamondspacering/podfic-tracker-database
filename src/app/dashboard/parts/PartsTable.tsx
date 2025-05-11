@@ -34,11 +34,6 @@ export default function PartsTable() {
   const rawColorScale = useLengthColorScale(parts, 'raw_length');
   const lengthColorScale = useLengthColorScale(parts, 'length');
 
-  // TODO: make this a general imported thing
-  const arrayIncludesFilter = (row, columnId, filterValue) => {
-    return filterValue.includes(row.getValue(columnId));
-  };
-
   const updatePart = async (part: PartWithContext) => {
     console.log('updating part');
     try {
@@ -50,7 +45,7 @@ export default function PartsTable() {
     }
   };
 
-  // TODO: audio link?
+  // TODO: easily visible submission instructions notes?
   const columns = [
     columnHelper.accessor('part_id', {
       header: 'ID',
@@ -94,7 +89,6 @@ export default function PartsTable() {
         type: 'link',
       },
     }),
-    // TODO: make a dropdown for that maybe? nah it can just be in the full edit yknow
     columnHelper.accessor('username', {
       header: 'Organizer',
       cell: TableCell,
@@ -204,8 +198,6 @@ export default function PartsTable() {
   const [editingRowId, setEditingRowId] = useState(null);
   const [editingRow, setEditingRow] = useState<PartWithContext>({} as any);
 
-  // TODO: update function
-
   const table = useReactTable({
     data: parts,
     columns,
@@ -235,7 +227,6 @@ export default function PartsTable() {
       },
       submitRow: async () => {
         console.log({ editingRow });
-        // TODO: updater
         await updatePart(editingRow);
       },
     },

@@ -56,7 +56,6 @@ export default function CoverArtForm({ coverArt, setCoverArt }) {
           setCoverArt((prev) => ({ ...prev, image_link: e.target.value }))
         }
       />
-      {/* TODO: give this an actual status select */}
       <TextField
         size='small'
         label='Cover Art Status'

@@ -130,6 +130,7 @@ export default function VoiceteamPage({ voiceteamId }) {
                 '>1h': 20,
               }}
               bonus_values={data.bonus_values ?? {}}
+              eventId={data.event_id}
             />
           </TabPanel>
         ))}

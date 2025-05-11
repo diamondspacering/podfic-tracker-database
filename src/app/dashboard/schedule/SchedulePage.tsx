@@ -4,10 +4,8 @@ import { Calendar, luxonLocalizer, View, Views } from 'react-big-calendar';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './schedule.css';
-import styles from './schedule.module.css';
 import { DateTime, Settings } from 'luxon';
 import { useScheduleEvents } from '@/app/lib/swrLoaders';
-import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import EventContent from '@/app/lib/EventContent';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
@@ -16,23 +14,10 @@ import { ScheduledEventType } from '@/app/types';
 
 const timezone = DateTime.local().zoneName;
 
-function getDate(str, DateTimeObj) {
-  return DateTimeObj.fromISO(str).toJSDate();
-}
-
-/* TODO:
-  - figure out how to represent deadline events (have it start like 30 minutes before, show end time as time? does it work well on the month view? all day option for deadlines? or set it as all day if 11:59 PM?)
-  - set up automatic triggers to create schedule events for deadlines
-    - make sure you know how date is being sent
-  - make query that automatically pulls in info for the podfic/chapter/part/round that it's linked to so the info is already there and you don't have to find it or whatever
-  - relevant link to thing based on its properties
-*/
 export default function SchedulePage() {
-  // TODO: use it just for this month or whatever other view? bc we do not need ALL of them lol
+  // TODO: use min/max/hide completed parameters
   const { scheduleEvents, isLoading: scheduleEventsLoading } =
     useScheduleEvents({});
-  const router = useRouter();
-  const pathname = usePathname();
 
   const [localEvents, setLocalEvents] = useState([]);
 
@@ -53,8 +38,6 @@ export default function SchedulePage() {
       );
     }
   }, [localEvents.length, scheduleEvents, scheduleEventsLoading]);
-
-  // TODO: add changing deadlines on things by dragging?
 
   const { getNow, localizer, scrollToTime } = useMemo(() => {
     Settings.defaultZone = timezone;

@@ -108,7 +108,6 @@ export default function PodficTable() {
 
   useEffect(() => setExcludingMultivoice(excludeMultivoice), []);
 
-  // TODO: easily visible submission instructions notes?
   const columns = [
     columnHelper.accessor('podfic_id', {
       header: 'ID',
@@ -278,7 +277,6 @@ export default function PodficTable() {
       cell: TableCell,
       meta: {
         type: 'length',
-        // TODO: color scale for this
         colorScale: lengthColorScale,
         immutable: true,
         columnName: 'Plain Length',
