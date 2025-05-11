@@ -4,6 +4,7 @@
 //   part?: Part;
 //   round?: Round;
 
+import { DateTime } from 'luxon';
 import { ScheduledEventType } from '../types';
 
 // }
@@ -13,6 +14,7 @@ interface EventContentProps {
 
 export default function EventContent({ scheduleEvent }: EventContentProps) {
   const {
+    end,
     type,
     title,
     wordcount,
@@ -25,6 +27,8 @@ export default function EventContent({ scheduleEvent }: EventContentProps) {
     part_wordcount,
     round_number,
   } = scheduleEvent;
+
+  console.log('end', end);
   return (
     <div
       style={{
@@ -40,7 +44,12 @@ export default function EventContent({ scheduleEvent }: EventContentProps) {
       )}
       {round_number && (
         <>
-          <span>Voiceteam Round {round_number} ends</span>
+          <span>
+            Voiceteam Round {round_number} ends,{' '}
+            {DateTime.fromISO(end as string).toLocaleString(
+              DateTime.TIME_SIMPLE
+            )}
+          </span>
           <br />
         </>
       )}

@@ -2,13 +2,18 @@ import { Button, Typography } from '@mui/material';
 import styles from './dashboard.module.css';
 import Link from 'next/link';
 import { Add } from '@mui/icons-material';
-import { fetchInProgressPodfics, fetchRecordedToday } from '../lib/loaders';
+import {
+  fetchInProgressPodfics,
+  fetchRecordedToday,
+  fetchVoiceteams,
+} from '../lib/loaders';
 import StatusBadge from '../ui/StatusBadge';
 import { getLengthText } from '../lib/format';
 
 export default async function Page() {
   const inProgressPodfics = await fetchInProgressPodfics();
   const recordedToday = await fetchRecordedToday();
+  const voiceteams = await fetchVoiceteams();
 
   return (
     <div className={styles.body}>
@@ -26,6 +31,21 @@ export default async function Page() {
 
       <br />
       <br />
+
+      {/* TODO: smarter way of doing this, dates for voiceteams? */}
+      {new Date().getMonth() === 4 && (
+        <>
+          <a
+            href={`/dashboard/voiceteam/${
+              voiceteams.find((vt) => vt.year === new Date().getFullYear())
+                .event_id
+            }`}
+          >
+            Current Voiceteam
+          </a>
+          <br />
+        </>
+      )}
 
       <Typography variant='h4'>Recorded Today</Typography>
       <span>

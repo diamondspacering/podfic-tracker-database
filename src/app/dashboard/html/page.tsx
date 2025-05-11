@@ -136,7 +136,6 @@ export default function Page() {
     const chapterId = parseInt(params.get('chapter_id'));
     console.log({ podficId, chapterId });
 
-    // TODO: this needs its own custom type lol this is getting unwieldy
     if (isNaN(podficId)) setPodfic({} as PodficFull);
     else await fetchPodfic(podficId);
     if (isNaN(chapterId)) setChapter({} as Chapter);
@@ -368,7 +367,6 @@ export default function Page() {
           </MenuItem>
         ))}
       </TextField>
-      {/* TODO: this should be a button not a boolean checkbox what's wrong with you */}
       {selectedTemplate === 'Audiofic Archive' && !!podfic.chaptered && (
         <>
           <FormControlLabel

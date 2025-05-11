@@ -9,6 +9,9 @@ import Handsontable from 'handsontable';
 import { addLengthStringToLength } from '@/app/lib/lengthHelpers';
 import { getEmptyLength } from '@/app/types';
 import { getLengthText } from '@/app/lib/format';
+import BonusValuesTable from './BonusValuesTable';
+import VoiceteamResourcesTable from './VoiceteamResourcesTable';
+import styles from '@/app/dashboard/dashboard.module.css';
 
 export default function VoiceteamRoundPage({
   round,
@@ -16,12 +19,14 @@ export default function VoiceteamRoundPage({
   points_cap,
   length_bonus_options,
   bonus_values,
+  eventId,
 }: {
   round: Round;
   setRound: (round: Round) => void;
   points_cap: number;
   length_bonus_options: object;
   bonus_values: any;
+  eventId: number;
 }) {
   const projects = useMemo(
     () =>
@@ -549,7 +554,6 @@ export default function VoiceteamRoundPage({
           },
         ]}
         // hmmm just a custom row on the bottom might be best lol i want my own functions
-        // these are not lined up. why are they not lined up.
         // TODO: render these all bold perhaps?
         columnSummary={[
           {
@@ -628,6 +632,14 @@ export default function VoiceteamRoundPage({
           },
         ]}
       />
+
+      <br />
+      <div className={styles.flexRow}>
+        <BonusValuesTable
+          bonusValues={{ ...bonus_values, ...length_bonus_options }}
+        />
+        <VoiceteamResourcesTable eventId={eventId} />
+      </div>
 
       <div style={{ paddingBottom: '190px' }} />
     </div>
