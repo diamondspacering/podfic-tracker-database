@@ -38,9 +38,6 @@ export default function VoiceteamRoundPage({
         ),
     [round]
   );
-  const [newProject, setNewProject] = useState({
-    created_at: new Date(),
-  } as Project);
   useEffect(() => console.log({ projects }), [projects]);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -64,27 +61,24 @@ export default function VoiceteamRoundPage({
               ...c,
               projects: c.projects.concat([
                 {
-                  ...newProject,
                   challenge_id,
                   challenge_name: c.name,
                   points_manual: c.points,
                   origIndex: c.projects.length,
+                  created_at: new Date(),
                 },
               ]),
             }
           : c
       ),
     });
-    setNewProject({ created_at: new Date() } as Project);
   };
 
   useEffect(() => console.log({ projects }), [projects]);
 
   const updatePointsManual = useCallback(
     (projectIndex, newValue) => {
-      console.log('updating points manually');
       const project = projects[projectIndex];
-      console.log({ project });
       if (!project) return;
       const origIndex = project.origIndex;
 
@@ -125,7 +119,6 @@ export default function VoiceteamRoundPage({
       const bonusIsAdditional = challenge?.bonus_is_additional;
       const universalValue = bonus_values.universal ?? 0;
       const projectLeadValue = bonus_values.project_lead ?? 0;
-      console.log({ length_bonus_options });
 
       console.log({ challenge_points, universalValue, projectLeadValue });
 
@@ -193,6 +186,42 @@ export default function VoiceteamRoundPage({
       length_bonus_options,
       setRound,
     ]
+  );
+
+  const updateChallengeForProject = useCallback(
+    (projectIndex, newChallengeName) => {
+      const project = projects[projectIndex];
+      const origIndex = project.origIndex;
+      const challenge = round.challenges.find(
+        (c) => c.name === newChallengeName
+      );
+      const newChallengeId = challenge?.challenge_id;
+
+      console.log({ project, newChallengeId, newChallengeName });
+
+      setRound({
+        ...round,
+        challenges: round.challenges.map((c) =>
+          c.challenge_id === project.challenge_id
+            ? {
+                ...c,
+                projects: c.projects.map((p, i) =>
+                  i === origIndex
+                    ? {
+                        ...p,
+                        challenge_id: newChallengeId,
+                        challenge_name: newChallengeName,
+                      }
+                    : p
+                ),
+              }
+            : c
+        ),
+      });
+
+      updatePoints(projectIndex);
+    },
+    [projects, round, setRound, updatePoints]
   );
 
   Handsontable.renderers.registerRenderer(
@@ -323,13 +352,14 @@ export default function VoiceteamRoundPage({
               changeArray[1] === 'bonus' ||
               changeArray[1] === 'bonus_manual'
             ) {
-              console.log('updating points');
               updatePoints(changeArray[0]);
             } else if (
               changeArray[1] === 'points_manual' &&
               source === 'edit'
             ) {
               updatePointsManual(changeArray[0], changeArray[3]);
+            } else if (changeArray[1] === 'challenge_name') {
+              updateChallengeForProject(changeArray[0], changeArray[3]);
             }
           }
         }}
@@ -641,7 +671,8 @@ export default function VoiceteamRoundPage({
         <VoiceteamResourcesTable eventId={eventId} />
       </div>
 
-      <div style={{ paddingBottom: '190px' }} />
+      {/* hmm i dont like this actually */}
+      {/* <div style={{ paddingBottom: '190px' }} /> */}
     </div>
   );
 }
