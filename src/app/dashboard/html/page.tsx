@@ -69,6 +69,9 @@ export default function Page() {
   );
 
   const { podficcer: defaultPodficcer } = usePodficcer(1);
+  const { podficcer: coverArtist } = usePodficcer(
+    podfic?.coverArt?.podficcer_id ?? 1
+  );
 
   useEffect(() => console.log({ podfic }), [podfic]);
   useEffect(() => console.log({ files }), [files]);
@@ -221,7 +224,8 @@ export default function Page() {
         files,
         filteredResources,
         defaultPodficcer,
-        chapter
+        Object.keys(chapter).length ? chapter : undefined,
+        coverArtist?.profile
       );
       setGeneratedHTML(beautify.html(generated));
     } else if (selectedTemplate === 'bluedreaming') {

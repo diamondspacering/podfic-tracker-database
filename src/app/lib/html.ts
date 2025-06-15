@@ -127,7 +127,8 @@ export const generateHTMLAzdaema = (
   files: File[],
   resources: Resource[],
   defaultPodficcer: Podficcer,
-  chapter?: Chapter
+  chapter?: Chapter,
+  coverArtistProfile?: string
 ) => {
   let htmlString = ``;
   htmlString += `<div class="podfic">`;
@@ -215,7 +216,7 @@ export const generateHTMLAzdaema = (
         // }
       });
     }
-  } else if (!!chapter) {
+  } else if (!!chapter && !!Object.keys(chapter).length) {
     // TODO: may need to filter the files for this chapter
     const filteredFiles = files.filter((file) => Boolean(file));
     // this is assuming just direct links for now we will work on it. also more code needs to be shared don't worry about it
@@ -277,7 +278,7 @@ export const generateHTMLAzdaema = (
     podfic.cover_artist_name &&
     podfic.cover_artist_name !== defaultPodficcer.username
   ) {
-    htmlString += `<li><b>Cover art:</b> ${podfic.cover_artist_name}</li>`;
+    htmlString += `<li><b>Cover art:</b> <a href="${coverArtistProfile}">${podfic.cover_artist_name}</a></li>`;
   }
   // TODO: photo for cover art as well, + other resources incl. music. possibly smartly giving the up class as well? we'll see
   resources.forEach((resource) => {
