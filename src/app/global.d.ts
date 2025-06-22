@@ -77,6 +77,7 @@ interface Podfic {
   posted_unchaptered?: boolean;
   series_id?: number;
   vt_project_id?: any;
+  is_multivoice: boolean;
   chapters?: Chapter[];
   parts?: Part[];
   coverArt?: CoverArt;

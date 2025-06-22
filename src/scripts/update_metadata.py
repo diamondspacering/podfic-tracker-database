@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import json
 import requests
@@ -14,6 +15,8 @@ CONNECTION_STRING = (
     else os.getenv("CONNECTION_STRING")
 )
 print(CONNECTION_STRING)
+manual_mode = False
+filename = ""
 session = requests.Session()  # stores cookies so that we can login
 
 fandom_mapping = {}
@@ -37,18 +40,6 @@ def login():
     username = os.getenv("AO3_USERNAME")
     password = os.getenv("AO3_PWD")
 
-    # log in
-    url = "https://archiveofourown.org/users/login"
-    login_page = session.get(url)
-    login_soup = BeautifulSoup(login_page.text, "lxml")
-    authenticity_token = login_soup.find("input", {"name": "authenticity_token"})[
-        "value"
-    ]
-    data = {
-        "user[login]": username,
-        "user[password]": password,
-        "authenticity_token": authenticity_token,  # if you don't pass this along nothing works
-    }
     headers = {
         "Accept": "text/html,*/*",
         "Host": "archiveofourown.org",
@@ -56,9 +47,31 @@ def login():
         "User-Agent": "ozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36",
         "Content-Type": "application/x-www-form-urlencoded",
     }
+
+    # log in
+    url = "https://archiveofourown.org/users/login"
+    login_page = session.get(url=url, headers=headers)
+    login_soup = BeautifulSoup(login_page.text, "lxml")
+    # print(login_soup)
+    authenticity_token = login_soup.find("input", {"name": "authenticity_token"})[
+        "value"
+    ]
+    # authenticity_token = {}
+    # url_token = "http://archiveofourown.org/token_dispenser.json"
+    # jsonThing = session.get(url_token)
+    # authenticity_token = jsonThing.json()["token"]
+    data = {
+        "user[login]": username,
+        "user[password]": password,
+        "authenticity_token": authenticity_token,  # if you don't pass this along nothing works
+    }
+
     the_page = session.post(url=url, data=data, headers=headers)
 
     if ("users/" + username) not in the_page.url:
+        print(the_page.url)
+        the_page_soup = BeautifulSoup(the_page.text, "lxml")
+        print(the_page_soup)
         print("Login error!")
     else:
         print("Logged in!")
@@ -174,23 +187,30 @@ def get_chapter_data(chapter_soup):
     return (chapter_number, title, chapter_wordcount, chapter_link)
 
 
-def fetch_chapters(url):
-    if url.endswith("/"):
-        full_work_url = url[:-1] + "?view_full_work=true"
+# CURSE YOU GLOBAL VARIABLES UR NOT WORKING
+def fetch_chapters(url, manual_mode, filename):
+    soup = None
+    if manual_mode:
+        with open(f"src/scripts/data/{filename}.html") as f:
+            soup = BeautifulSoup(f, "html.parser")
     else:
-        full_work_url = url + "?view_full_work=true"
+        if url.endswith("/"):
+            full_work_url = url[:-1] + "?view_full_work=true"
+        else:
+            full_work_url = url + "?view_full_work=true"
 
-    status = 429
-    while 429 == status:
-        req = session.get(full_work_url)
-        status = req.status_code
-        if 429 == status:
-            print("Request answered with Status-Code 429")
-            print("Trying again in 1 minute...")
-            time.sleep(60)
-    src = req.text
-    soup = BeautifulSoup(src, "html.parser")
+        status = 429
+        while 429 == status:
+            req = session.get(full_work_url)
+            status = req.status_code
+            if 429 == status:
+                print("Request answered with Status-Code 429")
+                print("Trying again in 1 minute...")
+                time.sleep(60)
+        src = req.text
+        soup = BeautifulSoup(src, "html.parser")
 
+    print(soup)
     chapters = soup.find("div", id="chapters").find_all(
         "div", class_="chapter", recursive=False
     )
@@ -269,6 +289,13 @@ def main():
     conn = psycopg.connect(CONNECTION_STRING)
     cur = conn.cursor()
 
+    print(len(sys.argv))
+    print(sys.argv)
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--manual":
+            manual_mode = True
+    print(f"Manual mode: {manual_mode}")
+
     force_override = False
     # can also force override if needed
     # 0: work_id, 1: title, 2: link, 3: author_id, 4: fandom_id, 5: wordcount, 6: chapter_count, 7: rating
@@ -293,17 +320,34 @@ def main():
             main_character,
         ) = record
 
-        status = 429
-        while 429 == status:
-            req = session.get(url)
-            status = req.status_code
-            if 429 == status:
-                print("Request answered with Status-Code 429")
-                print("Trying again in 1 minute...")
-                time.sleep(60)
+        soup = None
+        filename = ""
+        if manual_mode:
+            filename = input(
+                f"Enter filename for {title} HTML file in data/ directory: "
+            )
+            print(os.listdir("."))
+            with open(f"src/scripts/data/{filename}.html") as f:
+                soup = BeautifulSoup(f, "html.parser")
+        else:
+            status = 429
+            while 429 == status:
+                req = session.get(url)
+                status = req.status_code
+                if 429 == status:
+                    print("Request answered with Status-Code 429")
+                    print("Trying again in 1 minute...")
+                    time.sleep(60)
 
-        src = req.text
-        soup = BeautifulSoup(src, "html.parser")
+            src = req.text
+            soup = BeautifulSoup(src, "html.parser")
+
+            if not soup:
+                filename = input(
+                    f"Cannot fetch AO3 data for {title}, enter filename of HTML file in data/ directory: "
+                )
+                with open(f"data/{filename}.html") as f:
+                    soup = BeautifulSoup(f, "html.parser")
 
         meta = soup.find("dl", class_="work meta group")
 
@@ -457,6 +501,7 @@ def main():
         print()
         # this assumes we're starting on the first chapter
         if chaptered:
+            # TODO: manual mode version of this too
             should_fetch_chapters = input("Fetch chapters? (Y/n) ")
             if (
                 should_fetch_chapters != "n"
@@ -464,7 +509,7 @@ def main():
                 and should_fetch_chapters.lower() != "no"
             ):
                 print("Fetching chapters")
-                chapter_data = fetch_chapters(url)
+                chapter_data = fetch_chapters(url, manual_mode, filename)
                 # insert into db
                 update_chapters_in_db(chapter_data, podfic_id)
 

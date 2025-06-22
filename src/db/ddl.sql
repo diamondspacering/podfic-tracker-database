@@ -1,6 +1,3 @@
-create database "podfic-tracker-db-2"
-    with owner "podfic-tracker-db_owner";
-
 create sequence public.author_podficcer_id_seq
     as integer;
 
@@ -96,6 +93,10 @@ create sequence public.work_fandom_id_seq
 
 alter sequence public.work_fandom_id_seq owner to "podfic-tracker-db_owner";
 
+create type public.scheduleeventtype as enum ('Podfic', 'Chapter', 'Part', 'Round');
+
+alter type public.scheduleeventtype owner to "podfic-tracker-db_owner";
+
 create table public.event_parent
 (
     event_parent_id serial
@@ -107,23 +108,6 @@ create table public.event_parent
 
 alter table public.event_parent
     owner to "podfic-tracker-db_owner";
-
-create unique index event_parent_event_parent_id_uindex
-    on public.event_parent (event_parent_id);
-
-create table public.fandom_category
-(
-    fandom_category_id serial
-        constraint fandom_category_pk
-            primary key,
-    name               varchar(200) not null
-);
-
-alter table public.fandom_category
-    owner to "podfic-tracker-db_owner";
-
-create unique index fandom_category_fandom_category_id_uindex
-    on public.fandom_category (fandom_category_id);
 
 create table public.event
 (
@@ -143,6 +127,20 @@ alter table public.event
 create unique index event_event_id_uindex
     on public.event (event_id);
 
+create unique index event_parent_event_parent_id_uindex
+    on public.event_parent (event_parent_id);
+
+create table public.fandom_category
+(
+    fandom_category_id serial
+        constraint fandom_category_pk
+            primary key,
+    name               varchar(200) not null
+);
+
+alter table public.fandom_category
+    owner to "podfic-tracker-db_owner";
+
 create table public.fandom
 (
     fandom_id   serial
@@ -159,6 +157,9 @@ alter table public.fandom
 
 create unique index fandom_fandom_id_uindex
     on public.fandom (fandom_id);
+
+create unique index fandom_category_fandom_category_id_uindex
+    on public.fandom_category (fandom_category_id);
 
 create table public.podficcer
 (
@@ -385,9 +386,6 @@ create table public.work
 alter table public.work
     owner to "podfic-tracker-db_owner";
 
-create unique index work_work_id_uindex
-    on public.work (work_id);
-
 create table public.podfic
 (
     podfic_id          serial
@@ -422,7 +420,8 @@ create table public.podfic
     vt_project_id      integer
         constraint podfic_vt_project_vt_project_id_fk
             references public.vt_project,
-    posted_unchaptered boolean
+    posted_unchaptered boolean,
+    is_multivoice      boolean
 );
 
 alter table public.podfic
@@ -433,9 +432,6 @@ alter sequence public.podfic_event_id_seq owned by public.podfic.event_id;
 alter sequence public.podfic_giftee_id_seq owned by public.podfic.giftee_id;
 
 alter sequence public.podfic_work_id_seq owned by public.podfic.work_id;
-
-create unique index podfic_podfic_id_uindex
-    on public.podfic (podfic_id);
 
 create table public.chapter
 (
@@ -609,6 +605,9 @@ alter table public.part
 
 alter sequence public.part_chapter_id_seq owned by public.part.chapter_id;
 
+create unique index podfic_podfic_id_uindex
+    on public.podfic (podfic_id);
+
 create table public.podfic_podficcer
 (
     podfic_id    serial
@@ -720,6 +719,9 @@ alter table public.schedule_event
 alter sequence public.schedule_event_chapter_id_seq owned by public.schedule_event.chapter_id;
 
 alter sequence public.schedule_event_podfic_id_seq owned by public.schedule_event.podfic_id;
+
+create unique index work_work_id_uindex
+    on public.work (work_id);
 
 create function public.create_part_schedule_event() returns trigger
     language plpgsql
@@ -1017,4 +1019,47 @@ create trigger update_update_schedule_event_type
     for each row
 execute procedure public.update_schedule_event_type();
 
+create procedure public.update_all_raw_lengths_from_recording_sessions()
+    language plpgsql
+as
+$$
+BEGIN
+    RAISE NOTICE 'updating all raw lengths';
+
+    UPDATE podfic
+    SET raw_length = sum_rec_lengths.sum_raw
+    FROM (SELECT podfic.podfic_id, SUM(recording_session.length) AS sum_raw
+          FROM podfic
+                   LEFT JOIN recording_session ON podfic.podfic_id = recording_session.podfic_id
+          WHERE recording_session.chapter_id IS NULL
+            AND recording_session.part_id IS NULL
+          GROUP BY podfic.podfic_id) AS sum_rec_lengths
+    WHERE podfic.podfic_id = sum_rec_lengths.podfic_id;
+
+    RAISE NOTICE 'updated all regular podfics';
+
+    UPDATE chapter
+    SET raw_length = sum_rec_lengths.sum_raw
+    FROM (SELECT chapter.chapter_id, SUM(recording_session.length) AS sum_raw
+          FROM chapter
+                   LEFT JOIN recording_session ON chapter.chapter_id = recording_session.chapter_id
+          WHERE recording_session.part_id IS NULL
+          GROUP BY chapter.chapter_id) AS sum_rec_lengths
+    WHERE chapter.chapter_id = sum_rec_lengths.chapter_id;
+
+    RAISE NOTICE 'updated all chapters';
+
+    UPDATE part
+    SET raw_length = sum_rec_lengths.sum_raw
+    FROM (SELECT part.part_id, SUM(recording_session.length) AS sum_raw
+          FROM part
+                   LEFT JOIN recording_session ON part.part_id = recording_session.part_id
+          GROUP BY part.part_id) AS sum_rec_lengths
+    WHERE part.part_id = sum_rec_lengths.part_id;
+
+    RAISE NOTICE 'updated all parts';
+END;
+$$;
+
+alter procedure public.update_all_raw_lengths_from_recording_sessions() owner to "podfic-tracker-db_owner";
 
