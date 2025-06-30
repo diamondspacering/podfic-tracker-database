@@ -15,8 +15,25 @@ import {
 import { useEffect, useState } from 'react';
 import styles from '@/app/forms/forms.module.css';
 
-export default function FileLinkForm({ link, setLink, podficTitle, label }) {
+export default function FileLinkForm({
+  link,
+  setLink,
+  podficTitle,
+  chapterId,
+  label,
+}) {
   const [aaDate, setAADate] = useState(formatDateString(new Date()));
+  const [chapter, setChapter] = useState({} as Chapter);
+
+  useEffect(() => {
+    const fetchChapter = async () => {
+      const response = await fetch(`/db/chapters?chapter_id=${chapterId}`);
+      const data = await response.json();
+      setChapter(data);
+    };
+
+    if (chapterId) fetchChapter();
+  });
 
   // DO NOT add other dependencies or it will maximum update depth exceeded. TODO: work on that I guess
   useEffect(() => {
@@ -24,6 +41,7 @@ export default function FileLinkForm({ link, setLink, podficTitle, label }) {
       const dateString = generateAADate(aaDate);
       const fileString = generateAALink({
         title: podficTitle,
+        chapterInfo: chapter,
         date: dateString,
         label,
       });

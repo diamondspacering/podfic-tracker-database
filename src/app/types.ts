@@ -76,6 +76,7 @@ export const getEmptyLength = () => {
 export enum FilterType {
   STATUS = 'status',
   PERMISSION = 'permission',
+  PART_STATUS = 'part_status',
   TYPE = 'type',
   DATE = 'date',
   STRING = 'string',

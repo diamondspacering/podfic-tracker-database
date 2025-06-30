@@ -1,15 +1,9 @@
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { useCallback, useEffect, useState } from 'react';
+import { createColumnHelper } from '@tanstack/react-table';
+import { useCallback, useState } from 'react';
 import { TableCell } from './TableCell';
 import tableStyles from '@/app/ui/table/table.module.css';
 import {
   Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -19,15 +13,22 @@ import {
 import { Delete, Edit } from '@mui/icons-material';
 import FileDialog from '@/app/forms/podfic/file-dialog';
 import { getLengthText } from '@/app/lib/format';
+import { useFiles } from '@/app/lib/swrLoaders';
+import { mutate } from 'swr';
+import CustomTable from './CustomTable';
 
 export default function FileTable({
   podficId,
   podficTitle,
+  onlyNonAAFiles = false,
   chapterId,
   lengthColorScale,
 }) {
-  const [files, setFiles] = useState<File[]>([]);
-  const [filesLoading, setFilesLoading] = useState(false);
+  const { files, isLoading } = useFiles({
+    podficId,
+    chapterId,
+    onlyNonAAFiles,
+  });
 
   const [fileDialogOpen, setFileDialogOpen] = useState(false);
   const [editingFile, setEditingFile] = useState(null);
@@ -35,29 +36,15 @@ export default function FileTable({
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState(-1);
 
-  const fetchFiles = useCallback(async () => {
-    const response = await fetch(
-      `/db/files?podfic_id=${podficId}&chapter_id=${chapterId}&with_chapters=false`
-    );
-    const data = await response.json();
-    console.log({ data });
-    setFiles(data);
-  }, [podficId, chapterId]);
-
-  // possibly just needs the fetchfiles dependency
-  useEffect(() => {
-    fetchFiles();
-  }, [fetchFiles, podficId, chapterId]);
-
   const deleteFile = useCallback(async () => {
     // TODO: will be needed w/ swr
     // const fileObject = files?.find((file) => file.file_id === selectedFile);
     await fetch(`/db/files/${selectedFile}`, {
       method: 'DELETE',
     });
-    await fetchFiles();
+    await mutate((key) => Array.isArray(key) && key[0] === '/db/files');
     setDeleteConfirmDialogOpen(false);
-  }, [selectedFile, fetchFiles]);
+  }, [selectedFile]);
 
   const columnHelper = createColumnHelper<File>();
 
@@ -179,8 +166,8 @@ export default function FileTable({
       cell: (props) => (
         <IconButton
           onClick={() => {
-            setFileDialogOpen(true);
             setEditingFile(props.row.original);
+            setFileDialogOpen(true);
           }}
           style={{ padding: '0px' }}
         >
@@ -205,23 +192,6 @@ export default function FileTable({
     }),
   ];
 
-  const table = useReactTable({
-    data: files,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    initialState: {
-      columnVisibility: {
-        file_id: false,
-        podfic_id: false,
-        chapter_id: false,
-      },
-    },
-    meta: {
-      editingRowId: null,
-      setEditingRowId: () => {},
-    },
-  });
-
   // TODO: should this be passed the podfic title?
   return (
     <div>
@@ -229,12 +199,13 @@ export default function FileTable({
         isOpen={fileDialogOpen}
         onClose={() => setFileDialogOpen(false)}
         submitCallback={async () => {
-          await fetchFiles();
+          await mutate((key) => Array.isArray(key) && key[0] === '/db/files');
           setFileDialogOpen(false);
         }}
         file={editingFile}
         podficId={podficId}
         podficTitle={podficTitle}
+        chapterId={chapterId}
         existingLength={editingFile?.length}
       />
       <Dialog
@@ -263,44 +234,24 @@ export default function FileTable({
           <Button onClick={deleteFile}>Delete</Button>
         </DialogActions>
       </Dialog>
-      {filesLoading ? (
-        <CircularProgress />
-      ) : (
-        <table className={tableStyles.table}>
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <>
-                <tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              </>
-            ))}
-          </tbody>
-        </table>
-      )}
+      <CustomTable
+        isLoading={isLoading}
+        data={files}
+        columns={columns}
+        rowKey='file_id'
+        rowCanExpand={false}
+        columnFilters={[]}
+        setColumnFilters={() => {}}
+        editingRowId={null}
+        setEditingRowId={() => {}}
+        columnVisibility={{
+          file_id: false,
+          podfic_id: false,
+          chapter_id: false,
+        }}
+        updateItemInline={async () => {}}
+        numLoadingRows={3}
+      />
     </div>
   );
 }

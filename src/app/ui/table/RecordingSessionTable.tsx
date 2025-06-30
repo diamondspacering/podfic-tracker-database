@@ -5,19 +5,13 @@ import {
 } from '@/app/lib/format';
 import { useRecordingSessions } from '@/app/lib/swrLoaders';
 import { getDefaultLength } from '@/app/types';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper } from '@tanstack/react-table';
 import ColorScale from 'color-scales';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { TableCell } from './TableCell';
 import Link from 'next/link';
 import {
   Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -25,8 +19,8 @@ import {
 } from '@mui/material';
 import { Delete, Edit, OpenInNew } from '@mui/icons-material';
 import { mutate } from 'swr';
-import tableStyles from '@/app/ui/table/table.module.css';
 import { getLengthValue } from '@/app/lib/lengthHelpers';
+import CustomTable from './CustomTable';
 
 interface RecordingSessionTableProps {
   podficId: number | string;
@@ -169,20 +163,6 @@ export default function RecordingSessionTable({
     }),
   ];
 
-  const table = useReactTable({
-    data: recordingSessions,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    initialState: {
-      columnVisibility: columns.reduce((acc, column) => {
-        if ((column.meta as any)?.hidden && (column as any)?.accessorKey) {
-          acc[(column as any).accessorKey as string] = false;
-        }
-        return acc;
-      }, {}),
-    },
-  });
-
   return (
     <div>
       <Dialog
@@ -219,43 +199,23 @@ export default function RecordingSessionTable({
           </Button>
         </DialogActions>
       </Dialog>
-      <table className={tableStyles.table}>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {/* TODO: better loading state */}
-          {isLoading && (
-            <tr>
-              <td>
-                <CircularProgress />
-              </td>
-            </tr>
-          )}
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <CustomTable
+        isLoading={isLoading}
+        data={recordingSessions}
+        columns={columns}
+        columnVisibility={columns.reduce((acc, column) => {
+          if ((column.meta as any)?.hidden && (column as any)?.accessorKey) {
+            acc[(column as any).accessorKey as string] = false;
+          }
+          return acc;
+        }, {})}
+        columnFilters={[]}
+        setColumnFilters={() => {}}
+        rowKey='recording_id'
+        editingRowId={null}
+        setEditingRowId={() => {}}
+        updateItemInline={async () => {}}
+      />
     </div>
   );
 }

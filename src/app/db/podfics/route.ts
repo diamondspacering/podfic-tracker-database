@@ -5,7 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const eventId = searchParams.get('event_id');
+  const missingAALinks = searchParams.get('missing_aa_links') === 'true';
   let podfics = null;
+  console.log({ missingAALinks });
   if (eventId) {
     const client = await getClient();
     const result = await client.query(
@@ -24,9 +26,17 @@ export async function GET(request: NextRequest) {
         [podfic.podfic_id]
       );
       podfic.notes = noteResult.rows ?? [];
+
+      // TODO: don't get chapter resources
+      // const resourceResult = await client.query(
+      //   `select * from resource inner join resource_podfic on resource.resource_id = resource_podfic.resource_id where resource_podfic.podfic_id = $1`,
+      //   [podfic.podfic_id]
+      // );
+      // podfic.resources = resourceResult.rows ?? [];
     }
   } else {
-    podfics = await fetchPodficsFull();
+    podfics = await fetchPodficsFull(missingAALinks);
+    // console.log(podfics);
   }
 
   return NextResponse.json(podfics ?? []);

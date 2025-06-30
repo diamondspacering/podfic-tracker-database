@@ -1,47 +1,23 @@
 'use client';
 
-import {
-  format2Digits,
-  formatDateString,
-  formatDateStringMonthFirst,
-  getLengthText,
-} from '@/app/lib/format';
+import { getLengthText } from '@/app/lib/format';
 import {
   FilterType,
   getDefaultLength,
-  PermissionStatus,
   PodficStatus,
   PodficType,
 } from '@/app/types';
 import AddMenu from '@/app/ui/AddMenu';
 import { TableCell } from '@/app/ui/table/TableCell';
-import {
-  ColumnFiltersState,
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  getExpandedRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { ColumnFiltersState, createColumnHelper } from '@tanstack/react-table';
 import ColorScale from 'color-scales';
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import styles from '@/app/dashboard/dashboard.module.css';
 import tableStyles from '@/app/ui/table/table.module.css';
 import { updatePodficMinified } from '@/app/lib/updaters';
 import Link from 'next/link';
+import { Button, Checkbox, FormControlLabel, IconButton } from '@mui/material';
 import {
-  Button,
-  Checkbox,
-  FormControlLabel,
-  IconButton,
-  InputAdornment,
-  Switch,
-  TextField,
-} from '@mui/material';
-import {
-  Close,
   KeyboardArrowDown,
   KeyboardArrowRight,
   Mic,
@@ -52,23 +28,25 @@ import { HeaderCell } from '@/app/ui/table/HeaderCell';
 import {
   arrayIncludesFilter,
   dateFilter,
-  usePersistentState,
+  formatTableDate,
 } from '@/app/lib/utils';
-import { usePathname } from 'next/navigation';
+import { usePersistentState } from '@/app/lib/utilsFrontend';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { usePodficsFull } from '@/app/lib/swrLoaders';
 import { mutate } from 'swr';
 import AdditionalContentRows from '@/app/ui/table/AdditionalContentRows';
 import FileTable from '@/app/ui/table/FileTable';
 import { EditCell } from '@/app/ui/table/EditCell';
 import RecordingSessionTable from '@/app/ui/table/RecordingSessionTable';
-import {
-  resetAllColumns,
-  resetAllColumnsToDefault,
-} from '../../lib/defaultColumnFilters';
 import { addLengths, getLengthValue } from '@/app/lib/lengthHelpers';
+import CustomTable from '@/app/ui/table/CustomTable';
 
 export default function PodficTable() {
-  const { podfics, isLoading } = usePodficsFull();
+  const searchParams = useSearchParams();
+  const missingAALinks = searchParams.get('missing_aa_links') === 'true';
+  const { podfics, isLoading } = usePodficsFull({ missingAALinks });
+
+  const router = useRouter();
 
   const pathname = usePathname();
 
@@ -77,7 +55,6 @@ export default function PodficTable() {
   const [recordingSessionsExpanded, setRecordingSessionsExpanded] = useState<
     number[]
   >([]);
-  const [excludingMultivoice, setExcludingMultivoice] = useState(false);
 
   const lengthColorScale = new ColorScale(0, 3600, ['#ffffff', '#4285f4']);
   const wordcountColorScale = new ColorScale(0, 150000, ['#ffffff', '#4285f4']);
@@ -94,19 +71,13 @@ export default function PodficTable() {
     ]);
   useEffect(() => console.log({ columnFilters }), [columnFilters]);
 
-  // TODO: of COURSE this doesn't load in properly it probably needs to be set somehow
-  const excludeMultivoice = useMemo(() => {
+  const includeMultivoice = useMemo(() => {
     const typeFilter = columnFilters.find((filter) => filter?.id === 'type');
     if (!typeFilter || !typeFilter.value) return false;
-    return !(typeFilter.value as Array<string>).includes('multivoice');
+    return (typeFilter.value as Array<string>).includes('multivoice');
   }, [columnFilters]);
 
-  useEffect(
-    () => setExcludingMultivoice(excludeMultivoice),
-    [excludeMultivoice]
-  );
-
-  useEffect(() => setExcludingMultivoice(excludeMultivoice), []);
+  const [editingRowId, setEditingRowId] = useState<string | null>(null);
 
   const columns = [
     columnHelper.accessor('podfic_id', {
@@ -334,7 +305,7 @@ export default function PodficTable() {
           .rows?.filter(
             (row) => !!row.getValue('wordcount') && !!row.getValue('length')
           );
-        const num = filteredRows?.length ?? 0;
+        const num = filteredRows?.length ? filteredRows.length : 1;
         const sum = filteredRows?.reduce(
           (acc, row) =>
             acc +
@@ -372,7 +343,7 @@ export default function PodficTable() {
               !!row.getValue('raw_length') &&
               row.getValue('status') !== 'Recording'
           );
-        const num = filteredRows?.length ?? 0;
+        const num = filteredRows?.length ? filteredRows.length : 1;
         const sum = filteredRows?.reduce(
           (acc, row) =>
             acc +
@@ -429,23 +400,8 @@ export default function PodficTable() {
             const currentVal =
               getValue() ?? row.original.posted_year?.toString();
             const isSingleYear = !getValue();
-            // TODO: this isn't working correctly
-            // use the dateformat util
-            if (editingRowId === row.id)
-              return currentVal
-                ? formatDateString(
-                    new Date(
-                      currentVal.includes('T')
-                        ? currentVal
-                        : `${currentVal}T00:00:00`
-                    )
-                  )
-                : '';
-            return currentVal
-              ? isSingleYear
-                ? currentVal
-                : formatDateStringMonthFirst(new Date(currentVal))
-              : '';
+            if (isSingleYear && editingRowId !== row.id) return currentVal;
+            else return formatTableDate(currentVal, editingRowId === row.id);
           }}
           row={row}
           {...rest}
@@ -577,13 +533,6 @@ export default function PodficTable() {
       return acc;
     }, {})
   );
-  const [columnVisibilityExpanded, setColumnVisibilityExpanded] =
-    useState(false);
-
-  const [editingRowId, setEditingRowId] = useState(null);
-  const [editingRow, setEditingRow] = useState<Podfic & Work & Fandom & Event>(
-    {} as Podfic & Work & Fandom & Event
-  );
 
   const updatePodfic = async (podfic: Podfic & Work & Fandom) => {
     try {
@@ -598,442 +547,260 @@ export default function PodficTable() {
           status: podfic.status,
         })
       );
-      await mutate('/db/podfics');
+      await mutate((key) => Array.isArray(key) && key[0] === '/db/podfics');
     } catch (e) {
       console.error('Error updating podfic inline:', e);
     }
   };
 
-  const table = useReactTable({
-    data: podfics,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    getRowCanExpand: () => true,
-    getFilteredRowModel: getFilteredRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
-    getRowId: (row) => row.podfic_id?.toString(),
-    enableMultiRowSelection: false,
-    enableRowSelection: (row) =>
-      editingRowId !== row.id && editingRowId !== parseInt(row.id),
-    initialState: {
-      columnPinning: {
-        left: ['expand', 'number', 'title'],
-      },
-    },
-    state: {
-      columnFilters: columnFilters,
-      columnVisibility: columnVisibility,
-    },
-    onColumnFiltersChange: (updaterOrValue) => {
-      setColumnFilters(updaterOrValue);
-    },
-    onColumnVisibilityChange: (updaterOrValue) => {
-      setColumnVisibility(updaterOrValue);
-    },
-    meta: {
-      columnFilters,
-      setColumnFilters,
-      // TODO: transfer this over to the helper function in utils
-      filterActivated: (column, filterType) => {
-        if (!columnFilters.some((f) => f.id === column.id)) return false;
-        if (filterType === FilterType.STATUS) {
-          return !Object.values(PodficStatus).every((f) =>
-            (column.getFilterValue() ?? []).includes(f)
-          );
-        }
-        if (filterType === FilterType.PERMISSION) {
-          return !Object.values(PermissionStatus).every((f) =>
-            (column.getFilterValue() ?? []).includes(f)
-          );
-        }
-        if (filterType === FilterType.TYPE) {
-          return !Array.from(column.getFacetedUniqueValues().keys()).every(
-            (f) => (column.getFilterValue() ?? []).includes(f)
-          );
-        }
-        // so should list as activated if there's non-truthy keys in there
-        if (filterType === FilterType.DATE) {
-          return !!column.getFilterValue() &&
-            !!Object.keys(column.getFilterValue()).length &&
-            !!Object.values(column.getFilterValue()).some((f) => !!f) &&
-            column.getFilterValue().range
-            ? !!Object.keys(column.getFilterValue().range).length &&
-                !!Object.values(column.getFilterValue().range).some((f) => !!f)
-            : true;
-        }
-      },
-      // TODO: alter the editing system & make work w/ swr
-      // huh what does that mean - persisting the changes in the cache
-      editingRowId,
-      setEditingRowId,
-      editingRow,
-      setEditingRow,
-      updateData: (_rowId, columnId, value) => {
-        setEditingRow((prev) => ({ ...prev, [columnId]: value }));
-      },
-      revertRow: () => {
-        setEditingRow(null);
-      },
-      submitRow: async () => {
-        console.log({ editingRow });
-        await updatePodfic(editingRow);
-      },
-    },
-  });
-
   return (
     <div>
-      <div className={tableStyles.visibilityToggleContainer}>
-        <span>
-          <IconButton
-            style={{ padding: '0px' }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setColumnVisibilityExpanded((prev) => !prev);
-            }}
-          >
-            {columnVisibilityExpanded ? (
-              <KeyboardArrowDown />
-            ) : (
-              <KeyboardArrowRight />
-            )}
-          </IconButton>
-          <b>Column Visibility</b>
-        </span>
-        <br />
-        <div className={tableStyles.flexRow}>
-          {columnVisibilityExpanded &&
-            table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => (
-                <FormControlLabel
-                  key={column.id}
-                  label={
-                    (column.columnDef.meta as any)?.columnName ?? column.id
-                  }
-                  control={
-                    <Switch
-                      checked={column.getIsVisible()}
-                      onChange={column.getToggleVisibilityHandler()}
-                    />
-                  }
-                />
-              ))}
-        </div>
-      </div>
-      <div className={styles.flexRow}>
-        {/* TODO: make this debounced it needs it */}
-        <TextField
-          size='small'
-          label='Title search'
-          value={columnFilters.find((f) => f.id === 'title')?.value ?? ''}
-          onChange={(e) =>
-            columnFilters.find((f) => f.id === 'title')
-              ? setColumnFilters((prev) =>
-                  prev.map((f) =>
-                    f.id === 'title' ? { ...f, value: e.target.value } : f
-                  )
-                )
-              : setColumnFilters((prev) => [
-                  ...prev,
-                  { id: 'title', value: e.target.value },
-                ])
-          }
-          sx={{
-            width: 'fit-content',
-          }}
-          slotProps={{
-            input: {
-              endAdornment: (
-                <InputAdornment position='end'>
-                  <IconButton
-                    onClick={() => {
-                      setColumnFilters((prev) =>
-                        prev.map((f) =>
-                          f.id === 'title' ? { ...f, value: '' } : f
-                        )
-                      );
-                    }}
-                  >
-                    <Close />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            },
-          }}
-        />
-        <FormControlLabel
-          label='Exclude multivoices'
-          control={
-            <Checkbox
-              value={excludingMultivoice}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  const filter = columnFilters.find(
-                    (filter) => filter?.id === 'type'
-                  );
-                  if (!filter) {
-                    setColumnFilters((filters) => [
-                      ...filters,
-                      {
-                        id: 'type',
-                        value: [
-                          ...Object.values(PodficType).filter(
-                            (type) => type !== PodficType.MULTIVOICE
-                          ),
-                          null,
-                        ],
-                      },
-                    ]);
-                  } else {
-                    const value = filter.value;
-                    if (!value || !Array.isArray(value)) {
-                      setColumnFilters((filters) =>
-                        filters.map((filter) =>
-                          filter?.id === 'type'
-                            ? {
-                                id: 'type',
-                                value: [
-                                  ...Object.values(PodficType).filter(
-                                    (type) => type !== PodficType.MULTIVOICE
-                                  ),
-                                  null,
-                                ],
-                              }
-                            : filter
-                        )
-                      );
+      <CustomTable
+        isLoading={isLoading}
+        data={podfics}
+        columns={columns}
+        rowKey='podfic_id'
+        rowCanExpand
+        showRowCount
+        editingRowId={editingRowId}
+        setEditingRowId={setEditingRowId}
+        initialState={{
+          columnPinning: {
+            left: ['expand', 'number', 'title'],
+          },
+        }}
+        columnFilters={columnFilters}
+        setColumnFilters={setColumnFilters}
+        showClearFilters
+        showResetDefaultFilters
+        showColumnVisibility
+        columnVisibility={columnVisibility}
+        setColumnVisibility={setColumnVisibility}
+        updateItemInline={async (editingRow) => {
+          await updatePodfic(editingRow);
+        }}
+        globalFilterFn='includesString'
+        additionalFilters={
+          <div className={styles.flexRow} style={{ alignItems: 'center' }}>
+            <FormControlLabel
+              label='Include multivoices'
+              control={
+                <Checkbox
+                  value={includeMultivoice}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      const filterValue = columnFilters.find(
+                        (filter) => filter?.id === 'type'
+                      )?.value;
+                      if (!!filterValue && Array.isArray(filterValue))
+                        setColumnFilters((filters) =>
+                          filters.map((filter) =>
+                            filter?.id === 'type'
+                              ? {
+                                  id: 'type',
+                                  value: [
+                                    ...filterValue,
+                                    PodficType.MULTIVOICE,
+                                  ],
+                                }
+                              : filter
+                          )
+                        );
                     } else {
-                      setColumnFilters((filters) =>
-                        filters.map((filter) =>
-                          filter?.id === 'type'
-                            ? {
-                                id: 'type',
-                                value: value.filter(
-                                  (type) => type !== PodficType.MULTIVOICE
-                                ),
-                              }
-                            : filter
-                        )
+                      const filter = columnFilters.find(
+                        (filter) => filter?.id === 'type'
                       );
-                    }
-                  }
-                } else {
-                  const filterValue = columnFilters.find(
-                    (filter) => filter?.id === 'type'
-                  )?.value;
-                  if (!!filterValue && Array.isArray(filterValue))
-                    setColumnFilters((filters) =>
-                      filters.map((filter) =>
-                        filter?.id === 'type'
-                          ? {
-                              id: 'type',
-                              value: [...filterValue, PodficType.MULTIVOICE],
-                            }
-                          : filter
-                      )
-                    );
-                }
-              }}
-            />
-          }
-        />
-      </div>
-
-      <br />
-      <Button onClick={() => setColumnFilters(resetAllColumns(table))}>
-        Clear All Filters
-      </Button>
-      <Button onClick={() => setColumnFilters(resetAllColumnsToDefault(table))}>
-        Reset Filters to Default
-      </Button>
-      <br />
-      <b>Displaying {table.getFilteredRowModel().rows.length}</b>
-      <table className={tableStyles.table}>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <Fragment key={row.id}>
-              <tr
-                key={row.id}
-                className={`${tableStyles.clickable} ${
-                  row.getIsSelected() ? tableStyles.selected : ''
-                }`}
-                onClick={row.getToggleSelectedHandler()}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-              {/* TODO: insert expanded content, incl. like cover art */}
-              {row.getIsExpanded() && (
-                <>
-                  {!!row.original.coverArt && (
-                    <>
-                      <tr key='cover-art-expand'>
-                        <td
-                          colSpan={row.getAllCells().length}
-                          key='cover-art'
-                          style={{ paddingLeft: '30px' }}
-                        >
-                          <span>
-                            <b>Cover Art</b>
-                          </span>
-                        </td>
-                      </tr>
-                      <tr key='cover-art-expanded'>
-                        <td
-                          colSpan={row.getAllCells().length}
-                          style={{ paddingLeft: '30px' }}
-                        >
-                          <table className={tableStyles.table}>
-                            <thead>
-                              <tr>
-                                <th>Link</th>
-                                <th>Cover artist</th>
-                                <th>Status</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td>
-                                  <span
-                                    style={{
-                                      display: 'block',
-                                      textOverflow: 'ellipsis',
-                                      overflow: 'hidden',
-                                      whiteSpace: 'nowrap',
-                                      maxWidth: '100px',
-                                    }}
-                                  >
-                                    <a href={row.original.coverArt.image_link}>
-                                      {row.original.coverArt.image_link}
-                                    </a>
-                                  </span>
-                                </td>
-                                <td>
-                                  {row.original.coverArt.cover_artist_name}
-                                </td>
-                                <td>
-                                  {row.original.coverArt.cover_art_status}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </td>
-                      </tr>
-                    </>
-                  )}
-                  {/* TODO: files expanded state - should that be in additionalcontentrows */}
-                  <tr key={'files-expanded'}>
-                    <td
-                      key='2'
-                      colSpan={row.getVisibleCells().length}
-                      style={{ paddingLeft: '60px' }}
-                    >
-                      <FileTable
-                        podficId={row.original.podfic_id}
-                        podficTitle={row.getValue('title')}
-                        chapterId={null}
-                        lengthColorScale={lengthColorScale}
-                      />
-                    </td>
-                  </tr>
-                  <tr key='recording-sessions-expand'>
-                    <td
-                      colSpan={row.getAllCells().length}
-                      style={{ paddingLeft: '30px' }}
-                    >
-                      <span>
-                        <IconButton
-                          style={{ padding: '0px' }}
-                          onClick={() =>
-                            setRecordingSessionsExpanded((prev) =>
-                              prev.includes(row.original.podfic_id)
-                                ? prev.filter(
-                                    (id) => id !== row.original.podfic_id
-                                  )
-                                : [...prev, row.original.podfic_id]
+                      if (!filter) {
+                        setColumnFilters((filters) => [
+                          ...filters,
+                          {
+                            id: 'type',
+                            value: [
+                              ...Object.values(PodficType).filter(
+                                (type) => type !== PodficType.MULTIVOICE
+                              ),
+                              null,
+                            ],
+                          },
+                        ]);
+                      } else {
+                        const value = filter.value;
+                        if (!value || !Array.isArray(value)) {
+                          setColumnFilters((filters) =>
+                            filters.map((filter) =>
+                              filter?.id === 'type'
+                                ? {
+                                    id: 'type',
+                                    value: [
+                                      ...Object.values(PodficType).filter(
+                                        (type) => type !== PodficType.MULTIVOICE
+                                      ),
+                                      null,
+                                    ],
+                                  }
+                                : filter
                             )
-                          }
-                        >
-                          {recordingSessionsExpanded.includes(
-                            row.original.podfic_id
-                          ) ? (
-                            <KeyboardArrowDown />
-                          ) : (
-                            <KeyboardArrowRight />
-                          )}
-                        </IconButton>
-                        Recording Sessions
-                      </span>
-                    </td>
-                  </tr>
-                  {recordingSessionsExpanded.includes(
-                    row.original.podfic_id
-                  ) && (
-                    <tr key={'recording-sessions-expanded'}>
-                      <td
-                        colSpan={row.getVisibleCells().length}
-                        style={{ paddingLeft: '60px' }}
-                      >
-                        <RecordingSessionTable
-                          podficId={row.original.podfic_id}
-                          full
-                          returnUrl={pathname}
-                        />
-                      </td>
-                    </tr>
-                  )}
-
-                  <AdditionalContentRows
-                    width={row.getVisibleCells().length}
-                    notes={row.original.notes ?? []}
-                    // TODO: pull in resources as well
-                    resources={row.original.resources ?? []}
-                    podfic_id={row.original.podfic_id}
-                  />
-                </>
-              )}
-            </Fragment>
-          ))}
-        </tbody>
-        <tfoot>
-          {table.getFooterGroups().map((footerGroup) => (
-            <tr key={footerGroup.id}>
-              {footerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  <span>
-                    {flexRender(
-                      header.column.columnDef.footer,
-                      header.getContext()
-                    )}
-                  </span>
-                </th>
-              ))}
+                          );
+                        } else {
+                          setColumnFilters((filters) =>
+                            filters.map((filter) =>
+                              filter?.id === 'type'
+                                ? {
+                                    id: 'type',
+                                    value: value.filter(
+                                      (type) => type !== PodficType.MULTIVOICE
+                                    ),
+                                  }
+                                : filter
+                            )
+                          );
+                        }
+                      }
+                    }
+                  }}
+                />
+              }
+            />
+            <FormControlLabel
+              label='Only podfics missing AA links'
+              checked={missingAALinks}
+              control={
+                <Checkbox
+                  onChange={(e) => {
+                    router.push(
+                      `${pathname}?missing_aa_links=${e.target.checked}`
+                    );
+                    // router.refresh();
+                    window.location.reload();
+                  }}
+                />
+              }
+            />
+          </div>
+        }
+        getExpandedContent={(row) => (
+          <>
+            {!!row.original.coverArt && (
+              <>
+                <tr key='cover-art-expand'>
+                  <td
+                    colSpan={row.getAllCells().length}
+                    key='cover-art'
+                    style={{ paddingLeft: '30px' }}
+                  >
+                    <span>
+                      <b>Cover Art</b>
+                    </span>
+                  </td>
+                </tr>
+                <tr key='cover-art-expanded'>
+                  <td
+                    colSpan={row.getAllCells().length}
+                    style={{ paddingLeft: '30px' }}
+                  >
+                    <table className={tableStyles.table}>
+                      <thead>
+                        <tr>
+                          <th>Link</th>
+                          <th>Cover artist</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            <span
+                              style={{
+                                display: 'block',
+                                textOverflow: 'ellipsis',
+                                overflow: 'hidden',
+                                whiteSpace: 'nowrap',
+                                maxWidth: '100px',
+                              }}
+                            >
+                              <a href={row.original.coverArt.image_link}>
+                                {row.original.coverArt.image_link}
+                              </a>
+                            </span>
+                          </td>
+                          <td>{row.original.coverArt.cover_artist_name}</td>
+                          <td>{row.original.coverArt.cover_art_status}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </>
+            )}
+            {/* TODO: files expanded state - should that be in additionalcontentrows */}
+            <tr key={'files-expanded'}>
+              <td
+                key='2'
+                colSpan={row.getVisibleCells().length}
+                style={{ paddingLeft: '60px' }}
+              >
+                <FileTable
+                  podficId={row.original.podfic_id}
+                  podficTitle={row.getValue('title')}
+                  onlyNonAAFiles={missingAALinks}
+                  chapterId={null}
+                  lengthColorScale={lengthColorScale}
+                />
+              </td>
             </tr>
-          ))}
-        </tfoot>
-      </table>
+            <tr key='recording-sessions-expand'>
+              <td
+                colSpan={row.getAllCells().length}
+                style={{ paddingLeft: '30px' }}
+              >
+                <span>
+                  <IconButton
+                    style={{ padding: '0px' }}
+                    onClick={() =>
+                      setRecordingSessionsExpanded((prev) =>
+                        prev.includes(row.original.podfic_id)
+                          ? prev.filter((id) => id !== row.original.podfic_id)
+                          : [...prev, row.original.podfic_id]
+                      )
+                    }
+                  >
+                    {recordingSessionsExpanded.includes(
+                      row.original.podfic_id
+                    ) ? (
+                      <KeyboardArrowDown />
+                    ) : (
+                      <KeyboardArrowRight />
+                    )}
+                  </IconButton>
+                  Recording Sessions
+                </span>
+              </td>
+            </tr>
+            {recordingSessionsExpanded.includes(row.original.podfic_id) && (
+              <tr key={'recording-sessions-expanded'}>
+                <td
+                  colSpan={row.getVisibleCells().length}
+                  style={{ paddingLeft: '60px' }}
+                >
+                  <RecordingSessionTable
+                    podficId={row.original.podfic_id}
+                    full
+                    returnUrl={pathname}
+                  />
+                </td>
+              </tr>
+            )}
+
+            <AdditionalContentRows
+              width={row.getVisibleCells().length}
+              notes={row.original.notes ?? []}
+              // TODO: pull in resources as well
+              resources={row.original.resources ?? []}
+              podfic_id={row.original.podfic_id}
+            />
+          </>
+        )}
+      />
     </div>
   );
 }

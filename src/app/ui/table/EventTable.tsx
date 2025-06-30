@@ -1,16 +1,9 @@
 'use client';
 
-import { Fragment, useCallback, useEffect, useState } from 'react';
-import tableStyles from './table.module.css';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  getExpandedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { Fragment, useState } from 'react';
+import { createColumnHelper, flexRender } from '@tanstack/react-table';
 import { TableCell } from './TableCell';
-import { Button, CircularProgress, IconButton } from '@mui/material';
+import { Button, IconButton } from '@mui/material';
 import {
   Add,
   ArrowForward,
@@ -20,34 +13,19 @@ import {
 import EventDialog from '../event/event-dialog';
 import EventPodficTable from './EventPodficTable';
 import Link from 'next/link';
+import CustomTable from './CustomTable';
+import { useEvents } from '@/app/lib/swrLoaders';
+import { mutate } from 'swr';
 
 // TODO: better styling? this works but he ugly
 
 // TODO: a way to revalidate?
 export default function EventTable() {
-  const [events, setEvents] = useState<EventParent[]>([]);
-  const [eventsLoading, setEventsLoading] = useState(true);
+  const { events, isLoading } = useEvents();
+
+  // useEffect(() => console.log({ events }), [events]);
 
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
-
-  // TODO: should this be in here, or should it be in a parent component? I'd rather edit in a dialog. how to indicate what's inline vs. a dialog?
-  const fetchEvents = useCallback(async () => {
-    setEventsLoading(true);
-    try {
-      const response = await fetch(`/db/events`);
-      const data = await response.json();
-      console.log({ data });
-      setEvents(data);
-    } catch (e) {
-      console.error('Error fetching events:', e);
-    } finally {
-      setEventsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchEvents();
-  }, []);
 
   const columnHelper = createColumnHelper<Event & EventParent>();
 
@@ -73,7 +51,7 @@ export default function EventTable() {
         hidden: true,
       },
     }),
-    // TODO: reusable expand component? ooooh i love that
+    // TODO: make this actually work correctly for event podfics
     columnHelper.display({
       id: 'expand',
       cell: (props) =>
@@ -127,6 +105,8 @@ export default function EventTable() {
         type: 'date',
       },
     }),
+    // TODO: display this conditionally
+    // also make it actually point to the right thing. make sure it does that my guy.
     columnHelper.display({
       id: 'voiceteam-link',
       cell: (props) => (
@@ -146,40 +126,17 @@ export default function EventTable() {
     }),
   ];
 
-  // this is not set up well I am sacrificing much for the subrows
-  const table = useReactTable({
-    data: events as (EventParent & Event)[],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    getSubRows: (row) => row.events ?? [],
-    getRowCanExpand: () => true,
-    getIsRowExpanded: () => true,
-    initialState: {
-      columnVisibility: columns.reduce((acc, column) => {
-        if ((column.meta as any)?.hidden && (column as any)?.accessorKey) {
-          acc[(column as any).accessorKey as string] = false;
-        }
-        return acc;
-      }, {}),
-    },
-    meta: {
-      editingRowId: null,
-      setEditingRowId: () => {},
-    },
-  });
-
   return (
     <div>
       <EventDialog
         isOpen={eventDialogOpen}
         onClose={() => setEventDialogOpen(false)}
         submitCallback={async () => {
-          await fetchEvents();
+          await mutate('/db/events');
           setEventDialogOpen(false);
         }}
         submitParentCallback={async () => {
-          await fetchEvents();
+          await mutate('/db/events');
         }}
         parents={events}
       />
@@ -190,90 +147,64 @@ export default function EventTable() {
       >
         Add Event
       </Button>
-      <table
-        className={tableStyles.table}
-        style={{
-          marginTop: '2rem',
-        }}
-      >
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
+      <CustomTable
+        isLoading={isLoading}
+        data={events}
+        columns={columns}
+        rowKey='event_parent_id'
+        showRowCount
+        editingRowId={null}
+        setEditingRowId={() => {}}
+        // TODO: column filters bc this doesn't like. actually need em
+        columnFilters={[]}
+        setColumnFilters={() => {}}
+        columnVisibility={columns.reduce((acc, column) => {
+          if ((column.meta as any)?.hidden && (column as any)?.accessorKey) {
+            acc[(column as any).accessorKey as string] = false;
+          }
+          return acc;
+        }, {})}
+        rowCanExpand
+        rowsAlwaysExpanded
+        getSubRows={(row) => row.events ?? []}
+        getExpandedContent={(row) =>
+          row.subRows?.map((subRow) => {
+            return (
+              <Fragment key={subRow.id}>
+                <tr key={`subRow-${subRow.id}`} id={`subRow-${subRow.id}`}>
+                  {subRow.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      style={{
+                        paddingLeft: cell.column.id === 'name' ? '30px' : '0px',
+                      }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
                       )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {eventsLoading && (
-            <tr>
-              <td>
-                <CircularProgress />
-              </td>
-            </tr>
-          )}
-          {table.getRowModel().rows.map((row) => (
-            <Fragment key={row.id}>
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-              {row.getIsExpanded() &&
-                row.subRows?.map((subRow) => {
-                  return (
-                    <Fragment key={subRow.id}>
-                      <tr
-                        key={`subRow-${subRow.id}`}
-                        id={`subRow-${subRow.id}`}
-                      >
-                        {subRow.getVisibleCells().map((cell) => (
-                          <td
-                            key={cell.id}
-                            style={{
-                              paddingLeft:
-                                cell.column.id === 'name' ? '30px' : '0px',
-                            }}
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                      {expandedEventIds.includes(subRow.original.event_id) && (
-                        <tr id={`subRow-${subRow.id}-expanded`}>
-                          <td
-                            key='1'
-                            colSpan={row.getAllCells().length}
-                            style={{
-                              paddingLeft: '60px',
-                            }}
-                          >
-                            <EventPodficTable
-                              eventId={subRow.original.event_id}
-                            />
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  );
-                })}
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
+                    </td>
+                  ))}
+                </tr>
+                {expandedEventIds.includes(subRow.original.event_id) && (
+                  <tr id={`subRow-${subRow.id}-expanded`}>
+                    <td
+                      key='1'
+                      colSpan={row.getAllCells().length}
+                      style={{
+                        paddingLeft: '60px',
+                      }}
+                    >
+                      <EventPodficTable eventId={subRow.original.event_id} />
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })
+        }
+        updateItemInline={async () => {}}
+      />
     </div>
   );
 }

@@ -1,7 +1,8 @@
 'use client';
 
 import { useParts } from '@/app/lib/swrLoaders';
-import { useLengthColorScale, usePersistentState } from '@/app/lib/utils';
+import { arrayIncludesFilter, useLengthColorScale } from '@/app/lib/utils';
+import { usePersistentState } from '@/app/lib/utilsFrontend';
 import { EditCell } from '@/app/ui/table/EditCell';
 import { TableCell } from '@/app/ui/table/TableCell';
 import { Mic, OpenInNew } from '@mui/icons-material';
@@ -9,19 +10,19 @@ import { Button, IconButton, Typography } from '@mui/material';
 import {
   ColumnFiltersState,
   createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
+  VisibilityState,
 } from '@tanstack/react-table';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Fragment, useEffect, useState } from 'react';
-import tableStyles from '@/app/ui/table/table.module.css';
+import { useEffect, useState } from 'react';
 import { updatePartMinified } from '@/app/lib/updaters';
 import { mutate } from 'swr';
+import { FilterType, PartStatus } from '@/app/types';
+import { HeaderCell } from '@/app/ui/table/HeaderCell';
+import CustomTable from '@/app/ui/table/CustomTable';
 
 export default function PartsTable() {
-  const { parts } = useParts();
+  const { parts, isLoading } = useParts();
 
   const pathname = usePathname();
 
@@ -146,20 +147,30 @@ export default function PartsTable() {
       },
     }),
     columnHelper.accessor('event_name', {
-      header: 'Event',
+      header: (props) => <HeaderCell text='Event' {...props} />,
       cell: TableCell,
       meta: {
         type: 'string',
         immutable: true,
+        columnName: 'Event',
+        filterType: FilterType.STRING,
       },
+      filterFn: arrayIncludesFilter,
     }),
     columnHelper.accessor('status', {
-      header: 'Status',
+      header: (props) => <HeaderCell text='Status' {...props} />,
       cell: TableCell,
       meta: {
         type: 'status',
         statusType: 'part',
+        filterType: FilterType.PART_STATUS,
+        options: Object.values(PartStatus).map((status) => ({
+          label: status,
+          value: status,
+        })),
+        columnName: 'status',
       },
+      filterFn: arrayIncludesFilter,
     }),
     columnHelper.display({
       id: 'edit-inline',
@@ -195,83 +206,37 @@ export default function PartsTable() {
     }),
   ];
 
-  const [editingRowId, setEditingRowId] = useState(null);
-  const [editingRow, setEditingRow] = useState<PartWithContext>({} as any);
-
-  const table = useReactTable({
-    data: parts,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getRowId: (row) => row.part_id?.toString(),
-    initialState: {
-      columnVisibility: columns.reduce((acc, column) => {
+  const [columnVisibility, setColumnVisibility] =
+    usePersistentState<VisibilityState>(
+      'PARTS_TABLE_COLUMN_VISIBILITY',
+      columns.reduce((acc, column) => {
         acc[column.id] = (column.meta as any)?.hidden;
         return acc;
-      }, {}),
-    },
-    onColumnFiltersChange: (updaterOrValue) => {
-      setColumnFilters(updaterOrValue);
-    },
-    meta: {
-      columnFilters,
-      setColumnFilters,
-      editingRowId,
-      setEditingRowId,
-      editingRow,
-      setEditingRow,
-      updateData: (_rowId, columnId, value) => {
-        setEditingRow((prev) => ({ ...prev, [columnId]: value }));
-      },
-      revertRow: () => {
-        setEditingRow(null);
-      },
-      submitRow: async () => {
-        console.log({ editingRow });
-        await updatePart(editingRow);
-      },
-    },
-  });
+      }, {})
+    );
+
+  const [editingRowId, setEditingRowId] = useState(null);
 
   return (
     <div>
       <Typography variant='h2'>Parts</Typography>
-      <table className={tableStyles.table}>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <Fragment key={row.id}>
-              <tr
-                key={row.id}
-                className={`${tableStyles.clickable} ${
-                  row.getIsSelected() ? tableStyles.selected : ''
-                }`}
-                onClick={row.getToggleSelectedHandler()}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
+      <CustomTable
+        isLoading={isLoading}
+        data={parts}
+        columns={columns}
+        rowKey='part_id'
+        editingRowId={editingRowId}
+        setEditingRowId={setEditingRowId}
+        updateItemInline={async (item) => {
+          await updatePart(item);
+        }}
+        columnFilters={columnFilters}
+        setColumnFilters={setColumnFilters}
+        showClearFilters
+        showColumnVisibility
+        columnVisibility={columnVisibility}
+        setColumnVisibility={setColumnVisibility}
+      />
     </div>
   );
 }

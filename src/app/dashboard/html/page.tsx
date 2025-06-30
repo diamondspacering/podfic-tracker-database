@@ -1,7 +1,14 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import styles from '@/app/dashboard/dashboard.module.css';
 import {
   Button,
@@ -40,6 +47,9 @@ import { usePodficcer } from '@/app/lib/swrLoaders';
 export default function Page() {
   const searchParams = useSearchParams();
 
+  const [podficId, setPodficId] = useState<number | null>(null);
+  const [chapterId, setChapterId] = useState<number | null>(null);
+
   // --Data--
   const [podfic, setPodfic] = useState<PodficFull>({} as PodficFull);
   const [chapter, setChapter] = useState<Chapter>({} as Chapter);
@@ -65,13 +75,32 @@ export default function Page() {
   const [generatedFilesDialogOpen, setGeneratedFilesDialogOpen] =
     useState(false);
   const [aaDate, setAADate] = useState(
-    generateAADate(formatDateString(new Date()))
+    // generateAADate(formatDateString(new Date()))
+    generateAADate('2024-09-18')
   );
 
   const { podficcer: defaultPodficcer } = usePodficcer(1);
   const { podficcer: coverArtist } = usePodficcer(
     podfic?.coverArt?.podficcer_id ?? 1
   );
+
+  const postingURL = useMemo(() => {
+    const searchParams = new URLSearchParams();
+    searchParams.set('podfic_id', podficId ? podficId.toString() : 'null');
+    searchParams.set('chapter_id', chapterId ? chapterId.toString() : 'null');
+
+    if (!!Object.keys(chapter).length && chapter.chapter_number > 1) {
+      const url = new URL(`${podfic.ao3_link}chapters/new`);
+      url.search = searchParams.toString();
+      return url.toString();
+    } else {
+      const url = new URL('https://archiveofourown.org/works/new');
+
+      searchParams.set('work_link', podfic.link);
+      url.search = searchParams.toString();
+      return url.toString();
+    }
+  }, [podficId, chapterId, chapter, podfic.ao3_link, podfic.link]);
 
   useEffect(() => console.log({ podfic }), [podfic]);
   useEffect(() => console.log({ files }), [files]);
@@ -152,6 +181,9 @@ export default function Page() {
       isNaN(podficId) ? null : podficId,
       isNaN(chapterId) ? null : chapterId
     );
+
+    setPodficId(isNaN(podficId) ? null : podficId);
+    setChapterId(isNaN(chapterId) ? null : chapterId);
 
     setIsLoading(false);
   }, [searchParams, fetchPodfic, fetchChapter, fetchFiles, fetchResources]);
@@ -354,6 +386,11 @@ export default function Page() {
           hours
         </p>
       </div>
+
+      {/* maybe a button and the openinnew icon? */}
+      <a href={postingURL} target='_blank'>
+        Post
+      </a>
 
       <TextField
         select

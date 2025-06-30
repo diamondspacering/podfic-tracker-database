@@ -329,7 +329,7 @@ export const createUpdatePodfic = async (
   if (podficData.length)
     podficData.length = getLengthUpdateString(podficData.length);
 
-  console.log({ podficcers: podficData.podficcers });
+  // console.log({ podficcers: podficData.podficcers });
 
   const client = await getClient();
   if (!podficData.podfic_id) {
@@ -339,7 +339,7 @@ export const createUpdatePodfic = async (
       await createUpdateWork(podficData);
 
       podficResult = await client.query(
-        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, posted_date, exclude_stats, type, giftee_id, deadline, added_date, posted_year, vt_project_id, series_id, posted_unchaptered, updated_at) VALUES (
+        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, posted_date, exclude_stats, type, giftee_id, deadline, added_date, posted_year, vt_project_id, series_id, posted_unchaptered, is_multivoice, updated_at) VALUES (
         $1,
         $2,
         $3,
@@ -356,7 +356,8 @@ export const createUpdatePodfic = async (
         $14,
         $15,
         $16,
-        $17
+        $17,
+        $18
       )
       RETURNING *
     `,
@@ -377,6 +378,7 @@ export const createUpdatePodfic = async (
           podficData.vt_project_id,
           podficData.series_id,
           podficData.posted_unchaptered,
+          podficData.is_multivoice,
           new Date(),
         ]
       );
@@ -385,7 +387,7 @@ export const createUpdatePodfic = async (
       const work_id = (await createUpdateWork(podficData)).work_id;
 
       podficResult = await client.query(
-        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, posted_date, exclude_stats, type, giftee_id, deadline, added_date, posted_year, vt_project_id, series_id, posted_unchaptered, updated_at) VALUES (
+        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, posted_date, exclude_stats, type, giftee_id, deadline, added_date, posted_year, vt_project_id, series_id, posted_unchaptered, is_multivoice, updated_at) VALUES (
         $1,
         $2,
         $3,
@@ -402,7 +404,8 @@ export const createUpdatePodfic = async (
         $14,
         $15,
         $16,
-        $17
+        $17,
+        $18
       )
       RETURNING *
     `,
@@ -423,6 +426,7 @@ export const createUpdatePodfic = async (
           podficData.vt_project_id,
           podficData.series_id,
           podficData.posted_unchaptered,
+          podficData.is_multivoice,
           new Date(),
         ]
       );
@@ -458,8 +462,9 @@ export const createUpdatePodfic = async (
       vt_project_id = $14,
       series_id = $15,
       posted_unchaptered = $16,
-      updated_at = $17
-    WHERE podfic_id = $18
+      is_multivoice = $17,
+      updated_at = $18
+    WHERE podfic_id = $19
     RETURNING *
     `,
       [
@@ -479,6 +484,7 @@ export const createUpdatePodfic = async (
         podficData.vt_project_id,
         podficData.series_id,
         podficData.posted_unchaptered,
+        podficData.is_multivoice,
         new Date(),
         podficData.podfic_id,
       ]
@@ -1135,7 +1141,7 @@ export const createUpdateChallenge = async (challengeData: Challenge) => {
       ]
     );
   } else {
-    console.log({ challengeData });
+    // console.log({ challengeData });
     const result = await client.query(
       `UPDATE challenge SET
         name = $1,
@@ -1411,11 +1417,11 @@ export const createUpdatePartData = async (partData) => {
 
 export const updatePartMinified = async (data: any) => {
   const partData = JSON.parse(data);
-  console.log({ partData });
+  // console.log({ partData });
 
   if (partData.length) partData.length = getLengthUpdateString(partData.length);
 
-  console.log({ partData });
+  // console.log({ partData });
 
   if (typeof partData.part_id !== 'number')
     partData.part_id = parseInt(partData.part_id);
@@ -1441,10 +1447,10 @@ export const updatePartMinified = async (data: any) => {
     partData.status,
     partData.part_id,
   ];
-  console.log({ parameterArray });
-  console.log(parameterArray.length);
+  // console.log({ parameterArray });
+  // console.log(parameterArray.length);
   const result = await client.query(updateString, parameterArray);
-  console.log(result.rows[0]);
+  // console.log(result.rows[0]);
 };
 
 export const linkPodficcerToPodfic = async (

@@ -289,6 +289,7 @@ def main():
     conn = psycopg.connect(CONNECTION_STRING)
     cur = conn.cursor()
 
+    manual_mode = False
     print(len(sys.argv))
     print(sys.argv)
     if len(sys.argv) > 1:

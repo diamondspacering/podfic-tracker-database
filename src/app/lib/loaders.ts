@@ -12,7 +12,7 @@ export const fetchChapters = async (podficId) => {
   return chapters as Chapter[];
 };
 
-export const fetchPodficsFull = async () => {
+export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
   const client = await getClient();
   const result = await client.query(
     `select *,fandom.name as fandom_name,event.name as event_name,event_parent.name as parent_name from podfic
@@ -73,6 +73,25 @@ export const fetchPodficsFull = async () => {
           ),
         }
   );
+
+  if (onlyNonAAPodfics) {
+    console.log('getting podfics');
+    const allFilesMissingAALinks = (
+      await client.query(`
+      SELECT file.file_id,podfic_id,chapter_id,length,size,filetype,label,is_plain,string_agg(host, ',') from file
+      LEFT JOIN file_link on file_link.file_id = file.file_id
+      GROUP BY file.file_id
+      HAVING string_agg(host, ',') NOT LIKE '%audiofic archive%'
+    `)
+    ).rows;
+    // ok just preload in the files ok
+    podfics = podfics.filter((podfic) =>
+      allFilesMissingAALinks.some((file) => file.podfic_id === podfic.podfic_id)
+    );
+    // TODO: make sure the files are filtered too? just do it when fetching files I think. preloading files could work too but eh, would have to rejigger stuff
+  }
+
+  console.log(podfics.length);
 
   return podfics as (Podfic & Work & Fandom)[];
 };

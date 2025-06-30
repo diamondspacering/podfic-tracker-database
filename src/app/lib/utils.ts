@@ -1,29 +1,18 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   format2Digits,
   formatDateString,
   formatDateStringMonthFirst,
 } from './format';
-import { FilterType, getDefaultLength } from '../types';
+import {
+  FilterType,
+  getDefaultLength,
+  PodficStatus,
+  PermissionStatus,
+  PartStatus,
+} from '../types';
 import ColorScale from 'color-scales';
 import { getLengthValue } from './lengthHelpers';
-
-// TODO: this complains about localStorage not being defined, but it does still work
-export const usePersistentState = <T>(
-  key: string,
-  defaultValue: T
-): [T, React.Dispatch<React.SetStateAction<T>>] => {
-  const [state, setState] = useState<T>(() => {
-    const storedValue = localStorage.getItem(key);
-    return storedValue ? (JSON.parse(storedValue) as T) : defaultValue;
-  });
-
-  useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(state));
-  }, [key, state]);
-
-  return [state, setState];
-};
 
 // TODO: still running into issues w/ this, try again
 export const formatTableDate = (
@@ -32,14 +21,13 @@ export const formatTableDate = (
   editingRowVal?: string
 ) => {
   let formattedDate = '';
-  if (isEditingRow && !!editingRowVal)
-    formattedDate = formatDateString(
-      new Date(
-        editingRowVal?.includes('T') ? date : `${editingRowVal}T00:00:00`
-      )
-    );
+  if (isEditingRow)
+    formattedDate = date
+      ? formatDateString(
+          new Date(date.includes('T') ? date : `${date}T00:00:00`)
+        )
+      : '';
   else if (!!date) formattedDate = formatDateStringMonthFirst(new Date(date));
-  console.log({ formattedDate });
   return formattedDate;
 };
 
@@ -58,7 +46,17 @@ export const filterActivated = (column, filterType: FilterType) => {
       (column.getFilterValue() ?? []).includes(f)
     );
   }
+  if (filterType === FilterType.PART_STATUS) {
+    return !Object.values(PartStatus).every((f) =>
+      (column.getFilterValue() ?? []).includes(f)
+    );
+  }
   if (filterType === FilterType.TYPE) {
+    return !Array.from(column.getFacetedUniqueValues().keys()).every((f) =>
+      (column.getFilterValue() ?? []).includes(f)
+    );
+  }
+  if (filterType === FilterType.STRING) {
     return !Array.from(column.getFacetedUniqueValues().keys()).every((f) =>
       (column.getFilterValue() ?? []).includes(f)
     );

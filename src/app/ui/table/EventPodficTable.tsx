@@ -1,13 +1,7 @@
-import { fetcher, useEventPodfics } from '@/app/lib/swrLoaders';
+import { useEventPodfics } from '@/app/lib/swrLoaders';
 import { useEffect, useMemo } from 'react';
-import useSWR from 'swr';
 import tableStyles from './table.module.css';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { createColumnHelper } from '@tanstack/react-table';
 import { TableCell } from './TableCell';
 import { sourceCodePro } from '@/app/fonts/fonts';
 import ColorScale from 'color-scales';
@@ -16,9 +10,10 @@ import { getDefaultLength } from '@/app/types';
 import { Edit, OpenInNew } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 import Link from 'next/link';
+import CustomTable from './CustomTable';
 
 export default function EventPodficTable({ eventId }) {
-  const { podfics } = useEventPodfics(eventId);
+  const { podfics, isLoading } = useEventPodfics(eventId);
 
   useEffect(() => console.log({ podfics }), [podfics]);
 
@@ -175,50 +170,9 @@ export default function EventPodficTable({ eventId }) {
     // TODO: ability to add notes
   ];
 
-  const table = useReactTable({
-    data: podfics,
-    columns,
-    getCoreRowModel: getCoreRowModel<Podfic & Work & Author>(),
-    initialState: {
-      columnVisibility: columns.reduce((acc, column) => {
-        if ((column.meta as any)?.hidden && (column as any)?.accessorKey) {
-          acc[(column as any).accessorKey as string] = false;
-        }
-        return acc;
-      }, {}),
-    },
-  });
-
-  return (
-    <table className={tableStyles.table}>
-      <thead>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <tr key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <th key={header.id}>
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-              </th>
-            ))}
-          </tr>
-        ))}
-      </thead>
-      <tbody>
-        {table.getRowModel().rows.map((row) => (
-          <tr key={row.id}>
-            {row.getVisibleCells().map((cell) => (
-              <td key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-      <tfoot>
+  // TODO: figure out how to include this custom footer?
+  /*
+  <tfoot>
         <tr>
           <td colSpan={columns.length}>
             {podfics?.reduce((acc, podfic) => {
@@ -227,6 +181,26 @@ export default function EventPodficTable({ eventId }) {
           </td>
         </tr>
       </tfoot>
-    </table>
+  */
+
+  return (
+    <CustomTable
+      isLoading={isLoading}
+      data={podfics}
+      columns={columns}
+      rowKey='podfic_id'
+      editingRowId={null}
+      setEditingRowId={() => {}}
+      columnFilters={[]}
+      setColumnFilters={() => {}}
+      columnVisibility={columns.reduce((acc, column) => {
+        if ((column.meta as any)?.hidden && (column as any)?.accessorKey) {
+          acc[(column as any).accessorKey as string] = false;
+        }
+        return acc;
+      }, {})}
+      updateItemInline={async () => {}}
+      numLoadingRows={3}
+    />
   );
 }

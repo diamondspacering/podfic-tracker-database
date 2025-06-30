@@ -8,13 +8,13 @@ export const useChaptersForPodfic = (podficId) => {
   );
 
   return {
-    chapters: data ?? [],
+    chapters: (data ?? []) as Chapter[],
     error,
     isLoading,
   };
 };
 
-export const useResources = (resourceType = null) => {
+export const useResourcesOfType = (resourceType = null) => {
   const { data, error, isLoading } = useSWR(
     ['/db/resources', resourceType],
     () => fetcher(`/db/resources?resource_type=${resourceType}`)
@@ -49,6 +49,18 @@ export const useEventPodfics = (eventId) => {
 
   return {
     podfics,
+    error,
+    isLoading,
+  };
+};
+
+export const useEvents = () => {
+  const { data, error, isLoading } = useSWR('/db/events', fetcher);
+
+  const events = (data ?? []) as (Event & EventParent)[];
+
+  return {
+    events,
     error,
     isLoading,
   };
@@ -124,13 +136,88 @@ const recordingSessionFetcher = async (
   return data;
 };
 
-export const usePodficsFull = () => {
-  const { data, error, isLoading } = useSWR('/db/podfics', fetcher);
+const filesFetcher = async (podficId, chapterId, onlyNonAAFiles = false) => {
+  let response = null;
+  let baseString = `/db/files?podfic_id=${podficId}&chapter_id=${chapterId}`;
+  if (onlyNonAAFiles) {
+    baseString = `${baseString}&with_chapters=true&only_non_aa_files=true`;
+  } else {
+    baseString = `${baseString}&with_chapters=false`;
+  }
+
+  response = await fetch(baseString);
+  const data = await response.json();
+  return data;
+};
+
+const resourcesFetcher = async (podficId, chapterId) => {
+  let requestString = `/db/resources?`;
+  if (podficId) requestString += `podfic_id=${podficId}`;
+  else if (chapterId) requestString += `chapter_id=${chapterId}`;
+
+  const response = await fetch(requestString);
+  const data = await response.json();
+  return data;
+};
+
+const podficsFetcher = async (missingAALinks = false) => {
+  let response = null;
+  if (missingAALinks) {
+    response = await fetch(`/db/podfics?missing_aa_links=true`);
+  } else {
+    response = await fetch('/db/podfics');
+  }
+
+  const data = await response.json();
+  return data;
+};
+
+export const usePodficsFull = ({ missingAALinks = false }) => {
+  // don't revalidate if looking at missing aa links podfics, since we want to update w/o them disappearing
+  const { data, error, isLoading } = useSWR(
+    ['/db/podfics', missingAALinks],
+    () => podficsFetcher(missingAALinks),
+    {
+      revalidateIfStale: !missingAALinks,
+      revalidateOnFocus: !missingAALinks,
+      revalidateOnReconnect: !missingAALinks,
+    }
+  );
 
   const podfics = (data ?? []) as (Podfic & Work & Fandom & Event)[];
 
   return {
     podfics,
+    error,
+    isLoading,
+  };
+};
+
+export const useFiles = ({ podficId, chapterId, onlyNonAAFiles = false }) => {
+  const { data, error, isLoading } = useSWR(
+    ['/db/files', podficId, chapterId, onlyNonAAFiles],
+    () => filesFetcher(podficId, chapterId, onlyNonAAFiles)
+  );
+
+  const files = (data ?? []) as File[];
+
+  return {
+    files,
+    error,
+    isLoading,
+  };
+};
+
+export const useResources = ({ podficId, chapterId }) => {
+  const { data, error, isLoading } = useSWR(
+    ['/db/resources', podficId, chapterId],
+    () => resourcesFetcher(podficId, chapterId)
+  );
+
+  const resources = (data ?? []) as Resource[];
+
+  return {
+    resources,
     error,
     isLoading,
   };
@@ -191,6 +278,21 @@ export const usePart = (id: number) => {
 
   return {
     part,
+    error,
+    isLoading,
+  };
+};
+
+export const usePodficCountByYear = () => {
+  const { data, error, isLoading } = useSWR(
+    `/db/stats/podfic_count_by_year`,
+    fetcher
+  );
+
+  const podficCountByYear = (data ?? {}) as Record<string, number>;
+
+  return {
+    podficCountByYear,
     error,
     isLoading,
   };

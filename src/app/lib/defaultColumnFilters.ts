@@ -1,5 +1,6 @@
 import {
   FilterType,
+  PartStatus,
   PermissionStatus,
   PodficStatus,
   PodficType,
@@ -139,6 +140,8 @@ export const getFilterValues = (column: Column<any, any>) => {
       return Object.values(PodficStatus);
     case 'permission':
       return Object.values(PermissionStatus);
+    case 'part_status':
+      return Object.values(PartStatus);
     case 'type':
       return Object.values(PodficType);
     case 'string':

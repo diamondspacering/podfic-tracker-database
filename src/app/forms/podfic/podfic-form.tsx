@@ -40,6 +40,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
   const [challengesLoading, setChallengesLoading] = useState(true);
   const [challengeId, setChallengeId] = useState(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [isMultivoice, setIsMultivoice] = useState(false);
   const [seriesLoading, setSeriesLoading] = useState(true);
   const [series, setSeries] = useState<Series[]>([]);
   const [isNewSeries, setIsNewSeries] = useState(false);
@@ -613,27 +614,38 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
             </>
           )}
         </div>
-        <TextField
-          size='small'
-          select
-          sx={{
-            width: '200px',
-          }}
-          label={'Type'}
-          value={podfic.type}
-          onChange={(e) =>
-            setPodfic((prev) => ({
-              ...prev,
-              type: e.target.value as PodficType,
-            }))
-          }
-        >
-          {Object.values(PodficType).map((type) => (
-            <MenuItem key={type} value={type}>
-              <span>{type}</span>
-            </MenuItem>
-          ))}
-        </TextField>
+        <>
+          <TextField
+            size='small'
+            select
+            sx={{
+              width: '200px',
+            }}
+            label={'Type'}
+            value={podfic.type}
+            onChange={(e) =>
+              setPodfic((prev) => ({
+                ...prev,
+                type: e.target.value as PodficType,
+              }))
+            }
+          >
+            {Object.values(PodficType).map((type) => (
+              <MenuItem key={type} value={type}>
+                <span>{type}</span>
+              </MenuItem>
+            ))}
+          </TextField>
+          <FormControlLabel
+            label='Is multivoice?'
+            control={
+              <Checkbox
+                checked={isMultivoice}
+                onChange={(e) => setIsMultivoice(e.target.checked)}
+              />
+            }
+          />
+        </>
 
         <Autocomplete
           size='small'
