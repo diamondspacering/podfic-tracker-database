@@ -74,7 +74,7 @@ export default function VoiceteamRoundPage({
     });
   };
 
-  useEffect(() => console.log({ projects }), [projects]);
+  // useEffect(() => console.log({ projects }), [projects]);
 
   const updatePointsManual = useCallback(
     (projectIndex, newValue) => {

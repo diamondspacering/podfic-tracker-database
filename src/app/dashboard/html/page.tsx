@@ -75,8 +75,7 @@ export default function Page() {
   const [generatedFilesDialogOpen, setGeneratedFilesDialogOpen] =
     useState(false);
   const [aaDate, setAADate] = useState(
-    // generateAADate(formatDateString(new Date()))
-    generateAADate('2024-09-18')
+    generateAADate(formatDateString(new Date()))
   );
 
   const { podficcer: defaultPodficcer } = usePodficcer(1);
@@ -392,22 +391,37 @@ export default function Page() {
         Post
       </a>
 
-      <TextField
-        select
-        size='small'
-        sx={{
-          width: '300px',
-        }}
-        label='Template'
-        value={selectedTemplate}
-        onChange={(e) => setSelectedTemplate(e.target.value)}
-      >
-        {htmlTemplates.map((template) => (
-          <MenuItem key={template} value={template}>
-            {template}
-          </MenuItem>
-        ))}
-      </TextField>
+      <div className={styles.flexRow}>
+        <TextField
+          select
+          size='small'
+          sx={{
+            width: '300px',
+          }}
+          label='Template'
+          value={selectedTemplate}
+          onChange={(e) => setSelectedTemplate(e.target.value)}
+        >
+          {htmlTemplates.map((template) => (
+            <MenuItem key={template} value={template}>
+              {template}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        {selectedTemplate === 'Audiofic Archive' && (
+          <span>
+            Change date:
+            <TextField
+              size='small'
+              type='date'
+              value={aaDate}
+              onChange={(e) => setAADate(e.target.value)}
+            />
+          </span>
+        )}
+      </div>
+
       {selectedTemplate === 'Audiofic Archive' && !!podfic.chaptered && (
         <>
           <FormControlLabel
