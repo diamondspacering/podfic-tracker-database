@@ -144,6 +144,11 @@ interface CoverArt {
   cover_art_status?: string;
 }
 
+interface Tag {
+  tag_id?: number;
+  name: string;
+}
+
 // --FIC INFO--
 
 interface Work {

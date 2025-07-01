@@ -710,7 +710,7 @@ create table public.schedule_event
     round_id          integer
         constraint schedule_event_round_round_id_fk
             references public.round,
-    type              varchar
+    type              scheduleeventtype
 );
 
 alter table public.schedule_event
@@ -722,6 +722,32 @@ alter sequence public.schedule_event_podfic_id_seq owned by public.schedule_even
 
 create unique index work_work_id_uindex
     on public.work (work_id);
+
+create table public.tag
+(
+    tag_id serial
+        constraint tag_pk
+            primary key,
+    tag    text not null
+);
+
+alter table public.tag
+    owner to "podfic-tracker-db_owner";
+
+create table public.tag_podfic
+(
+    tag_id    integer not null
+        constraint tag_podfic_tag_tag_id_fk
+            references public.tag,
+    podfic_id integer not null
+        constraint tag_podfic_podfic_podfic_id_fk
+            references public.podfic,
+    constraint tag_podfic_pk
+        primary key (tag_id, podfic_id)
+);
+
+alter table public.tag_podfic
+    owner to "podfic-tracker-db_owner";
 
 create function public.create_part_schedule_event() returns trigger
     language plpgsql
@@ -771,6 +797,50 @@ END;
 $$;
 
 alter function public.create_round_schedule_event() owner to "podfic-tracker-db_owner";
+
+create procedure public.update_all_raw_lengths_from_recording_sessions()
+    language plpgsql
+as
+$$
+BEGIN
+    RAISE NOTICE 'updating all raw lengths';
+
+    UPDATE podfic
+    SET raw_length = sum_rec_lengths.sum_raw
+    FROM (SELECT podfic.podfic_id, SUM(recording_session.length) AS sum_raw
+          FROM podfic
+                   LEFT JOIN recording_session ON podfic.podfic_id = recording_session.podfic_id
+          WHERE recording_session.chapter_id IS NULL
+            AND recording_session.part_id IS NULL
+          GROUP BY podfic.podfic_id) AS sum_rec_lengths
+    WHERE podfic.podfic_id = sum_rec_lengths.podfic_id;
+
+    RAISE NOTICE 'updated all regular podfics';
+
+    UPDATE chapter
+    SET raw_length = sum_rec_lengths.sum_raw
+    FROM (SELECT chapter.chapter_id, SUM(recording_session.length) AS sum_raw
+          FROM chapter
+                   LEFT JOIN recording_session ON chapter.chapter_id = recording_session.chapter_id
+          WHERE recording_session.part_id IS NULL
+          GROUP BY chapter.chapter_id) AS sum_rec_lengths
+    WHERE chapter.chapter_id = sum_rec_lengths.chapter_id;
+
+    RAISE NOTICE 'updated all chapters';
+
+    UPDATE part
+    SET raw_length = sum_rec_lengths.sum_raw
+    FROM (SELECT part.part_id, SUM(recording_session.length) AS sum_raw
+          FROM part
+                   LEFT JOIN recording_session ON part.part_id = recording_session.part_id
+          GROUP BY part.part_id) AS sum_rec_lengths
+    WHERE part.part_id = sum_rec_lengths.part_id;
+
+    RAISE NOTICE 'updated all parts';
+END;
+$$;
+
+alter procedure public.update_all_raw_lengths_from_recording_sessions() owner to "podfic-tracker-db_owner";
 
 create function public.update_length_from_parts() returns trigger
     language plpgsql
@@ -1018,48 +1088,4 @@ create trigger update_update_schedule_event_type
     on public.schedule_event
     for each row
 execute procedure public.update_schedule_event_type();
-
-create procedure public.update_all_raw_lengths_from_recording_sessions()
-    language plpgsql
-as
-$$
-BEGIN
-    RAISE NOTICE 'updating all raw lengths';
-
-    UPDATE podfic
-    SET raw_length = sum_rec_lengths.sum_raw
-    FROM (SELECT podfic.podfic_id, SUM(recording_session.length) AS sum_raw
-          FROM podfic
-                   LEFT JOIN recording_session ON podfic.podfic_id = recording_session.podfic_id
-          WHERE recording_session.chapter_id IS NULL
-            AND recording_session.part_id IS NULL
-          GROUP BY podfic.podfic_id) AS sum_rec_lengths
-    WHERE podfic.podfic_id = sum_rec_lengths.podfic_id;
-
-    RAISE NOTICE 'updated all regular podfics';
-
-    UPDATE chapter
-    SET raw_length = sum_rec_lengths.sum_raw
-    FROM (SELECT chapter.chapter_id, SUM(recording_session.length) AS sum_raw
-          FROM chapter
-                   LEFT JOIN recording_session ON chapter.chapter_id = recording_session.chapter_id
-          WHERE recording_session.part_id IS NULL
-          GROUP BY chapter.chapter_id) AS sum_rec_lengths
-    WHERE chapter.chapter_id = sum_rec_lengths.chapter_id;
-
-    RAISE NOTICE 'updated all chapters';
-
-    UPDATE part
-    SET raw_length = sum_rec_lengths.sum_raw
-    FROM (SELECT part.part_id, SUM(recording_session.length) AS sum_raw
-          FROM part
-                   LEFT JOIN recording_session ON part.part_id = recording_session.part_id
-          GROUP BY part.part_id) AS sum_rec_lengths
-    WHERE part.part_id = sum_rec_lengths.part_id;
-
-    RAISE NOTICE 'updated all parts';
-END;
-$$;
-
-alter procedure public.update_all_raw_lengths_from_recording_sessions() owner to "podfic-tracker-db_owner";
 
