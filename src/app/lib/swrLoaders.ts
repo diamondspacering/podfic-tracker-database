@@ -297,3 +297,15 @@ export const usePodficCountByYear = () => {
     isLoading,
   };
 };
+
+export const useTags = () => {
+  const { data, error, isLoading } = useSWR('/db/tags', fetcher);
+
+  const tags = (data ?? []) as Tag[];
+
+  return {
+    tags,
+    error,
+    isLoading,
+  };
+};

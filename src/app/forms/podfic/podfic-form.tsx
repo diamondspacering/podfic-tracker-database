@@ -4,6 +4,7 @@ import {
   Autocomplete,
   Button,
   Checkbox,
+  createFilterOptions,
   FormControlLabel,
   MenuItem,
   TextField,
@@ -19,8 +20,11 @@ import { formatDateString, formatDateTimeString } from '@/app/lib/format';
 import StatusSelect from '@/app/ui/StatusSelect';
 import DatePicker from '@/app/ui/DatePicker';
 import SeriesForm from './series-form';
-import { usePodficcers } from '@/app/lib/swrLoaders';
+import { usePodficcers, useTags } from '@/app/lib/swrLoaders';
 import PodficcerDialog from '@/app/ui/podficcer/podficcer-dialog';
+import { mutate } from 'swr';
+
+const filter = createFilterOptions<Tag>();
 
 interface PodficFormProps {
   podfic: Podfic & Work;
@@ -53,6 +57,9 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
   const [authorsLoading, setAuthorsLoading] = useState(true);
   const [isNewAuthor, setIsNewAuthor] = useState(false);
 
+  const [addingTag, setAddingTag] = useState(false);
+
+  const { tags, isLoading: tagsLoading } = useTags();
   const { podficcers, isLoading: podficcersLoading } = usePodficcers();
 
   // TODO: make it default type of podfic
@@ -87,6 +94,31 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
         added_date: formatDateTimeString(new Date(podfic.added_date)),
       }));
   }, [podfic.added_date]);
+
+  const addTag = async (tag: string) => {
+    try {
+      setAddingTag(true);
+
+      const result = await fetch(`/db/tags`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tag }),
+      });
+      const newTag = await result.json();
+      await mutate('/db/tags');
+
+      setPodfic((prev) => ({
+        ...prev,
+        tags: [...podfic.tags, newTag],
+      }));
+    } catch (e) {
+      console.error('Error adding tag:', e);
+    } finally {
+      setAddingTag(false);
+    }
+  };
 
   const fetchAuthors = useCallback(async () => {
     setAuthorsLoading(true);
@@ -646,6 +678,62 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
             }
           />
         </>
+
+        <Autocomplete
+          size='small'
+          sx={{
+            minWidth: '200px',
+          }}
+          options={tags.filter(
+            (tag) => !podfic.tags?.find((t) => t.tag_id === tag.tag_id)
+          )}
+          loading={tagsLoading || addingTag}
+          getOptionLabel={(option) =>
+            typeof option === 'string' ? option : option?.tag
+          }
+          multiple
+          value={podfic.tags ?? []}
+          onChange={(event, newValue) => {
+            const newTags = newValue.filter(
+              (value) =>
+                typeof value === 'string' || value.tag.match(/Add ".*"/)
+            );
+
+            if (newTags.length) {
+              const tagContent = (
+                typeof newTags[0] === 'string'
+                  ? newTags[0]
+                  : newTags[0].tag.match(/Add "(.*)"/)[1]
+              ).toLowerCase();
+              addTag(tagContent);
+            } else {
+              setPodfic((prev) => ({
+                ...prev,
+                tags: newValue as Tag[],
+              }));
+            }
+          }}
+          freeSolo
+          filterOptions={(options, params) => {
+            const filtered = filter(options, params);
+
+            const { inputValue } = params;
+            // Suggest the creation of a new value
+            const isExisting = options.some(
+              (option) => inputValue === option.tag
+            );
+            if (inputValue !== '' && !isExisting) {
+              filtered.push({
+                tag: `Add "${inputValue}"`,
+              });
+            }
+
+            return filtered;
+          }}
+          renderInput={(params) => (
+            <TextField {...params} size='small' label='Tags&nbsp;&nbsp;' />
+          )}
+        />
 
         <Autocomplete
           size='small'

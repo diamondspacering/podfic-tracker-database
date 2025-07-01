@@ -28,15 +28,17 @@ export default function Page({ params }: { params: { id: any } }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch(`/db/podfics/${params.id}?with_podficcers=true`).then((res) => {
-      res.json().then((data) => {
-        if (Object.keys(data).length && params.id !== 'new') {
-          console.log({ data });
-          setPodfic(data);
-        }
-        setLoading(false);
-      });
-    });
+    fetch(`/db/podfics/${params.id}?with_podficcers=true&with_tags=true`).then(
+      (res) => {
+        res.json().then((data) => {
+          if (Object.keys(data).length && params.id !== 'new') {
+            console.log({ data });
+            setPodfic(data);
+          }
+          setLoading(false);
+        });
+      }
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

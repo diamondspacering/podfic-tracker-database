@@ -14,6 +14,7 @@ export async function GET(
   const withCoverArt = searchParams.get('with_cover_art');
   const withAuthor = searchParams.get('with_author');
   const withPodficcers = searchParams.get('with_podficcers');
+  const withTags = searchParams.get('with_tags');
 
   const client = await getClient();
 
@@ -57,6 +58,14 @@ export async function GET(
       [id]
     );
     podfic.podficcers = podficcerResult.rows ?? [];
+  }
+
+  if (withTags) {
+    const tagResult = await client.query(
+      `select * from tag inner join tag_podfic on tag_podfic.tag_id = tag.tag_id where podfic_id = $1`,
+      [id]
+    );
+    podfic.tags = tagResult.rows ?? [];
   }
 
   const chapterResult = await client.query(

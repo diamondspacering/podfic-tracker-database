@@ -84,6 +84,7 @@ interface Podfic {
   podficcers?: Podficcer[];
   notes?: Note[];
   resources?: Resource[];
+  tags?: Tag[];
 }
 
 interface Chapter {
@@ -146,7 +147,7 @@ interface CoverArt {
 
 interface Tag {
   tag_id?: number;
-  name: string;
+  tag: string;
 }
 
 // --FIC INFO--
