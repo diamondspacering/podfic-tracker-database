@@ -83,7 +83,7 @@ export enum FilterType {
   NUMBER = 'number',
 }
 
-export enum ScheduledEventType {
+export enum ScheduleEventType {
   PODFIC = 'Podfic',
   CHAPTER = 'Chapter',
   PART = 'Part',

@@ -5,7 +5,7 @@
 //   round?: Round;
 
 import { DateTime } from 'luxon';
-import { ScheduledEventType } from '../types';
+import { ScheduleEventType } from '../types';
 
 // }
 interface EventContentProps {
@@ -65,7 +65,7 @@ export default function EventContent({ scheduleEvent }: EventContentProps) {
           {part},&nbsp;{part_wordcount} words
         </span>
       )}
-      {type === ScheduledEventType.PODFIC && (
+      {type === ScheduleEventType.PODFIC && (
         <span>
           {wordcount},&nbsp;{status}
         </span>

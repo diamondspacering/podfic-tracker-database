@@ -274,7 +274,7 @@ interface Event {
   year?: string | number;
 }
 
-enum ScheduledEventType {
+enum ScheduleEventType {
   PODFIC = 'Podfic',
   CHAPTER = 'Chapter',
   PART = 'Part',
@@ -287,7 +287,7 @@ interface ScheduleEvent {
   chapter_id?: number;
   part_id?: number;
   round_id?: number;
-  type?: ScheduledEventType;
+  type?: ScheduleEventType;
   start?: string | Date;
   end?: string | Date;
   allDay?: boolean;

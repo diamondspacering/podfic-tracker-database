@@ -12,7 +12,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import EventContent from '@/app/lib/EventContent';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import { Button, Typography } from '@mui/material';
-import { ScheduledEventType } from '@/app/types';
+import { ScheduleEventType } from '@/app/types';
 
 const timezone = DateTime.local().zoneName;
 
@@ -64,13 +64,13 @@ export default function SchedulePage() {
   const eventPropGetter = useCallback((event) => {
     const seType = event.type;
     switch (seType) {
-      case ScheduledEventType.ROUND:
+      case ScheduleEventType.ROUND:
         return { style: { backgroundColor: 'purple' } };
-      case ScheduledEventType.PART:
+      case ScheduleEventType.PART:
         return { style: { backgroundColor: 'blue' } };
-      case ScheduledEventType.CHAPTER:
+      case ScheduleEventType.CHAPTER:
         return { style: { backgroundColor: 'green' } };
-      case ScheduledEventType.PODFIC:
+      case ScheduleEventType.PODFIC:
         return { style: { backgroundColor: 'orange' } };
       default:
         return { style: { backgroundColor: 'red' } };
