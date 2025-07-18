@@ -297,3 +297,27 @@ export const usePodficCountByYear = () => {
     isLoading,
   };
 };
+
+export const useTags = () => {
+  const { data, error, isLoading } = useSWR('/db/tags', fetcher);
+
+  const tags = (data ?? []) as Tag[];
+
+  return {
+    tags,
+    error,
+    isLoading,
+  };
+};
+
+export const useToPodficPodfics = () => {
+  const { data, error, isLoading } = useSWR('/db/topodfic', fetcher);
+
+  const podfics = (data ?? []) as (Podfic & Work & Fandom & Event)[];
+
+  return {
+    podfics,
+    error,
+    isLoading,
+  };
+};

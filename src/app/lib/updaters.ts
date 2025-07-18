@@ -496,6 +496,11 @@ export const createUpdatePodfic = async (
       await linkPodficcerToPodfic(podficcer.podficcer_id, podficId);
     }
   }
+  if (podficData.tags?.length) {
+    await Promise.all(
+      podficData.tags.map((tag) => linkTagToPodfic(tag.tag_id, podficId))
+    );
+  }
   return podficResult?.rows[0];
 };
 
@@ -1463,5 +1468,33 @@ export const linkPodficcerToPodfic = async (
     [podficId, podficcerId]
   );
   // console.log(result.rows[0]);
+  return result.rows[0];
+};
+
+export const linkTagToPodfic = async (tagId: number, podficId: number) => {
+  const client = await getClient();
+  const result = await client.query(
+    `INSERT INTO tag_podfic (tag_id, podfic_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *`,
+    [tagId, podficId]
+  );
+  return result.rows[0];
+};
+
+export const unlinkTagFromPodfic = async (tagId: number, podficId: number) => {
+  const client = await getClient();
+  const result = await client.query(
+    'DELETE FROM tag_podfic WHERE tag_id = $1 AND podfic_id = $2',
+    [tagId, podficId]
+  );
+  return result;
+};
+
+// TODO: use values instead
+export const updateTag = async (tagId: number, tagText: string) => {
+  const client = await getClient();
+  const result = await client.query(
+    'UPDATE tag SET tag = $1 WHERE tag_id = $2 RETURNING *',
+    [tagText, tagId]
+  );
   return result.rows[0];
 };

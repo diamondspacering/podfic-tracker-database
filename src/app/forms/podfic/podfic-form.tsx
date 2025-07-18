@@ -21,6 +21,7 @@ import DatePicker from '@/app/ui/DatePicker';
 import SeriesForm from './series-form';
 import { usePodficcers } from '@/app/lib/swrLoaders';
 import PodficcerDialog from '@/app/ui/podficcer/podficcer-dialog';
+import TagSelect from '@/app/ui/TagSelect';
 
 interface PodficFormProps {
   podfic: Podfic & Work;
@@ -646,6 +647,24 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
             }
           />
         </>
+
+        <TagSelect
+          existingTags={podfic.tags ?? []}
+          addToExistingTags={(newTag) => {
+            console.log({ newTag });
+            setPodfic((prev) => ({
+              ...prev,
+              tags: [...(prev.tags ?? []), newTag],
+            }));
+          }}
+          setExistingTags={(tags) => {
+            setPodfic((prev) => ({
+              ...prev,
+              tags,
+            }));
+          }}
+          showExistingTags
+        />
 
         <Autocomplete
           size='small'

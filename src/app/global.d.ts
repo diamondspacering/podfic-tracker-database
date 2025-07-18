@@ -84,6 +84,7 @@ interface Podfic {
   podficcers?: Podficcer[];
   notes?: Note[];
   resources?: Resource[];
+  tags?: Tag[];
 }
 
 interface Chapter {
@@ -144,7 +145,19 @@ interface CoverArt {
   cover_art_status?: string;
 }
 
+interface Tag {
+  tag_id?: number;
+  tag: string;
+}
+
 // --FIC INFO--
+enum Rating {
+  GEN = 'Gen',
+  TEEN = 'Teen',
+  MATURE = 'Mature',
+  EXPLICIT = 'Explicit',
+  NOT_RATED = 'Not Rated',
+}
 
 interface Work {
   work_id?: number;
@@ -157,7 +170,7 @@ interface Work {
   wordcount: number | string;
   chaptered?: boolean;
   chapter_count?: number;
-  rating?: string;
+  rating?: Rating;
   category?: string;
   relationship?: string;
   main_character?: string;

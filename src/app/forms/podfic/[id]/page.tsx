@@ -13,7 +13,13 @@ import DurationPicker from '@/app/ui/DurationPicker';
 import { PodficType } from '@/app/types';
 import { usePodficcer } from '@/app/lib/swrLoaders';
 
-export default function Page({ params }: { params: { id: any } }) {
+export default function Page({
+  params,
+  searchParams,
+}: {
+  params: { id: any };
+  searchParams?: any;
+}) {
   const { podficcer: defaultPodficcer } = usePodficcer(1);
 
   // TODO: use swr instead
@@ -28,15 +34,17 @@ export default function Page({ params }: { params: { id: any } }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch(`/db/podfics/${params.id}?with_podficcers=true`).then((res) => {
-      res.json().then((data) => {
-        if (Object.keys(data).length && params.id !== 'new') {
-          console.log({ data });
-          setPodfic(data);
-        }
-        setLoading(false);
-      });
-    });
+    fetch(`/db/podfics/${params.id}?with_podficcers=true&with_tags=true`).then(
+      (res) => {
+        res.json().then((data) => {
+          if (Object.keys(data).length && params.id !== 'new') {
+            console.log({ data });
+            setPodfic(data);
+          }
+          setLoading(false);
+        });
+      }
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -45,7 +53,8 @@ export default function Page({ params }: { params: { id: any } }) {
     setSubmitting(true);
     try {
       await createUpdatePodficClient(podfic);
-      router.push('/dashboard/podfic');
+      if (searchParams?.return_url) router.push(searchParams.return_url);
+      else router.push('/dashboard/podfic');
     } catch (e) {
       console.error('Error submitting podfic:', e);
     } finally {

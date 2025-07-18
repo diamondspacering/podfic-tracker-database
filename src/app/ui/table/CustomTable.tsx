@@ -270,7 +270,7 @@ export default function CustomTable<T>({
           <br />
         </>
       )}
-      {showRowCount && (
+      {showRowCount && !isLoading && (
         <b>Displaying {table.getFilteredRowModel().rows.length}</b>
       )}
       <table className={tableStyles.table}>

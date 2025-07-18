@@ -13,6 +13,7 @@ import DurationPicker from '../DurationPicker';
 import DatePicker from '../DatePicker';
 import { sourceCodePro } from '@/app/fonts/fonts';
 import { getLengthValue } from '@/app/lib/lengthHelpers';
+import RatingBadge from '../RatingBadge';
 
 type Option = {
   label: string;
@@ -171,6 +172,8 @@ const DisplayCell = ({ value, meta, isExpanded }) => {
   switch (meta?.type) {
     case 'status':
       return <StatusBadge status={value} />;
+    case 'rating':
+      return <RatingBadge rating={value} />;
     case 'length':
       return (
         <span

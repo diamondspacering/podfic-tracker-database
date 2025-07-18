@@ -35,6 +35,9 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
   const resourceResult = await client.query(
     'select * from resource inner join resource_podfic on resource.resource_id = resource_podfic.resource_id'
   );
+  const tagResult = await client.query(
+    'select * from tag inner join tag_podfic on tag.tag_id = tag_podfic.tag_id'
+  );
 
   let podfics = result.rows;
   podfics = podfics.map((podfic) =>
@@ -55,6 +58,9 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
           resources: resourceResult.rows.filter(
             (resource) => resource.podfic_id === podfic.podfic_id
           ),
+          tags: tagResult.rows.filter(
+            (tag) => tag.podfic_id === podfic.podfic_id
+          ),
         }
       : {
           ...podfic,
@@ -70,6 +76,9 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
           ),
           resources: resourceResult.rows.filter(
             (resource) => resource.podfic_id === podfic.podfic_id
+          ),
+          tags: tagResult.rows.filter(
+            (tag) => tag.podfic_id === podfic.podfic_id
           ),
         }
   );
