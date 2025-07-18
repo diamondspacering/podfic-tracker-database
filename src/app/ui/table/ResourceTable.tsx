@@ -1,44 +1,13 @@
-import tableStyles from '@/app/ui/table/table.module.css';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { createColumnHelper } from '@tanstack/react-table';
 import { TableCell } from './TableCell';
-import { CircularProgress } from '@mui/material';
+import CustomTable from './CustomTable';
+import { useResources } from '@/app/lib/swrLoaders';
 
 // TODO: should be able to pull in resources from parent sometimes? also refresh itself. it should be using swr
 // TODO: event & author handling as well, and isFull for podficId
 // TODO: I think this is largely deprecated?? you want to use the additionalcontentrows thing instead and pull in prefetched data
 export default function ResourceTable({ podficId = null, chapterId = null }) {
-  const [resources, setResources] = useState<Resource[]>([]);
-  const [resourcesLoading, setResourcesLoading] = useState(true);
-
-  const fetchResources = useCallback(async () => {
-    console.log('fetchresources running');
-    setResourcesLoading(true);
-    try {
-      // may need to work on return types....has extra field bc of the join
-      let requestString = `/db/resources?`;
-      if (podficId) requestString = requestString + `podfic_id=${podficId}`;
-      else if (chapterId)
-        requestString = requestString + `chapter_id=${chapterId}`;
-      const response = await fetch(requestString);
-      const data = await response.json();
-      console.log({ data });
-      setResources(data);
-    } catch (e) {
-      console.error('Error fetching resources:', e);
-    } finally {
-      setResourcesLoading(false);
-    }
-  }, [podficId, chapterId]);
-
-  useEffect(() => {
-    fetchResources();
-  }, [fetchResources]);
+  const { resources, isLoading } = useResources({ podficId, chapterId });
 
   const columnHelper = createColumnHelper<Resource>();
 
@@ -82,57 +51,19 @@ export default function ResourceTable({ podficId = null, chapterId = null }) {
     }),
   ];
 
-  const table = useReactTable({
-    data: resources,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    initialState: {
-      columnVisibility: {
-        resource_id: false,
-      },
-    },
-    meta: {
-      editingRowId: null,
-      setEditingRowId: () => {},
-    },
-  });
-
-  // TODO: loading state in tbody instead. also it isn't showing headers this is fine
   // TODO: row groups for resource type?
   return (
-    <div>
-      <table className={tableStyles.table}>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {resourcesLoading && <CircularProgress />}
-          {table.getRowModel().rows.map((row) => (
-            <Fragment key={row.id}>
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            </Fragment>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <CustomTable
+      isLoading={isLoading}
+      data={resources}
+      columns={columns}
+      columnVisibility={{ resource_id: false }}
+      rowKey='resource_id'
+      editingRowId={null}
+      setEditingRowId={() => {}}
+      columnFilters={[]}
+      setColumnFilters={() => {}}
+      updateItemInline={async () => {}}
+    />
   );
 }

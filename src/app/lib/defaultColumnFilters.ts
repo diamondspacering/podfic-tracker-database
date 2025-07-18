@@ -1,8 +1,10 @@
 import {
   FilterType,
+  PartStatus,
   PermissionStatus,
   PodficStatus,
   PodficType,
+  Rating,
 } from '@/app/types';
 import { Column, ColumnFilter, Table } from '@tanstack/react-table';
 
@@ -11,6 +13,7 @@ const DEFAULT_DEFINED_FILTER_TYPES = [
   FilterType.PERMISSION,
   FilterType.TYPE,
   FilterType.STRING,
+  FilterType.OTHER,
 ];
 
 export const defaultPodficStatusValues = Object.values(PodficStatus).filter(
@@ -37,6 +40,9 @@ export const getDefaultFilterForColumn = (
       break;
     case FilterType.TYPE:
       value = defaultPodficTypeValues;
+      break;
+    case FilterType.OTHER:
+      value = [];
       break;
     default:
       value = Array.from(column.getFacetedUniqueValues().keys()).sort();
@@ -66,12 +72,18 @@ export const getResetFilterForColumn = (column: Column<any, any>) => {
     case FilterType.STRING:
       value = Array.from(column.getFacetedUniqueValues().keys()).sort();
       break;
+    case FilterType.OTHER:
+      value = [];
+      break;
     default:
       value = null;
   }
   return {
     id: column.id,
-    value: !!value && Array.isArray(value) ? [...value, null] : value,
+    value:
+      !!value && Array.isArray(value) && filterType !== FilterType.OTHER
+        ? [...value, null]
+        : value,
   };
 };
 
@@ -139,6 +151,10 @@ export const getFilterValues = (column: Column<any, any>) => {
       return Object.values(PodficStatus);
     case 'permission':
       return Object.values(PermissionStatus);
+    case 'part_status':
+      return Object.values(PartStatus);
+    case 'rating':
+      return Object.values(Rating);
     case 'type':
       return Object.values(PodficType);
     case 'string':

@@ -76,7 +76,7 @@ export default function StatusBadge({
 
   return (
     <div
-      className={`${styles.statusBadge} ${
+      className={`${styles.roundBadge} ${
         clickable ? styles.clickable : ''
       } ${className}`}
       onClick={onClick}

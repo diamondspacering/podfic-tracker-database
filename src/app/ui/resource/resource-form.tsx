@@ -1,6 +1,6 @@
 import styles from '@/app/forms/forms.module.css';
 import { resourceTypes } from '@/app/lib/dataGeneral';
-import { useResources } from '@/app/lib/swrLoaders';
+import { useResourcesOfType } from '@/app/lib/swrLoaders';
 import {
   Autocomplete,
   FormControlLabel,
@@ -19,7 +19,7 @@ export default function ResourceForm({
   resource,
   setResource,
 }: ResourceFormProps) {
-  const { resources, isLoading: resourcesLoading } = useResources(
+  const { resources, isLoading: resourcesLoading } = useResourcesOfType(
     resource.resource_type
   );
 

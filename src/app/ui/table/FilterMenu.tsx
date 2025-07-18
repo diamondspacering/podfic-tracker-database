@@ -16,8 +16,11 @@ import { useEffect, useMemo, useState } from 'react';
 import styles from './table.module.css';
 import DatePicker from '../DatePicker';
 
+// TODO: props type
+
 // options VERY tbd haha
 // TODO: expand & clean this up
+// TODO: render badges for badged things
 export default function FilterMenu({
   type,
   options,

@@ -1,22 +1,16 @@
 'use client';
 
 import { usePodficcers } from '@/app/lib/swrLoaders';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import tableStyles from '@/app/ui/table/table.module.css';
-import { Button, IconButton, InputAdornment, TextField } from '@mui/material';
+import { createColumnHelper } from '@tanstack/react-table';
+import { Button, IconButton } from '@mui/material';
 import { useState } from 'react';
 import { TableCell } from './TableCell';
-import { Add, Close, Edit } from '@mui/icons-material';
+import { Add, Edit } from '@mui/icons-material';
 import PodficcerDialog from '../podficcer/podficcer-dialog';
+import CustomTable from './CustomTable';
 
 export default function PodficcerTable() {
-  const { podficcers } = usePodficcers();
+  const { podficcers, isLoading } = usePodficcers();
 
   const [podficcerDialogOpen, setPodficcerDialogOpen] = useState(false);
   const [selectedPodficcer, setSelectedPodficcer] = useState(null);
@@ -60,49 +54,8 @@ export default function PodficcerTable() {
     }),
   ];
 
-  const table = useReactTable({
-    data: podficcers,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    globalFilterFn: 'includesString',
-    initialState: {
-      columnVisibility: {
-        podficcer_id: false,
-      },
-    },
-    meta: {
-      editingRowId: null,
-      setEditingRowId: () => {},
-    },
-  });
-
-  // TODO: loading state
   return (
     <div>
-      <TextField
-        size='small'
-        placeholder='Search...'
-        value={table.getState().globalFilter}
-        onChange={(e) => table.setGlobalFilter(e.target.value)}
-        slotProps={{
-          input: {
-            endAdornment: (
-              <InputAdornment position='end'>
-                <IconButton
-                  onClick={() => {
-                    table.setGlobalFilter('');
-                  }}
-                >
-                  <Close />
-                </IconButton>
-              </InputAdornment>
-            ),
-          },
-        }}
-      />
-      <br />
-      <br />
       <PodficcerDialog
         isOpen={podficcerDialogOpen}
         onClose={() => setPodficcerDialogOpen(false)}
@@ -120,35 +73,19 @@ export default function PodficcerTable() {
       </Button>
       <br />
       <br />
-      <table className={tableStyles.table}>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <CustomTable
+        isLoading={isLoading}
+        data={podficcers}
+        columns={columns}
+        rowKey='podficcer_id'
+        editingRowId={null}
+        setEditingRowId={() => {}}
+        columnVisibility={{ podficcer_id: false }}
+        columnFilters={[]}
+        setColumnFilters={() => {}}
+        globalFilterFn='includesString'
+        updateItemInline={async () => {}}
+      />
     </div>
   );
 }

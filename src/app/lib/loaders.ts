@@ -12,7 +12,7 @@ export const fetchChapters = async (podficId) => {
   return chapters as Chapter[];
 };
 
-export const fetchPodficsFull = async () => {
+export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
   const client = await getClient();
   const result = await client.query(
     `select *,fandom.name as fandom_name,event.name as event_name,event_parent.name as parent_name from podfic
@@ -35,6 +35,9 @@ export const fetchPodficsFull = async () => {
   const resourceResult = await client.query(
     'select * from resource inner join resource_podfic on resource.resource_id = resource_podfic.resource_id'
   );
+  const tagResult = await client.query(
+    'select * from tag inner join tag_podfic on tag.tag_id = tag_podfic.tag_id'
+  );
 
   let podfics = result.rows;
   podfics = podfics.map((podfic) =>
@@ -55,6 +58,9 @@ export const fetchPodficsFull = async () => {
           resources: resourceResult.rows.filter(
             (resource) => resource.podfic_id === podfic.podfic_id
           ),
+          tags: tagResult.rows.filter(
+            (tag) => tag.podfic_id === podfic.podfic_id
+          ),
         }
       : {
           ...podfic,
@@ -71,8 +77,30 @@ export const fetchPodficsFull = async () => {
           resources: resourceResult.rows.filter(
             (resource) => resource.podfic_id === podfic.podfic_id
           ),
+          tags: tagResult.rows.filter(
+            (tag) => tag.podfic_id === podfic.podfic_id
+          ),
         }
   );
+
+  if (onlyNonAAPodfics) {
+    console.log('getting podfics');
+    const allFilesMissingAALinks = (
+      await client.query(`
+      SELECT file.file_id,podfic_id,chapter_id,length,size,filetype,label,is_plain,string_agg(host, ',') from file
+      LEFT JOIN file_link on file_link.file_id = file.file_id
+      GROUP BY file.file_id
+      HAVING string_agg(host, ',') NOT LIKE '%audiofic archive%'
+    `)
+    ).rows;
+    // ok just preload in the files ok
+    podfics = podfics.filter((podfic) =>
+      allFilesMissingAALinks.some((file) => file.podfic_id === podfic.podfic_id)
+    );
+    // TODO: make sure the files are filtered too? just do it when fetching files I think. preloading files could work too but eh, would have to rejigger stuff
+  }
+
+  console.log(podfics.length);
 
   return podfics as (Podfic & Work & Fandom)[];
 };

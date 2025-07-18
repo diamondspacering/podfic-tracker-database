@@ -76,15 +76,26 @@ export const getEmptyLength = () => {
 export enum FilterType {
   STATUS = 'status',
   PERMISSION = 'permission',
+  PART_STATUS = 'part_status',
+  RATING = 'rating',
   TYPE = 'type',
   DATE = 'date',
   STRING = 'string',
   NUMBER = 'number',
+  OTHER = 'other',
 }
 
-export enum ScheduledEventType {
+export enum ScheduleEventType {
   PODFIC = 'Podfic',
   CHAPTER = 'Chapter',
   PART = 'Part',
   ROUND = 'Round',
+}
+
+export enum Rating {
+  GEN = 'Gen',
+  TEEN = 'Teen',
+  MATURE = 'Mature',
+  EXPLICIT = 'Explicit',
+  NOT_RATED = 'Not Rated',
 }

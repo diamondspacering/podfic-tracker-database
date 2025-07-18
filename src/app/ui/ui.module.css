@@ -1,7 +1,18 @@
-.statusBadge {
+.roundBadge {
   border-radius: 50px;
   width: fit-content;
   padding: 0.25rem 0.5rem;
+  text-wrap: nowrap;
+}
+
+.tagBadge {
+  border-radius: 5px;
+  width: fit-content;
+  height: fit-content;
+  padding: 0.25rem 0.5rem;
+  text-wrap: nowrap;
+  background-color: #e6e6e6;
+  color: #718189;
   text-wrap: nowrap;
 }
 
@@ -86,7 +97,8 @@
   background-color: #f6b26b;
 }
 
-.ToAsk, .ToAskFirst {
+.ToAsk,
+.ToAskFirst {
   background-color: #6d9eeb;
 }
 
@@ -96,4 +108,24 @@
 
 .BP {
   background-color: #00ff00;
+}
+
+.Gen {
+  background-color: #76a600;
+}
+
+.Teen {
+  background-color: #e6d200;
+}
+
+.Mature {
+  background-color: #f88513;
+}
+
+.Explicit {
+  background-color: #a10202;
+}
+
+.NotRated {
+  background-color: #c1daf1;
 }

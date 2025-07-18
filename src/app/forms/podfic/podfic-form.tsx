@@ -21,6 +21,7 @@ import DatePicker from '@/app/ui/DatePicker';
 import SeriesForm from './series-form';
 import { usePodficcers } from '@/app/lib/swrLoaders';
 import PodficcerDialog from '@/app/ui/podficcer/podficcer-dialog';
+import TagSelect from '@/app/ui/TagSelect';
 
 interface PodficFormProps {
   podfic: Podfic & Work;
@@ -40,6 +41,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
   const [challengesLoading, setChallengesLoading] = useState(true);
   const [challengeId, setChallengeId] = useState(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [isMultivoice, setIsMultivoice] = useState(false);
   const [seriesLoading, setSeriesLoading] = useState(true);
   const [series, setSeries] = useState<Series[]>([]);
   const [isNewSeries, setIsNewSeries] = useState(false);
@@ -613,27 +615,56 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
             </>
           )}
         </div>
-        <TextField
-          size='small'
-          select
-          sx={{
-            width: '200px',
-          }}
-          label={'Type'}
-          value={podfic.type}
-          onChange={(e) =>
+        <>
+          <TextField
+            size='small'
+            select
+            sx={{
+              width: '200px',
+            }}
+            label={'Type'}
+            value={podfic.type}
+            onChange={(e) =>
+              setPodfic((prev) => ({
+                ...prev,
+                type: e.target.value as PodficType,
+              }))
+            }
+          >
+            {Object.values(PodficType).map((type) => (
+              <MenuItem key={type} value={type}>
+                <span>{type}</span>
+              </MenuItem>
+            ))}
+          </TextField>
+          <FormControlLabel
+            label='Is multivoice?'
+            control={
+              <Checkbox
+                checked={isMultivoice}
+                onChange={(e) => setIsMultivoice(e.target.checked)}
+              />
+            }
+          />
+        </>
+
+        <TagSelect
+          existingTags={podfic.tags ?? []}
+          addToExistingTags={(newTag) => {
+            console.log({ newTag });
             setPodfic((prev) => ({
               ...prev,
-              type: e.target.value as PodficType,
-            }))
-          }
-        >
-          {Object.values(PodficType).map((type) => (
-            <MenuItem key={type} value={type}>
-              <span>{type}</span>
-            </MenuItem>
-          ))}
-        </TextField>
+              tags: [...(prev.tags ?? []), newTag],
+            }));
+          }}
+          setExistingTags={(tags) => {
+            setPodfic((prev) => ({
+              ...prev,
+              tags,
+            }));
+          }}
+          showExistingTags
+        />
 
         <Autocomplete
           size='small'

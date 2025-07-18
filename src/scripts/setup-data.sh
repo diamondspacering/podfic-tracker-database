@@ -39,6 +39,7 @@ if [ ! -f "$DATA_PERSONAL_FILE" ]; then
 export const mics = ['Mic 1', 'Mic 2'];
 export const devices = ['Laptop', 'Phone'];
 export const locations = ['Closet', 'Desk'];
+export const statsYears = [2025, 2024];
 EOL
   echo "dataPersonal.ts created."
 else

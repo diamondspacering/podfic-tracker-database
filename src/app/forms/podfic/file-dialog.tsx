@@ -33,8 +33,10 @@ export default function FileDialog({
 }: FileDialogProps) {
   const [file, setFile] = useState(fileProp ?? getDefaultFile(existingLength));
 
-  // useEffect(() => setFile(fileProp ?? ({} as File)), [fileProp]);
-  // useEffect(() => console.log({ length: file.length }), [file.length]);
+  useEffect(
+    () => setFile(fileProp ?? getDefaultFile(existingLength)),
+    [fileProp]
+  );
 
   const submitFile = useCallback(async () => {
     const _id = await createUpdateFile({
@@ -82,6 +84,7 @@ export default function FileDialog({
           file={file}
           setFile={setFile}
           podficTitle={podficTitle}
+          chapterId={chapterId}
           existingLength={existingLength}
         />
       </DialogContent>

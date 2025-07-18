@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const podficId = searchParams.get('podfic_id');
   const chapterId = searchParams.get('chapter_id');
   const withChapters = searchParams.get('with_chapters');
+  const onlyNonAAFiles = searchParams.get('only_non_aa_files');
 
   let fileResult = {} as any;
 
@@ -18,10 +19,21 @@ export async function GET(request: NextRequest) {
     `);
   } else {
     if (withChapters && withChapters === 'true') {
-      fileResult = await client.query(
-        'select * from file where file.podfic_id = $1',
-        [podficId]
-      );
+      if (onlyNonAAFiles && onlyNonAAFiles === 'true') {
+        fileResult = await client.query(
+          `select file.file_id,podfic_id,chapter_id,length,size,filetype,label,is_plain from file
+          left join file_link on file_link.file_id = file.file_id
+          where file.podfic_id = $1
+          group by file.file_id
+          having string_agg(host, ',') not like '%audiofic archive%'
+        `,
+          [podficId]
+        );
+      } else
+        fileResult = await client.query(
+          'select * from file where file.podfic_id = $1',
+          [podficId]
+        );
     } else {
       fileResult = await client.query(`
         select * from file where file.podfic_id = ${podficId} and file.chapter_id is null
@@ -30,6 +42,7 @@ export async function GET(request: NextRequest) {
   }
 
   const files = fileResult.rows as File[];
+  // TODO: a Promise.all situation
   for (const file of files) {
     const fileLinkResult = await client.query(`
         select * from file_link where file_id = ${file.file_id}

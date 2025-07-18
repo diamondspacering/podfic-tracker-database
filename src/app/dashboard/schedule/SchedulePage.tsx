@@ -4,18 +4,27 @@ import { Calendar, luxonLocalizer, View, Views } from 'react-big-calendar';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './schedule.css';
+import styles from './schedule.module.css';
 import { DateTime, Settings } from 'luxon';
 import { useScheduleEvents } from '@/app/lib/swrLoaders';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import EventContent from '@/app/lib/EventContent';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import { Button, Typography } from '@mui/material';
-import { ScheduledEventType } from '@/app/types';
+import { ScheduleEventType } from '@/app/types';
 
 const timezone = DateTime.local().zoneName;
 
+/* TODO:
+  - set up automatic triggers to create schedule events for deadlines (partially implemented)
+    - make sure you know how date is being sent
+  - make query that automatically pulls in info for the podfic/chapter/part/round that it's linked to so the info is already there and you don't have to find it or whatever
+  - relevant link to thing based on its properties
+  - limit query based on selected date
+  - better date selection
+*/
 export default function SchedulePage() {
-  // TODO: use min/max/hide completed parameters
   const { scheduleEvents, isLoading: scheduleEventsLoading } =
     useScheduleEvents({});
 
@@ -24,7 +33,7 @@ export default function SchedulePage() {
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState<Date>(new Date());
 
-  useEffect(() => console.log({ scheduleEvents }), [scheduleEvents]);
+  // useEffect(() => console.log({ scheduleEvents }), [scheduleEvents]);
 
   useEffect(() => {
     if (!scheduleEventsLoading && !localEvents.length) {
@@ -38,6 +47,8 @@ export default function SchedulePage() {
       );
     }
   }, [localEvents.length, scheduleEvents, scheduleEventsLoading]);
+
+  // TODO: add changing deadlines on things by dragging?
 
   const { getNow, localizer, scrollToTime } = useMemo(() => {
     Settings.defaultZone = timezone;
@@ -53,13 +64,13 @@ export default function SchedulePage() {
   const eventPropGetter = useCallback((event) => {
     const seType = event.type;
     switch (seType) {
-      case ScheduledEventType.ROUND:
+      case ScheduleEventType.ROUND:
         return { style: { backgroundColor: 'purple' } };
-      case ScheduledEventType.PART:
+      case ScheduleEventType.PART:
         return { style: { backgroundColor: 'blue' } };
-      case ScheduledEventType.CHAPTER:
+      case ScheduleEventType.CHAPTER:
         return { style: { backgroundColor: 'green' } };
-      case ScheduledEventType.PODFIC:
+      case ScheduleEventType.PODFIC:
         return { style: { backgroundColor: 'orange' } };
       default:
         return { style: { backgroundColor: 'red' } };
@@ -72,6 +83,7 @@ export default function SchedulePage() {
     <div>
       <Typography variant='h3'>Schedule</Typography>
       <Button onClick={() => console.log(localEvents)}>Log local events</Button>
+      {/* TODO: height flexing based on items? */}
       {!scheduleEventsLoading && localEvents.length && (
         <DnDCalendar
           view={view}

@@ -1,13 +1,9 @@
-create database "podfic-tracker-db"
-    with owner "podfic-tracker-db_owner";
-
 create sequence public.author_podficcer_id_seq
     as integer;
 
 alter sequence public.author_podficcer_id_seq owner to "podfic-tracker-db_owner";
 
-create sequence public.cover_art_podfic_id_
-seq
+create sequence public.cover_art_podfic_id_seq
     as integer;
 
 alter sequence public.cover_art_podfic_id_seq owner to "podfic-tracker-db_owner";
@@ -47,6 +43,11 @@ create sequence public.note_podfic_id_seq
 
 alter sequence public.note_podfic_id_seq owner to "podfic-tracker-db_owner";
 
+create sequence public.part_chapter_id_seq
+    as integer;
+
+alter sequence public.part_chapter_id_seq owner to "podfic-tracker-db_owner";
+
 create sequence public.podfic_event_id_seq
     as integer;
 
@@ -77,6 +78,11 @@ create sequence public.schedule_event_chapter_id_seq
 
 alter sequence public.schedule_event_chapter_id_seq owner to "podfic-tracker-db_owner";
 
+create sequence public.schedule_event_podfic_id_seq
+    as integer;
+
+alter sequence public.schedule_event_podfic_id_seq owner to "podfic-tracker-db_owner";
+
 create sequence public.work_author_id_seq
     as integer;
 
@@ -87,10 +93,9 @@ create sequence public.work_fandom_id_seq
 
 alter sequence public.work_fandom_id_seq owner to "podfic-tracker-db_owner";
 
-create sequence public.part_chapter_id_seq
-    as integer;
+create type public.scheduleeventtype as enum ('Podfic', 'Chapter', 'Part', 'Round');
 
-alter sequence public.part_chapter_id_seq owner to "podfic-tracker-db_owner";
+alter type public.scheduleeventtype owner to "podfic-tracker-db_owner";
 
 create table public.event_parent
 (
@@ -109,7 +114,7 @@ create table public.event
     event_id  serial
         constraint event_pk
             primary key,
-    parent_id serial
+    parent_id integer
         constraint event_event_parent_event_parent_id_fk
             references public.event_parent,
     name      varchar(200),
@@ -141,7 +146,7 @@ create table public.fandom
     fandom_id   serial
         constraint fandom_pk
             primary key,
-    category_id serial
+    category_id integer
         constraint fandom_fandom_category_fandom_category_id_fk
             references public.fandom_category,
     name        varchar(200) not null
@@ -179,22 +184,18 @@ create table public.author
     permission_status    varchar(50),
     primary_social_media varchar(200),
     permission_ask       varchar(200),
-    podficcer_id         integer default nextval('author_podficcer_id_seq'::regclass)
+    podficcer_id         integer
         constraint author_podficcer_podficcer_id_fk
             references public.podficcer,
-    asked_date           date
+    asked_date           date,
+    permission_date      date
 );
 
 alter table public.author
     owner to "podfic-tracker-db_owner";
 
-alter sequence public.author_podficcer_id_seq owned by public.author.podficcer_id;
-
 create unique index author_author_id_uindex
     on public.author (author_id);
-
-create unique index podficcer_podficcer_id_uindex
-    on public.podficcer (podficcer_id);
 
 create table public.resource
 (
@@ -219,7 +220,7 @@ create table public.resource_author
     resource_id serial
         constraint resource_author_resource_resource_id_fk
             references public.resource,
-    author_id   serial
+    author_id   integer not null
         constraint resource_author_author_author_id_fk
             references public.author,
     constraint resource_author_pk
@@ -229,11 +230,19 @@ create table public.resource_author
 alter table public.resource_author
     owner to "podfic-tracker-db_owner";
 
-create table public.resource_test
+create table public.resource_event
 (
+    resource_id integer not null
+        constraint resource_event_resource_resource_id_fk
+            references public.resource,
+    event_id    integer not null
+        constraint resource_event_event_event_id_fk
+            references public.event,
+    constraint resource_event_pk
+        primary key (resource_id, event_id)
 );
 
-alter table public.resource_test
+alter table public.resource_event
     owner to "podfic-tracker-db_owner";
 
 create table public.series
@@ -251,19 +260,12 @@ alter table public.series
 create unique index series_series_id_uindex
     on public.series (series_id);
 
-create table public.test
-(
-);
-
-alter table public.test
-    owner to "podfic-tracker-db_owner";
-
 create table public.voiceteam_event
 (
     voiceteam_event_id serial
         constraint voiceteam_event_pk
             primary key,
-    event_id           serial
+    event_id           integer
         constraint voiceteam_event_event_event_id_fk
             references public.event,
     name               varchar(200),
@@ -277,12 +279,27 @@ create table public.voiceteam_event
 alter table public.voiceteam_event
     owner to "podfic-tracker-db_owner";
 
+create table public.resource_voiceteam_event
+(
+    resource_id        integer not null
+        constraint resource_voiceteam_event_resource_resource_id_fk
+            references public.resource,
+    voiceteam_event_id integer not null
+        constraint resource_voiceteam_event_voiceteam_event_voiceteam_event_id_fk
+            references public.voiceteam_event,
+    constraint resource_voiceteam_event_pk
+        primary key (voiceteam_event_id, resource_id)
+);
+
+alter table public.resource_voiceteam_event
+    owner to "podfic-tracker-db_owner";
+
 create table public.round
 (
     round_id           serial
         constraint round_pk
             primary key,
-    voiceteam_event_id serial
+    voiceteam_event_id integer
         constraint round_voiceteam_event_voiceteam_event_id_fk
             references public.voiceteam_event,
     name               text,
@@ -297,17 +314,18 @@ alter table public.round
 
 create table public.challenge
 (
-    challenge_id serial
+    challenge_id        serial
         constraint challenge_pk
             primary key,
-    round_id     serial
+    round_id            integer
         constraint challenge_round_round_id_fk
             references public.round,
-    name         text,
-    description  text,
-    points       integer,
-    bonus_points integer,
-    created_at   timestamp with time zone
+    name                text,
+    description         text,
+    points              integer,
+    bonus_points        integer,
+    created_at          timestamp with time zone,
+    bonus_is_additional boolean
 );
 
 alter table public.challenge
@@ -318,7 +336,7 @@ create table public.vt_project
     vt_project_id      serial
         constraint vt_project_pk
             primary key,
-    challenge_id       serial
+    challenge_id       integer
         constraint vt_project_challenge_challenge_id_fk
             references public.challenge,
     name               text,
@@ -348,10 +366,10 @@ create table public.work
             primary key,
     title          varchar(200) not null,
     link           varchar(200),
-    author_id      integer default nextval('work_author_id_seq'::regclass)
+    author_id      integer
         constraint work_author_author_id_fk
             references public.author,
-    fandom_id      integer default nextval('work_fandom_id_seq'::regclass)
+    fandom_id      integer
         constraint work_fandom_fandom_id_fk
             references public.fandom,
     needs_update   boolean,
@@ -368,30 +386,26 @@ create table public.work
 alter table public.work
     owner to "podfic-tracker-db_owner";
 
-alter sequence public.work_author_id_seq owned by public.work.author_id;
-
-alter sequence public.work_fandom_id_seq owned by public.work.fandom_id;
-
 create table public.podfic
 (
     podfic_id          serial
         constraint podfic_pk
             primary key,
-    work_id            integer default nextval('podfic_work_id_seq'::regclass)
+    work_id            integer
         constraint podfic_work_work_id_fk
             references public.work,
     status             varchar(20) not null,
     is_private         boolean,
     length             interval,
     raw_length         interval,
-    event_id           integer default nextval('podfic_event_id_seq'::regclass)
+    event_id           integer
         constraint podfic_event_event_id_fk
             references public.event,
     ao3_link           varchar(200),
     posted_date        date,
     exclude_stats      boolean,
     type               varchar(20),
-    giftee_id          integer default nextval('podfic_giftee_id_seq'::regclass)
+    giftee_id          integer
         constraint podfic_podficcer_podficcer_id_fk
             references public.podficcer,
     deadline           timestamp with time zone,
@@ -406,7 +420,8 @@ create table public.podfic
     vt_project_id      integer
         constraint podfic_vt_project_vt_project_id_fk
             references public.vt_project,
-    posted_unchaptered boolean
+    posted_unchaptered boolean,
+    is_multivoice      boolean
 );
 
 alter table public.podfic
@@ -423,7 +438,7 @@ create table public.chapter
     chapter_id     serial
         constraint chapter_pk
             primary key,
-    podfic_id      serial
+    podfic_id      integer
         constraint chapter_podfic_podfic_id_fk
             references public.podfic,
     link           varchar(200),
@@ -452,15 +467,18 @@ create table public.cover_art
     cover_art_id      serial
         constraint cover_art_pk
             primary key,
-    podfic_id         integer default nextval('cover_art_podfic_id_seq'::regclass)
+    podfic_id         integer
         constraint cover_art_podfic_podfic_id_fk
             references public.podfic,
     cover_artist_name varchar(20),
-    podficcer_id      integer default nextval('cover_art_podficcer_id_seq'::regclass)
+    podficcer_id      integer
         constraint cover_art_podficcer_podficcer_id_fk
             references public.podficcer,
     image_link        varchar(200),
-    status            varchar(20)
+    status            varchar(20),
+    chapter_id        integer
+        constraint cover_art_chapter_chapter_id_fk
+            references public.chapter
 );
 
 alter table public.cover_art
@@ -478,10 +496,10 @@ create table public.file
     file_id    serial
         constraint file_pk
             primary key,
-    podfic_id  integer default nextval('file_podfic_id_seq'::regclass)
+    podfic_id  integer
         constraint file_podfic_podfic_id_fk
             references public.podfic,
-    chapter_id integer default nextval('file_chapter_id_seq'::regclass)
+    chapter_id integer
         constraint file_chapter_chapter_id_fk
             references public.chapter,
     length     interval not null,
@@ -506,7 +524,7 @@ create table public.file_link
     file_link_id serial
         constraint file_link_pk
             primary key,
-    file_id      serial
+    file_id      integer
         constraint file_link_file_file_id_fk
             references public.file,
     host         varchar(20),
@@ -526,16 +544,16 @@ create table public.note
     note_id    serial
         constraint note_pk
             primary key,
-    podfic_id  integer default nextval('note_podfic_id_seq'::regclass)
+    podfic_id  integer
         constraint note_podfic_podfic_id_fk
             references public.podfic,
-    chapter_id integer default nextval('note_chapter_id_seq'::regclass)
+    chapter_id integer
         constraint note_chapter_chapter_id_fk
             references public.chapter,
-    author_id  integer default nextval('note_author_id_seq'::regclass)
+    author_id  integer
         constraint note_author_author_id_fk
             references public.author,
-    event_id   integer default nextval('note_event_id_seq'::regclass)
+    event_id   integer
         constraint note_event_event_id_fk
             references public.event,
     label      varchar(200),
@@ -561,11 +579,11 @@ create table public.part
     part_id    serial
         constraint part_pk
             primary key,
-    podfic_id  serial
+    podfic_id  integer
         constraint part_podfic_podfic_id_fk
             references public.podfic,
     doc        text,
-    organizer  serial
+    organizer  integer
         constraint part_podficcer_podficcer_id_fk
             references public.podficcer,
     words      integer,
@@ -574,7 +592,7 @@ create table public.part
     length     interval,
     raw_length interval,
     part       text,
-    chapter_id integer default nextval('part_chapter_id_seq'::regclass)
+    chapter_id integer
         constraint part_chapter_chapter_id_fk
             references public.chapter,
     deadline   timestamp with time zone,
@@ -595,7 +613,7 @@ create table public.podfic_podficcer
     podfic_id    serial
         constraint podfic_podficcer_podfic_podfic_id_fk
             references public.podfic,
-    podficcer_id serial
+    podficcer_id integer not null
         constraint podfic_podficcer_podficcer_podficcer_id_fk
             references public.podficcer,
     constraint podfic_podficcer_id
@@ -610,10 +628,10 @@ create table public.recording_session
     recording_id serial
         constraint recording_session_pk
             primary key,
-    podfic_id    integer default nextval('recording_session_podfic_id_seq'::regclass)
+    podfic_id    integer
         constraint recording_session_podfic_podfic_id_fk
             references public.podfic,
-    chapter_id   integer default nextval('recording_session_chapter_id_seq'::regclass)
+    chapter_id   integer
         constraint recording_session_chapter_chapter_id_fk
             references public.chapter,
     length       interval not null,
@@ -643,10 +661,10 @@ create table public.resource_chapter
     resource_id serial
         constraint resource_chapter_resource_resource_id_fk
             references public.resource,
-    chapter_id  serial
+    chapter_id  integer not null
         constraint resource_chapter_chapter_chapter_id_fk
             references public.chapter,
-    podfic_id   serial
+    podfic_id   integer not null
         constraint resource_chapter_podfic_podfic_id_fk
             references public.podfic,
     constraint resource_chapter_pk
@@ -661,7 +679,7 @@ create table public.resource_podfic
     resource_id serial
         constraint resource_podfic_resource_resource_id_fk
             references public.resource,
-    podfic_id   serial
+    podfic_id   integer not null
         constraint resource_podfic_podfic_podfic_id_fk
             references public.podfic,
     constraint resource_podfic_pk
@@ -676,16 +694,23 @@ create table public.schedule_event
     schedule_event_id serial
         constraint schedule_event_pk
             primary key,
-    podfic_id         serial
+    podfic_id         integer
         constraint schedule_event_podfic_podfic_id_fk
             references public.podfic,
-    chapter_id        integer default nextval('schedule_event_chapter_id_seq'::regclass)
+    chapter_id        integer
         constraint schedule_event_chapter_chapter_id_fk
             references public.chapter,
     title             text,
     start             timestamp with time zone,
     "end"             timestamp with time zone,
-    allday            boolean not null
+    allday            boolean not null,
+    part_id           integer
+        constraint schedule_event_part_part_id_fk
+            references public.part,
+    round_id          integer
+        constraint schedule_event_round_round_id_fk
+            references public.round,
+    type              scheduleeventtype
 );
 
 alter table public.schedule_event
@@ -693,8 +718,158 @@ alter table public.schedule_event
 
 alter sequence public.schedule_event_chapter_id_seq owned by public.schedule_event.chapter_id;
 
+alter sequence public.schedule_event_podfic_id_seq owned by public.schedule_event.podfic_id;
+
 create unique index work_work_id_uindex
     on public.work (work_id);
+
+create table public.tag
+(
+    tag_id serial
+        constraint tag_pk
+            primary key,
+    tag    text not null
+);
+
+alter table public.tag
+    owner to "podfic-tracker-db_owner";
+
+create table public.tag_podfic
+(
+    tag_id    integer not null
+        constraint tag_podfic_tag_tag_id_fk
+            references public.tag,
+    podfic_id integer not null
+        constraint tag_podfic_podfic_podfic_id_fk
+            references public.podfic,
+    constraint tag_podfic_pk
+        primary key (tag_id, podfic_id)
+);
+
+alter table public.tag_podfic
+    owner to "podfic-tracker-db_owner";
+
+create function public.create_part_schedule_event() returns trigger
+    language plpgsql
+as
+$$
+DECLARE
+BEGIN
+    IF new.deadline is not null AND old.deadline is null THEN
+        RAISE NOTICE 'updating deadline (%) for part (%)', new.deadline, new.part_id;
+        INSERT INTO schedule_event (podfic_id, chapter_id, part_id, start, "end", allday) VALUES (new.podfic_id, new.chapter_id, new.part_id, new.deadline, new.deadline, false);
+    ELSE IF new.deadline is not null and old.deadline is not null and new.deadline != old.deadline THEN
+        RAISE NOTICE 'creating new schedule event for part (%), updating old deadline (%) to new deadline (%)', new.part_id, old.deadline, new.deadline;
+        DELETE FROM schedule_event where part_id = new.part_id;
+        INSERT INTO schedule_event (podfic_id, chapter_id, part_id, start, "end", allday) VALUES (new.podfic_id, new.chapter_id, new.part_id, new.deadline, new.deadline, false);
+    END IF;
+    END IF;
+    RETURN null;
+END;
+$$;
+
+alter function public.create_part_schedule_event() owner to "podfic-tracker-db_owner";
+
+create trigger on_insert_create_part_schedule_event
+    after insert
+    on public.part
+    for each row
+execute procedure public.create_part_schedule_event();
+
+create trigger on_update_create_part_schedule_event
+    after update
+    on public.part
+    for each row
+execute procedure public.create_part_schedule_event();
+
+create function public.create_round_schedule_event() returns trigger
+    language plpgsql
+as
+$$
+DECLARE
+BEGIN
+    IF new.deadline is not null AND old.deadline is null THEN
+        RAISE NOTICE 'updating deadline (%) for round (%)', new.deadline, new.round_id;
+        INSERT INTO schedule_event (round_id, start, "end", allday) VALUES (new.round_id, new.deadline, new.deadline, false) ON CONFLICT DO NOTHING;
+    END IF;
+    RETURN null;
+END;
+$$;
+
+alter function public.create_round_schedule_event() owner to "podfic-tracker-db_owner";
+
+create procedure public.update_all_raw_lengths_from_recording_sessions()
+    language plpgsql
+as
+$$
+BEGIN
+    RAISE NOTICE 'updating all raw lengths';
+
+    UPDATE podfic
+    SET raw_length = sum_rec_lengths.sum_raw
+    FROM (SELECT podfic.podfic_id, SUM(recording_session.length) AS sum_raw
+          FROM podfic
+                   LEFT JOIN recording_session ON podfic.podfic_id = recording_session.podfic_id
+          WHERE recording_session.chapter_id IS NULL
+            AND recording_session.part_id IS NULL
+          GROUP BY podfic.podfic_id) AS sum_rec_lengths
+    WHERE podfic.podfic_id = sum_rec_lengths.podfic_id;
+
+    RAISE NOTICE 'updated all regular podfics';
+
+    UPDATE chapter
+    SET raw_length = sum_rec_lengths.sum_raw
+    FROM (SELECT chapter.chapter_id, SUM(recording_session.length) AS sum_raw
+          FROM chapter
+                   LEFT JOIN recording_session ON chapter.chapter_id = recording_session.chapter_id
+          WHERE recording_session.part_id IS NULL
+          GROUP BY chapter.chapter_id) AS sum_rec_lengths
+    WHERE chapter.chapter_id = sum_rec_lengths.chapter_id;
+
+    RAISE NOTICE 'updated all chapters';
+
+    UPDATE part
+    SET raw_length = sum_rec_lengths.sum_raw
+    FROM (SELECT part.part_id, SUM(recording_session.length) AS sum_raw
+          FROM part
+                   LEFT JOIN recording_session ON part.part_id = recording_session.part_id
+          GROUP BY part.part_id) AS sum_rec_lengths
+    WHERE part.part_id = sum_rec_lengths.part_id;
+
+    RAISE NOTICE 'updated all parts';
+END;
+$$;
+
+alter procedure public.update_all_raw_lengths_from_recording_sessions() owner to "podfic-tracker-db_owner";
+
+create function public.update_length_from_parts() returns trigger
+    language plpgsql
+as
+$$
+DECLARE sum_length interval;
+BEGIN
+    RAISE NOTICE 'updating length from its parts';
+    IF new.length != old.length or old.length is null THEN
+        RAISE NOTICE 'updating length';
+        IF new.chapter_id is not null THEN
+            sum_length = (SELECT SUM(length) from part where part.chapter_id = new.chapter_id);
+            UPDATE chapter SET length = sum_length WHERE chapter_id = new.chapter_id;
+        ELSIF new.podfic_id is not null THEN
+            sum_length = (SELECT SUM(length) from part where part.podfic_id = new.podfic_id);
+            UPDATE podfic SET length = sum_length WHERE podfic_id = new.podfic_id;
+        END IF;
+    END IF;
+    RETURN new;
+END;
+$$;
+
+alter function public.update_length_from_parts() owner to "podfic-tracker-db_owner";
+
+create trigger update_length
+    after update
+    on public.part
+    for each row
+execute procedure public.update_length_from_parts();
 
 create function public.update_plain_length_from_file() returns trigger
     language plpgsql
@@ -736,12 +911,12 @@ create function public.update_podfic_length_from_chapters() returns trigger
 as
 $$
 DECLARE sum_length interval;
-    sum_raw_length interval;
-    sum_plain_length interval;
-    sum_not_plain_length interval;
+        sum_raw_length interval;
+        sum_plain_length interval;
+        sum_not_plain_length interval;
 BEGIN
     RAISE NOTICE 'updating podfic length from its chapters';
-    IF new.length != old.length or old.length is null THEN
+    IF new.length != old.length or old.length is null or (new.status != old.status and new.status = 'Posted') THEN
         RAISE NOTICE 'updating podfic length';
         sum_length = (SELECT SUM(length) from chapter where podfic_id = new.podfic_id and chapter.status = 'Posted');
         RAISE NOTICE 'sum_length:(%)', sum_length;
@@ -830,10 +1005,10 @@ create function public.update_recording_session_length() returns trigger
 as
 $$
 DECLARE orig_raw_length interval;
-    sum_raw_length interval;
+        sum_raw_length interval;
 BEGIN
     RAISE NOTICE 'updating recording session length from (%) to (%)', new.length, old.length;
-	IF new.length != old.length then
+    IF new.length != old.length then
         IF new.chapter_id is not null then
             RAISE NOTICE 'updating chapter';
             orig_raw_length = (SELECT raw_length from chapter where chapter.chapter_id = new.chapter_id);
@@ -861,8 +1036,8 @@ BEGIN
                 END IF;
             END IF;
         END IF;
-	END IF;
-	RETURN null;
+    END IF;
+    RETURN null;
 END;
 $$;
 
@@ -874,33 +1049,43 @@ create trigger update_update_raw_length
     for each row
 execute procedure public.update_recording_session_length();
 
-create function public.update_length_from_parts() returns trigger
+create function public.update_schedule_event_type() returns trigger
     language plpgsql
 as
 $$
-DECLARE sum_length interval;
-BEGIN
-    RAISE NOTICE 'updating length from its parts';
-    IF new.length != old.length or old.length is null THEN
-        RAISE NOTICE 'updating length';
-        IF new.chapter_id is not null THEN
-            sum_length = (SELECT SUM(length) from part where part.chapter_id = new.chapter_id);
-            UPDATE chapter SET length = sum_length WHERE chapter_id = new.chapter_id;
-        ELSIF new.podfic_id is not null THEN
-            sum_length = (SELECT SUM(length) from part where part.podfic_id = new.podfic_id);
-            UPDATE podfic SET length = sum_length WHERE podfic_id = new.podfic_id;
+DECLARE se_type varchar;
+begin
+    IF new.type is null THEN
+        IF new.round_id is not null THEN
+            se_type = 'Round';
+        ELSE IF new.part_id is not null THEN
+            se_type = 'Part';
+        ELSE IF new.chapter_id is not null THEN
+            se_type = 'Chapter';
+        ELSE IF new.podfic_id is not null THEN
+            se_type = 'Podfic';
         END IF;
+        END IF;
+        END IF;
+        END IF;
+        RAISE NOTICE 'updating schedule event (%) with type (%)', new.schedule_event_id, se_type;
+        UPDATE schedule_event SET type = se_type WHERE schedule_event_id = new.schedule_event_id;
     END IF;
-    RETURN new;
-END;
+    RETURN null;
+end;
 $$;
 
-alter function public.update_length_from_parts() owner to "podfic-tracker-db_owner";
+alter function public.update_schedule_event_type() owner to "podfic-tracker-db_owner";
 
-create trigger update_length
-    after update
-    on public.part
+create trigger update_schedule_event_type
+    after insert
+    on public.schedule_event
     for each row
-execute procedure public.update_length_from_parts();
+execute procedure public.update_schedule_event_type();
 
+create trigger update_update_schedule_event_type
+    after update
+    on public.schedule_event
+    for each row
+execute procedure public.update_schedule_event_type();
 

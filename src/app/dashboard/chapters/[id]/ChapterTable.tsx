@@ -1,33 +1,17 @@
 'use client';
 
-import { formatDateString, formatDateStringMonthFirst } from '@/app/lib/format';
-import { getDefaultLength, PodficStatus } from '@/app/types';
 import {
-  ArrowRight,
-  Check,
-  Close,
-  Edit,
   KeyboardArrowDown,
   KeyboardArrowRight,
   Mic,
 } from '@mui/icons-material';
 import { Button, IconButton, Typography } from '@mui/material';
-import ColorScale from 'color-scales';
-import styles from '@/app/dashboard/dashboard.module.css';
-import { Fragment, useMemo, useState } from 'react';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  getExpandedRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import tableStyles from '@/app/ui/table/table.module.css';
+import { useState } from 'react';
+import { createColumnHelper } from '@tanstack/react-table';
 import { TableCell } from '@/app/ui/table/TableCell';
 import { EditCell } from '@/app/ui/table/EditCell';
 import AddMenu from '@/app/ui/AddMenu';
 import FileTable from '@/app/ui/table/FileTable';
-import ResourceTable from '@/app/ui/table/ResourceTable';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { mutate } from 'swr';
@@ -38,22 +22,26 @@ import {
   useColorScale,
   useLengthColorScale,
 } from '@/app/lib/utils';
-import { getLengthValue } from '@/app/lib/lengthHelpers';
+import CustomTable from '@/app/ui/table/CustomTable';
 
 // TODO: general chapter table for all chapters?
 export default function ChapterTable({ podficId, podficTitle }) {
-  const { chapters: originalChapters } = useChaptersForPodfic(podficId);
+  const { chapters, isLoading } = useChaptersForPodfic(podficId);
   // TODO: individual files and resources expanded per chapter
   const [filesExpanded, setFilesExpanded] = useState(false);
-  const [resourcesExpanded, setResourcesExpanded] = useState(false);
 
   const pathname = usePathname();
 
-  const rawColorScale = useLengthColorScale(originalChapters, 'raw_length');
-  const lengthColorScale = useLengthColorScale(originalChapters, 'length');
+  const rawColorScale = useLengthColorScale(chapters, 'raw_length');
+  const lengthColorScale = useLengthColorScale(chapters, 'length');
 
   // TODO: wordcount global color scale??
-  const wordcountColorScale = useColorScale(originalChapters, 'wordcount');
+  const wordcountColorScale = useColorScale(chapters, 'wordcount');
+
+  const [columnVisibility, setColumnVisibility] = useState({
+    chapter_id: false,
+    podfic_id: false,
+  });
 
   const columnHelper = createColumnHelper<Chapter>();
 
@@ -84,7 +72,6 @@ export default function ChapterTable({ podficId, podficTitle }) {
           onClick={(e) => {
             e.stopPropagation();
             setFilesExpanded(!props.row.getIsExpanded());
-            setResourcesExpanded(!props.row.getIsExpanded());
             props.row.toggleExpanded();
           }}
         >
@@ -265,47 +252,6 @@ export default function ChapterTable({ podficId, podficTitle }) {
   ];
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
-  const [editingRow, setEditingRow] = useState<Chapter | null>(null);
-
-  const chapterData = useMemo(
-    () =>
-      originalChapters.map((chapter) =>
-        editingRow?.chapter_id === chapter.chapter_id ? editingRow : chapter
-      ),
-    [editingRow, originalChapters]
-  );
-
-  const table = useReactTable({
-    data: chapterData,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    getRowCanExpand: () => true,
-    getRowId: (row) => row.chapter_id?.toString(),
-    enableMultiRowSelection: false,
-    enableRowSelection: (row) => editingRowId !== row.id,
-    initialState: {
-      columnVisibility: {
-        chapter_id: false,
-        podfic_id: false,
-      },
-    },
-    meta: {
-      editingRowId,
-      setEditingRowId,
-      editingRow,
-      setEditingRow,
-      updateData: (_rowId, columnId, value) => {
-        setEditingRow((prev) => (prev ? { ...prev, [columnId]: value } : null));
-      },
-      revertRow: () => {
-        setEditingRow(null);
-      },
-      submitRow: async () => {
-        await updateChapter(editingRow);
-      },
-    },
-  });
 
   const updateChapter = async (chapter: Chapter) => {
     try {
@@ -330,137 +276,76 @@ export default function ChapterTable({ podficId, podficTitle }) {
       }}
     >
       <Typography variant='h2'>Chapters for {podficTitle}</Typography>
-      <table className={tableStyles.table}>
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <Fragment key={row.id}>
-              <tr
-                key={row.id}
-                className={`${tableStyles.clickable} ${
-                  row.getIsSelected() ? tableStyles.selected : ''
-                }`}
-                onClick={row.getToggleSelectedHandler()}
+      <CustomTable
+        isLoading={isLoading}
+        data={chapters}
+        columns={columns}
+        rowKey='chapter_id'
+        columnFilters={[]}
+        setColumnFilters={() => {}}
+        showColumnVisibility
+        columnVisibility={columnVisibility}
+        setColumnVisibility={setColumnVisibility}
+        editingRowId={editingRowId}
+        setEditingRowId={setEditingRowId}
+        updateItemInline={async (chapter) => await updateChapter(chapter)}
+        showRowCount
+        rowCanExpand
+        getExpandedContent={(row) => (
+          <>
+            <tr key='files-expand'>
+              <td
+                key='1'
+                colSpan={row.getAllCells().length}
+                style={{
+                  paddingLeft: '30px',
+                }}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+                <span>
+                  <IconButton
+                    style={{
+                      padding: '0px',
+                    }}
+                    onClick={() => setFilesExpanded((prev) => !prev)}
+                  >
+                    {filesExpanded ? (
+                      <KeyboardArrowDown />
+                    ) : (
+                      <KeyboardArrowRight />
+                    )}
+                  </IconButton>
+                  Files
+                </span>
+              </td>
+            </tr>
+            {filesExpanded && (
+              <tr key='files-expanded'>
+                <td
+                  key='2'
+                  colSpan={row.getAllCells().length}
+                  style={{
+                    paddingLeft: '60px',
+                  }}
+                >
+                  <FileTable
+                    podficId={row.getValue('podfic_id')}
+                    podficTitle={podficTitle}
+                    chapterId={row.getValue('chapter_id')}
+                    lengthColorScale={lengthColorScale}
+                  />
+                </td>
               </tr>
-              {/* TODO: use additionalcontentrows */}
-              {row.getIsExpanded() && (
-                <>
-                  <tr key='files-expand'>
-                    <td
-                      key='1'
-                      colSpan={row.getAllCells().length}
-                      style={{
-                        paddingLeft: '30px',
-                      }}
-                    >
-                      <span>
-                        <IconButton
-                          style={{
-                            padding: '0px',
-                          }}
-                          onClick={() => setFilesExpanded((prev) => !prev)}
-                        >
-                          {filesExpanded ? (
-                            <KeyboardArrowDown />
-                          ) : (
-                            <KeyboardArrowRight />
-                          )}
-                        </IconButton>
-                        Files
-                      </span>
-                    </td>
-                  </tr>
-                  {filesExpanded && (
-                    <tr key='files-expanded'>
-                      <td
-                        key='2'
-                        colSpan={row.getAllCells().length}
-                        style={{
-                          paddingLeft: '60px',
-                        }}
-                      >
-                        <FileTable
-                          podficId={row.getValue('podfic_id')}
-                          podficTitle={podficTitle}
-                          chapterId={row.getValue('chapter_id')}
-                          lengthColorScale={lengthColorScale}
-                        />
-                      </td>
-                    </tr>
-                  )}
-                  {/* TODO: get stuff correctly for that */}
-                  {/* <AdditionalContentRows
-                    width={row.getVisibleCells().length}
-                    // TODO: pull in notes
-                    // notes={row.original.notes ?? []}
-                    resources={row.original.re}
-                  /> */}
-                  <tr key='resources-expand'>
-                    <td
-                      key='1'
-                      colSpan={row.getAllCells().length}
-                      style={{
-                        paddingLeft: '30px',
-                      }}
-                    >
-                      <span>
-                        <IconButton
-                          style={{
-                            padding: '0px',
-                          }}
-                          onClick={() => setResourcesExpanded((prev) => !prev)}
-                        >
-                          {resourcesExpanded ? (
-                            <KeyboardArrowDown />
-                          ) : (
-                            <KeyboardArrowRight />
-                          )}
-                        </IconButton>
-                        Resources
-                      </span>
-                    </td>
-                  </tr>
-                  {resourcesExpanded && (
-                    <tr key='resources-expanded'>
-                      <td
-                        key='2'
-                        colSpan={row.getAllCells().length}
-                        style={{
-                          paddingLeft: '60px',
-                        }}
-                      >
-                        <ResourceTable chapterId={row.getValue('chapter_id')} />
-                      </td>
-                    </tr>
-                  )}
-                </>
-              )}
-            </Fragment>
-          ))}
-        </tbody>
-        {/* TODO: summary row, similar to podfic table */}
-      </table>
+            )}
+            <AdditionalContentRows
+              width={row.getVisibleCells().length}
+              notes={row.original.notes ?? []}
+              resources={row.original.resources ?? []}
+              podfic_id={row.original.podfic_id}
+              chapter_id={row.original.chapter_id}
+            />
+          </>
+        )}
+      />
     </div>
   );
 }

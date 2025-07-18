@@ -47,20 +47,24 @@ export const generateAALink = ({
   let safeTitle = '';
   if (Object.keys(chapterInfo).length) {
     const chapterName = chapterInfo.chapter_title
-      ? `Chapter ${format2Digits(chapterInfo.chapter_number)} ${
+      ? `Chapter ${format2Digits(chapterInfo.chapter_number)} - ${
           chapterInfo.chapter_title
         }`
       : `${title} Chapter ${format2Digits(chapterInfo.chapter_number)}`;
     safeTitle = chapterName
       .replaceAll(/\s/g, '_')
-      .replaceAll('-', '')
+      // .replaceAll('-', '')
       .replaceAll(/'/g, '');
   } else {
     safeTitle = title.replaceAll(/\s/g, '_').replaceAll(/'/g, '');
   }
   console.log({ safeTitle });
   const fullTitle = `https://podfic.jinjurly.com/audfiles2/${date}_${safeTitle}${
-    label === 'Without Music' ? '_(no_music)' : ''
+    label === 'Without Music'
+      ? '_(no_music)'
+      : label === `Without Reader's Notes`
+      ? '_(no_notes)'
+      : ''
   }.${filetype}`;
   console.log({ fullTitle });
   return fullTitle;
@@ -76,7 +80,7 @@ export const generateHTMLAudioficArchive = (
     const filteredFiles = files.filter((file) => Boolean(file));
     filteredFiles.forEach((file) => {
       htmlString = `${htmlString}${
-        file.label ? `${file.label}\n` : ''
+        file.label ? `${file.label.toLowerCase()}\n` : ''
       }<audio src="${
         file.link
       }" crossorigin="anonymous" preload="metadata" controls="controls"></audio>\ndownload ${
@@ -86,29 +90,37 @@ export const generateHTMLAudioficArchive = (
       } MB, ${getLengthText(file.length)}]\n\n`;
     });
   } else {
+    // TODO: include splitting into sections
     podfic.chapters?.forEach((chapter) => {
-      const filteredFiles = files.filter(
+      let filteredFiles = files.filter(
         (file) => file.chapter_id === chapter.chapter_id
       );
+      console.log({ filteredFiles });
+      filteredFiles = filteredFiles.sort((a, b) =>
+        !a.label || (a.label.includes('With') && !a.label.includes('Without'))
+          ? -1
+          : 1
+      );
+      console.log({ filteredFiles });
+      if (!filteredFiles.length) return;
+      htmlString = `${htmlString}chapter ${format2Digits(
+        chapter.chapter_number
+      )}${
+        chapter.chapter_title ? ` - ${chapter.chapter_title.toLowerCase()}` : ''
+      }\n`;
       filteredFiles.forEach((file) => {
         const fileLink = file.links.find(
           (link) => link.host === 'audiofic archive'
         )?.link;
-        htmlString = `${htmlString}chapter ${format2Digits(
-          chapter.chapter_number
-        )}${
-          chapter.chapter_title
-            ? ` - ${chapter.chapter_title.toLowerCase()}`
-            : ''
-        }\n${
-          file.label ? `${file.label}\n` : ''
-        }<audio src="${fileLink}" crossorigin="anonymous" preload="metadata" controls="controls"></audio>\n`;
-        /* \ndownload ${
+        htmlString = `${htmlString}${
+          file.label ? `${file.label.toLowerCase()}\n` : ''
+        }<audio src="${fileLink}" crossorigin="anonymous" preload="metadata" controls="controls"></audio>\ndownload ${
           file.filetype ?? 'mp3'
         }: <a href="${fileLink}">here</a> (r-click or press, and 'save link') [${
           file.size
-        } MB, ${getLengthText(file.length)}]\n`;*/
+        } MB, ${getLengthText(file.length)}]\n`;
       });
+      htmlString = `${htmlString}\n`;
     });
   }
 
@@ -127,7 +139,8 @@ export const generateHTMLAzdaema = (
   files: File[],
   resources: Resource[],
   defaultPodficcer: Podficcer,
-  chapter?: Chapter
+  chapter?: Chapter,
+  coverArtistProfile?: string
 ) => {
   let htmlString = ``;
   htmlString += `<div class="podfic">`;
@@ -215,10 +228,11 @@ export const generateHTMLAzdaema = (
         // }
       });
     }
-  } else if (!!chapter) {
+  } else if (!!chapter && !!Object.keys(chapter).length) {
     // TODO: may need to filter the files for this chapter
     const filteredFiles = files.filter((file) => Boolean(file));
     // this is assuming just direct links for now we will work on it. also more code needs to be shared don't worry about it
+    // TODO: include all chapters html in first chapter
     if (filteredFiles.length) {
       htmlString += `<h3>Chapter ${chapter.chapter_number}${
         chapter.chapter_title ? `: ${chapter.chapter_title}` : ''
@@ -250,15 +264,14 @@ export const generateHTMLAzdaema = (
 
   htmlString += `<h3>Credits</h3>`;
   htmlString += `<ul>`;
-  // TODO: chapter titles as well? might just be a different largely copied function lol
   htmlString += `<li><b>Text:</b> <a href="${
     chapter ? chapter.link : podfic.link
   }">${
     chapter
-      ? `${podfic.title} Chapter ${chapter.chapter_number}${
+      ? `${podfic.nickname ?? podfic.title} Chapter ${chapter.chapter_number}${
           chapter.chapter_title ? `: ${chapter.chapter_title}` : ''
         }`
-      : podfic.title
+      : podfic.nickname ?? podfic.title
   }</a></li>`;
   // TODO: support multiple authors, if only by manually looking at string
   htmlString += `<li><b>Author:</b> <a href="${podfic.ao3}">${podfic.username}</a></li>`;
@@ -277,7 +290,7 @@ export const generateHTMLAzdaema = (
     podfic.cover_artist_name &&
     podfic.cover_artist_name !== defaultPodficcer.username
   ) {
-    htmlString += `<li><b>Cover art:</b> ${podfic.cover_artist_name}</li>`;
+    htmlString += `<li><b>Cover art:</b> <a href="${coverArtistProfile}">${podfic.cover_artist_name}</a></li>`;
   }
   // TODO: photo for cover art as well, + other resources incl. music. possibly smartly giving the up class as well? we'll see
   resources.forEach((resource) => {
