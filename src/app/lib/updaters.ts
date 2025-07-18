@@ -1479,3 +1479,22 @@ export const linkTagToPodfic = async (tagId: number, podficId: number) => {
   );
   return result.rows[0];
 };
+
+export const unlinkTagFromPodfic = async (tagId: number, podficId: number) => {
+  const client = await getClient();
+  const result = await client.query(
+    'DELETE FROM tag_podfic WHERE tag_id = $1 AND podfic_id = $2',
+    [tagId, podficId]
+  );
+  return result;
+};
+
+// TODO: use values instead
+export const updateTag = async (tagId: number, tagText: string) => {
+  const client = await getClient();
+  const result = await client.query(
+    'UPDATE tag SET tag = $1 WHERE tag_id = $2 RETURNING *',
+    [tagText, tagId]
+  );
+  return result.rows[0];
+};

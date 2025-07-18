@@ -309,3 +309,15 @@ export const useTags = () => {
     isLoading,
   };
 };
+
+export const useToPodficPodfics = () => {
+  const { data, error, isLoading } = useSWR('/db/topodfic', fetcher);
+
+  const podfics = (data ?? []) as (Podfic & Work & Fandom & Event)[];
+
+  return {
+    podfics,
+    error,
+    isLoading,
+  };
+};

@@ -20,6 +20,7 @@ import DatePicker from '../DatePicker';
 
 // options VERY tbd haha
 // TODO: expand & clean this up
+// TODO: render badges for badged things
 export default function FilterMenu({
   type,
   options,

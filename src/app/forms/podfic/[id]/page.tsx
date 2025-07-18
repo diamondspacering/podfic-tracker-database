@@ -13,7 +13,13 @@ import DurationPicker from '@/app/ui/DurationPicker';
 import { PodficType } from '@/app/types';
 import { usePodficcer } from '@/app/lib/swrLoaders';
 
-export default function Page({ params }: { params: { id: any } }) {
+export default function Page({
+  params,
+  searchParams,
+}: {
+  params: { id: any };
+  searchParams?: any;
+}) {
   const { podficcer: defaultPodficcer } = usePodficcer(1);
 
   // TODO: use swr instead
@@ -47,7 +53,8 @@ export default function Page({ params }: { params: { id: any } }) {
     setSubmitting(true);
     try {
       await createUpdatePodficClient(podfic);
-      router.push('/dashboard/podfic');
+      if (searchParams?.return_url) router.push(searchParams.return_url);
+      else router.push('/dashboard/podfic');
     } catch (e) {
       console.error('Error submitting podfic:', e);
     } finally {

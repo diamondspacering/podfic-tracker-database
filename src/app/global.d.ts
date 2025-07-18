@@ -151,6 +151,13 @@ interface Tag {
 }
 
 // --FIC INFO--
+enum Rating {
+  GEN = 'Gen',
+  TEEN = 'Teen',
+  MATURE = 'Mature',
+  EXPLICIT = 'Explicit',
+  NOT_RATED = 'Not Rated',
+}
 
 interface Work {
   work_id?: number;
@@ -163,7 +170,7 @@ interface Work {
   wordcount: number | string;
   chaptered?: boolean;
   chapter_count?: number;
-  rating?: string;
+  rating?: Rating;
   category?: string;
   relationship?: string;
   main_character?: string;

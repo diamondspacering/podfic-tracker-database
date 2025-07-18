@@ -12,6 +12,7 @@ const links = [
   { href: '/dashboard/events', text: 'Events' },
   { href: '/dashboard/schedule', text: 'Schedule' },
   { href: '/dashboard/parts', text: 'Parts' },
+  { href: '/dashboard/to-podfic', text: 'To Podfic' },
   { href: '/dashboard/other', text: 'Other' },
   { href: '/dashboard/voiceteam', text: 'Voiceteam' },
 ];
