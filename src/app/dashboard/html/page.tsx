@@ -89,7 +89,13 @@ export default function Page() {
     searchParams.set('chapter_id', chapterId ? chapterId.toString() : 'null');
 
     if (!!Object.keys(chapter).length && chapter.chapter_number > 1) {
-      const url = new URL(`${podfic.ao3_link}chapters/new`);
+      const url = new URL(
+        `${
+          podfic.ao3_link.slice(-1) === '/'
+            ? podfic.ao3_link
+            : `${podfic.ao3_link}/`
+        }chapters/new`
+      );
       url.search = searchParams.toString();
       return url.toString();
     } else {

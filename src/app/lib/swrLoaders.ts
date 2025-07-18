@@ -301,7 +301,9 @@ export const usePodficCountByYear = () => {
 export const useTags = () => {
   const { data, error, isLoading } = useSWR('/db/tags', fetcher);
 
-  const tags = (data ?? []) as Tag[];
+  const tags = ((data ?? []) as Tag[]).sort((a, b) =>
+    a.tag.localeCompare(b.tag)
+  );
 
   return {
     tags,
