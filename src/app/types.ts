@@ -99,3 +99,12 @@ export enum Rating {
   EXPLICIT = 'Explicit',
   NOT_RATED = 'Not Rated',
 }
+
+export enum Category {
+  GEN = 'Gen',
+  FF = 'F/F',
+  FM = 'F/M',
+  MM = 'M/M',
+  OTHER = 'Other',
+  MULTI = 'Multi',
+}

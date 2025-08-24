@@ -9,6 +9,5 @@ else
 fi
 
 echo $PYTHON
-echo $1
 
 $PYTHON $1

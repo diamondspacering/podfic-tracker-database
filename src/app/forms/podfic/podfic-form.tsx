@@ -19,9 +19,12 @@ import { formatDateString, formatDateTimeString } from '@/app/lib/format';
 import StatusSelect from '@/app/ui/StatusSelect';
 import DatePicker from '@/app/ui/DatePicker';
 import SeriesForm from './series-form';
-import { usePodficcers } from '@/app/lib/swrLoaders';
+import { TagMappings, usePodficcers } from '@/app/lib/swrLoaders';
 import PodficcerDialog from '@/app/ui/podficcer/podficcer-dialog';
 import TagSelect from '@/app/ui/TagSelect';
+import { LoadingButton } from '@mui/lab';
+import MetadataDialog from './metadata-dialog';
+import { WorkMetadata } from './metadataHelpers';
 
 interface PodficFormProps {
   podfic: Podfic & Work;
@@ -30,6 +33,9 @@ interface PodficFormProps {
 
 export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
   const [isNewWork, setIsNewWork] = useState(true);
+  const [metadata, setMetadata] = useState<WorkMetadata>({});
+  const [tagMappings, setTagMappings] = useState<TagMappings | null>(null);
+  const [metadataLoading, setMetadataLoading] = useState(false);
   const [works, setWorks] = useState<(Work & Fandom)[]>([]);
   const [worksLoading, setWorksLoading] = useState(false);
   const [fandoms, setFandoms] = useState<(Fandom & FandomCategory)[]>([]);
@@ -49,6 +55,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
   const [isBackDated, setIsBackDated] = useState(false);
 
   const [podficcerDialogOpen, setPodficcerDialogOpen] = useState(false);
+  const [metadataDialogOpen, setMetadataDialogOpen] = useState(false);
 
   const [authors, setAuthors] = useState<Author[]>([]);
   const [authorsLoading, setAuthorsLoading] = useState(true);
@@ -88,6 +95,17 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
         added_date: formatDateTimeString(new Date(podfic.added_date)),
       }));
   }, [podfic.added_date]);
+
+  const fetchMetadata = useCallback(async () => {
+    setMetadataLoading(true);
+    const metadataResult = await fetch(
+      `/db/metadata/work?work_url=${encodeURIComponent(podfic.link)}`
+    );
+    setMetadata(await metadataResult.json());
+    const tagResult = await fetch('/db/metadata/tagmappings');
+    setTagMappings(await tagResult.json());
+    setMetadataLoading(false);
+  }, [podfic.link]);
 
   const fetchAuthors = useCallback(async () => {
     setAuthorsLoading(true);
@@ -196,6 +214,32 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
           setPodficcerDialogOpen(false);
         }}
       />
+      {metadataDialogOpen && (
+        <MetadataDialog
+          isOpen={metadataDialogOpen}
+          onClose={() => setMetadataDialogOpen(false)}
+          metadata={metadata}
+          tagMappings={tagMappings}
+          submitCallback={(metadata) => {
+            // TODO: set podfic conditionally from these, also yeah it'll have more ids and stuff
+            setPodfic((prev) => ({
+              ...prev,
+              title: metadata.title ?? prev.title,
+              author_id: metadata.author_id ?? prev.author_id,
+              fandom_id: metadata.fandom_id ?? prev.fandom_id,
+              rating: metadata.rating ?? prev.rating,
+              category: metadata.category ?? prev.category,
+              relationship: metadata.relationship ?? prev.relationship,
+              main_character: metadata.main_character ?? prev.main_character,
+              wordcount: metadata.wordcount ?? prev.wordcount,
+              chapter_count: metadata.chapter_count ?? prev.chapter_count,
+              // TODO: chapters
+              chaptered: metadata.chaptered ?? prev.chaptered,
+            }));
+          }}
+          workUrl={podfic.link ?? ''}
+        />
+      )}
       <Button variant='contained' onClick={() => console.log({ podfic })}>
         Log podfic
       </Button>
@@ -281,6 +325,16 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
             />
           }
         ></FormControlLabel>
+        <LoadingButton
+          variant='contained'
+          loading={metadataLoading}
+          onClick={async () => {
+            await fetchMetadata();
+            setMetadataDialogOpen(true);
+          }}
+        >
+          Fetch AO3 metadata
+        </LoadingButton>
       </div>
       <br />
       <Typography variant='h6'>Metadata</Typography>

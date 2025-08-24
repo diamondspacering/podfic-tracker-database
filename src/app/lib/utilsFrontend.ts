@@ -9,19 +9,20 @@ export const usePersistentState = <T>(
   defaultValue: T
 ): [T, React.Dispatch<React.SetStateAction<T>>] => {
   const [state, setState] = useState<T>(() => {
-    // const storedValue =
-    //   typeof window !== 'undefined' ? localStorage.getItem(key) : null;
-    const storedValue = localStorage.getItem(key);
+    const storedValue =
+      typeof window !== 'undefined' ? localStorage.getItem(key) : null;
+    // const storedValue = localStorage.getItem(key);
     return storedValue ? (JSON.parse(storedValue) as T) : defaultValue;
   });
 
   useEffect(() => {
-    // if (typeof window !== 'undefined')
-    localStorage.setItem(key, JSON.stringify(state));
+    if (typeof window !== 'undefined')
+      localStorage.setItem(key, JSON.stringify(state));
   }, [key, state]);
 
   return [state, setState];
 };
+
 export const useDebouncedCallback = (callback, wait = 500) => {
   const argsRef = useRef<any>();
   const timeoutRef = useRef<any>();
