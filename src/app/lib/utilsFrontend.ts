@@ -2,22 +2,21 @@
 
 import { useState, useEffect, useRef } from 'react';
 
-// TODO: this complains about localStorage not being defined, but it does still work
-
 export const usePersistentState = <T>(
   key: string,
   defaultValue: T
 ): [T, React.Dispatch<React.SetStateAction<T>>] => {
   const [state, setState] = useState<T>(() => {
-    // const storedValue =
-    //   typeof window !== 'undefined' ? localStorage.getItem(key) : null;
-    const storedValue = localStorage.getItem(key);
+    let storedValue = null;
+    if (typeof window !== 'undefined') {
+      storedValue = window?.localStorage?.getItem(key);
+    }
     return storedValue ? (JSON.parse(storedValue) as T) : defaultValue;
   });
 
   useEffect(() => {
-    // if (typeof window !== 'undefined')
-    localStorage.setItem(key, JSON.stringify(state));
+    if (typeof window !== 'undefined')
+      window?.localStorage?.setItem(key, JSON.stringify(state));
   }, [key, state]);
 
   return [state, setState];
