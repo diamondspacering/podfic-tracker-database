@@ -1,4 +1,5 @@
 import useSWR from 'swr';
+import { WorkMetadata } from '../forms/podfic/metadataHelpers';
 export const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export const useChaptersForPodfic = (podficId) => {
@@ -319,6 +320,69 @@ export const useToPodficPodfics = () => {
 
   return {
     podfics,
+    error,
+    isLoading,
+  };
+};
+
+export const useWorkMetadata = ({ workUrl }: { workUrl: string }) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/metadata/work?work_url=${encodeURIComponent(workUrl)}`,
+    fetcher
+  );
+
+  console.log({ data });
+  const metadata = (data ?? {}) as WorkMetadata;
+
+  return {
+    metadata,
+    error,
+    isLoading,
+  };
+};
+
+export interface TagMappings {
+  fandom_mapping: Record<string, string>;
+  relationship_mapping: Record<string, string>;
+  character_mapping: Record<string, string>;
+}
+
+// TODO: may need to just put these in other location. ah well.
+export const useTagMappings = () => {
+  const { data, error, isLoading } = useSWR(
+    '/db/metadata/tagmappings',
+    fetcher
+  );
+
+  console.log({ data });
+  const tagMappings = (data ?? {}) as TagMappings;
+
+  return {
+    tagMappings,
+    error,
+    isLoading,
+  };
+};
+
+export const useFandoms = () => {
+  const { data, error, isLoading } = useSWR('/db/fandoms', fetcher);
+
+  const fandoms = (data ?? []) as (Fandom & FandomCategory)[];
+
+  return {
+    fandoms,
+    error,
+    isLoading,
+  };
+};
+
+export const useFandomCategories = () => {
+  const { data, error, isLoading } = useSWR('/db/fandoms/categories', fetcher);
+
+  const categories = (data ?? []) as FandomCategory[];
+
+  return {
+    categories,
     error,
     isLoading,
   };

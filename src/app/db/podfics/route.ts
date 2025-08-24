@@ -7,7 +7,6 @@ export async function GET(request: NextRequest) {
   const eventId = searchParams.get('event_id');
   const missingAALinks = searchParams.get('missing_aa_links') === 'true';
   let podfics = null;
-  console.log({ missingAALinks });
   if (eventId) {
     const client = await getClient();
     const result = await client.query(
