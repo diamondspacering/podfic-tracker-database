@@ -323,8 +323,18 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
             setPodfic((prev) => ({ ...prev, link: e.target.value }))
           }
         />
+        <LoadingButton
+          variant='contained'
+          loading={metadataLoading}
+          onClick={async () => {
+            await fetchMetadata();
+            setMetadataDialogOpen(true);
+          }}
+        >
+          Fetch AO3 metadata
+        </LoadingButton>
         <FormControlLabel
-          label='Pull metadata from AO3?'
+          label='Pull metadata from AO3 later'
           control={
             <Checkbox
               checked={podfic.needs_update ?? false}
@@ -336,17 +346,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
               }
             />
           }
-        ></FormControlLabel>
-        <LoadingButton
-          variant='contained'
-          loading={metadataLoading}
-          onClick={async () => {
-            await fetchMetadata();
-            setMetadataDialogOpen(true);
-          }}
-        >
-          Fetch AO3 metadata
-        </LoadingButton>
+        />
       </div>
       <br />
       <Typography variant='h6'>Metadata</Typography>

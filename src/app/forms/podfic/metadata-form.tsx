@@ -154,7 +154,8 @@ export default function MetadataForm({
         variableSetter: setSelectedFandom,
         mappedList: mappedFandomList,
         mappedListSetter: setMappedFandomList,
-        metadataKey: 'fandomList',
+        metadataListKey: 'fandomList',
+        metadataKey: 'fandom_id',
       },
       {
         name: 'relationship',
@@ -162,7 +163,8 @@ export default function MetadataForm({
         variableSetter: setSelectedRelationship,
         mappedList: mappedRelationshipList,
         mappedListSetter: setMappedRelationshipList,
-        metadataKey: 'relationshipList',
+        metadataListKey: 'relationshipList',
+        metadataKey: 'relationship',
       },
       {
         name: 'main character',
@@ -170,7 +172,8 @@ export default function MetadataForm({
         variableSetter: setSelectedCharacter,
         mappedList: mappedCharacterList,
         mappedListSetter: setMappedCharacterList,
-        metadataKey: 'characterList',
+        metadataListKey: 'characterList',
+        metadataKey: 'main_character',
       },
     ],
     [
@@ -183,7 +186,6 @@ export default function MetadataForm({
     ]
   );
 
-  // TODO: test that this works. maybe then manually delete data?
   const submitFandom = useCallback(async () => {
     setSubmittingFandom(true);
 
@@ -208,7 +210,6 @@ export default function MetadataForm({
     await mutate('/db/authors');
   }, [metadata.authorsLink, metadata.authorsString, newAuthorData]);
 
-  // TODO: option to remove any of these items?
   return (
     <div className={`${styles.flexColumn} ${styles.mt1}`}>
       {metadata.title !== null && (
@@ -231,7 +232,11 @@ export default function MetadataForm({
       {metadata.authorsString !== null && (
         <RemovableItem
           removeCallback={() =>
-            setMetadata((prev) => ({ ...prev, authorsString: null }))
+            setMetadata((prev) => ({
+              ...prev,
+              authorsString: null,
+              author_id: null,
+            }))
           }
         >
           <TextField
@@ -311,190 +316,201 @@ export default function MetadataForm({
         </RemovableItem>
       )}
 
-      {mappingOptions.map((option, index) => (
-        <RemovableItem
-          key={`${option.name}-${index}`}
-          removeCallback={() => {
-            if (option.name === 'fandom')
-              setMetadata((prev) => ({ ...prev, fandom_id: null }));
-            else if (option.name === 'relationship')
-              setMetadata((prev) => ({ ...prev, relationship: null }));
-            else if (option.name === 'main characeter')
-              setMetadata((prev) => ({ ...prev, main_character: null }));
-          }}
-        >
-          <Typography variant='body1'>
-            {option.name.charAt(0).toUpperCase() + option.name.slice(1)}
-          </Typography>
-          <RadioGroup
-            name={`${option.name}-select`}
-            value={option.variable ?? metadata[option.metadataKey]?.[0]}
-            onChange={(e) => option.variableSetter(e.target.value)}
+      {mappingOptions.map((option, index) => {
+        return metadata[option.metadataKey] !== null ? (
+          <RemovableItem
+            key={`${option.name}-${index}`}
+            removeCallback={() => {
+              if (option.name === 'fandom')
+                setMetadata((prev) => ({ ...prev, fandom_id: null }));
+              else if (option.name === 'relationship')
+                setMetadata((prev) => ({ ...prev, relationship: null }));
+              else if (option.name === 'main character')
+                setMetadata((prev) => ({ ...prev, main_character: null }));
+            }}
           >
-            {metadata[option.metadataKey]?.map((item, i) => {
-              const mapping = option.mappedList[item];
+            <Typography variant='body1'>
+              {option.name.charAt(0).toUpperCase() + option.name.slice(1)}
+            </Typography>
+            <RadioGroup
+              name={`${option.name}-select`}
+              value={option.variable ?? metadata[option.metadataListKey]?.[0]}
+              onChange={(e) => option.variableSetter(e.target.value)}
+            >
+              {metadata[option.metadataListKey]?.map((item, i) => {
+                const mapping = option.mappedList[item];
 
-              if (!mapping) return <></>;
+                if (!mapping) return <></>;
 
-              return (
-                <div
-                  key={mapping.mappedItem ?? item}
-                  className={styles.flexRow}
-                  style={{ alignItems: 'center' }}
-                >
-                  <FormControlLabel
-                    key={`${option.name}-${i}`}
-                    label={mapping.mappedItem ?? item}
-                    value={mapping.mappedItem ?? item}
-                    control={<Radio />}
-                  />
-                  {mapping.manuallyMapped && (
-                    <>
-                      <Typography variant='body1'>maps to:</Typography>
-                      <TextField
-                        size='small'
-                        label={`Mapped ${option.name} name`}
-                        value={option.mappedList[item].mappedItem}
-                        onChange={(e) =>
-                          setLocalTagMappings((prev) => ({
-                            ...prev,
-                            [`${
-                              option.name === 'main character'
-                                ? 'character'
-                                : option.name
-                            }_mapping`]: {
-                              ...prev[
-                                `${
-                                  option.name === 'main character'
-                                    ? 'character'
-                                    : option.name
-                                }_mapping`
-                              ],
-                              [item]: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </RadioGroup>
-          {option.name === 'fandom' &&
-            !!selectedFandom &&
-            !selectedFandomId && (
-              <div className={styles.flexRow}>
-                <TextField
-                  select
-                  size='small'
-                  sx={{
-                    width: '100px',
-                  }}
-                  label='Category'
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                >
-                  {categories.map((category, i) => (
-                    <MenuItem key={i} value={category.fandom_category_id}>
-                      {category.category_name}
-                    </MenuItem>
-                  ))}
-                  {categoriesLoading && (
-                    <MenuItem disabled value={0}>
-                      Loading...
-                    </MenuItem>
-                  )}
-                </TextField>
-                {isNewCategory ? (
-                  <TextField
-                    size='small'
-                    label='Category Name'
-                    value={categoryName}
-                    onChange={(e) => setCategoryName(e.target.value)}
-                  />
-                ) : (
-                  <Button
-                    onClick={() => setIsNewCategory(true)}
-                    startIcon={<Add />}
+                return (
+                  <div
+                    key={mapping.mappedItem ?? item}
+                    className={styles.flexRow}
+                    style={{ alignItems: 'center' }}
                   >
-                    New Category
+                    <FormControlLabel
+                      key={`${option.name}-${i}`}
+                      label={mapping.mappedItem ?? item}
+                      value={mapping.mappedItem ?? item}
+                      control={<Radio />}
+                    />
+                    {mapping.manuallyMapped && (
+                      <>
+                        <Typography variant='body1'>maps to:</Typography>
+                        <TextField
+                          size='small'
+                          label={`Mapped ${option.name} name`}
+                          value={option.mappedList[item].mappedItem}
+                          onChange={(e) =>
+                            setLocalTagMappings((prev) => ({
+                              ...prev,
+                              [`${
+                                option.name === 'main character'
+                                  ? 'character'
+                                  : option.name
+                              }_mapping`]: {
+                                ...prev[
+                                  `${
+                                    option.name === 'main character'
+                                      ? 'character'
+                                      : option.name
+                                  }_mapping`
+                                ],
+                                [item]: e.target.value,
+                              },
+                            }))
+                          }
+                        />
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </RadioGroup>
+            {option.name === 'fandom' &&
+              !!selectedFandom &&
+              !selectedFandomId && (
+                <div className={styles.flexRow}>
+                  <TextField
+                    select
+                    size='small'
+                    sx={{
+                      width: '100px',
+                    }}
+                    label='Category'
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
+                  >
+                    {categories.map((category, i) => (
+                      <MenuItem key={i} value={category.fandom_category_id}>
+                        {category.category_name}
+                      </MenuItem>
+                    ))}
+                    {categoriesLoading && (
+                      <MenuItem disabled value={0}>
+                        Loading...
+                      </MenuItem>
+                    )}
+                  </TextField>
+                  {isNewCategory ? (
+                    <TextField
+                      size='small'
+                      label='Category Name'
+                      value={categoryName}
+                      onChange={(e) => setCategoryName(e.target.value)}
+                    />
+                  ) : (
+                    <Button
+                      onClick={() => setIsNewCategory(true)}
+                      startIcon={<Add />}
+                    >
+                      New Category
+                    </Button>
+                  )}
+                  <Button onClick={submitFandom}>
+                    {submittingFandom ? <CircularProgress /> : <Check />}
                   </Button>
-                )}
-                <Button onClick={submitFandom}>
-                  {submittingFandom ? <CircularProgress /> : <Check />}
-                </Button>
-              </div>
-            )}
-        </RemovableItem>
-      ))}
+                </div>
+              )}
+          </RemovableItem>
+        ) : (
+          <></>
+        );
+      })}
 
       {/* TODO: colors? just letters? look at stats mapping & generalize? */}
-      <RemovableItem
-        removeCallback={() =>
-          setMetadata((prev) => ({ ...prev, rating: null }))
-        }
-      >
-        <TextField
-          size='small'
-          select
-          label='Rating'
-          value={metadata.rating}
-          onChange={(e) =>
-            setMetadata((prev) => ({
-              ...prev,
-              rating: e.target.value as Rating,
-            }))
+      {metadata.rating !== null && (
+        <RemovableItem
+          removeCallback={() =>
+            setMetadata((prev) => ({ ...prev, rating: null }))
           }
         >
-          {Object.values(Rating).map((rating) => (
-            <MenuItem key={rating} value={rating}>
-              <span>{rating}</span>
-            </MenuItem>
-          ))}
-        </TextField>
-      </RemovableItem>
+          <TextField
+            size='small'
+            select
+            label='Rating'
+            value={metadata.rating}
+            onChange={(e) =>
+              setMetadata((prev) => ({
+                ...prev,
+                rating: e.target.value as Rating,
+              }))
+            }
+          >
+            {Object.values(Rating).map((rating) => (
+              <MenuItem key={rating} value={rating}>
+                <span>{rating}</span>
+              </MenuItem>
+            ))}
+          </TextField>
+        </RemovableItem>
+      )}
 
       {/* TODO: this should be a radio too prob */}
-      <RemovableItem
-        removeCallback={() =>
-          setMetadata((prev) => ({ ...prev, category: null }))
-        }
-      >
-        <TextField
-          size='small'
-          select
-          label='Category'
-          value={metadata.category}
-          onChange={(e) =>
-            setMetadata((prev) => ({ ...prev, category: e.target.value }))
+      {metadata.category !== null && (
+        <RemovableItem
+          removeCallback={() =>
+            setMetadata((prev) => ({ ...prev, category: null }))
           }
         >
-          {Object.values(Category).map((category) => (
-            <MenuItem key={category} value={category}>
-              <span>{category}</span>
-            </MenuItem>
-          ))}
-        </TextField>
-      </RemovableItem>
+          <RadioGroup
+            name='category'
+            value={metadata.category}
+            onChange={(e) =>
+              setMetadata((prev) => ({ ...prev, category: e.target.value }))
+            }
+          >
+            {Object.values(Category).map((category) => (
+              <FormControlLabel
+                label={category}
+                key={category}
+                value={category}
+                control={<Radio />}
+              />
+            ))}
+          </RadioGroup>
+        </RemovableItem>
+      )}
 
-      <RemovableItem
-        removeCallback={() =>
-          setMetadata((prev) => ({ ...prev, wordcount: null }))
-        }
-      >
-        <TextField
-          size='small'
-          label='Wordcount'
-          value={metadata.wordcount?.toString()}
-          onChange={(e) =>
-            setMetadata((prev) => ({
-              ...prev,
-              wordcount: parseInt(e.target.value),
-            }))
+      {metadata.wordcount !== null && (
+        <RemovableItem
+          removeCallback={() =>
+            setMetadata((prev) => ({ ...prev, wordcount: null }))
           }
-        />
-      </RemovableItem>
+        >
+          <TextField
+            size='small'
+            label='Wordcount'
+            value={metadata.wordcount?.toString()}
+            onChange={(e) =>
+              setMetadata((prev) => ({
+                ...prev,
+                wordcount: parseInt(e.target.value),
+              }))
+            }
+          />
+        </RemovableItem>
+      )}
 
       <br />
 
@@ -509,7 +525,7 @@ export default function MetadataForm({
       )}
 
       {metadata.chapters?.map((chapter, i) => (
-        <Fragment key={`chapter-$`}>
+        <Fragment key={`chapter-${i}`}>
           <Typography variant='body1'>{chapter.chapter_number}</Typography>
           <TextField
             size='small'
