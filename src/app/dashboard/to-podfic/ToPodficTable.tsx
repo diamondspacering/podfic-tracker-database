@@ -13,7 +13,7 @@ import { TableCell } from '@/app/ui/table/TableCell';
 import { Add, Check, Edit, OpenInNew } from '@mui/icons-material';
 import { Autocomplete, Chip, IconButton, Link, TextField } from '@mui/material';
 import { ColumnFiltersState, createColumnHelper } from '@tanstack/react-table';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import tableStyles from '@/app/ui/table/table.module.css';
 import { FilterType, getDefaultLength, PodficStatus } from '@/app/types';
 import { HeaderCell } from '@/app/ui/table/HeaderCell';
@@ -34,10 +34,10 @@ export default function ToPodficTable() {
 
   const columnHelper = createColumnHelper<Podfic & Work & Fandom & Event>();
   const [columnFilters, setColumnFilters] =
-    usePersistentState<ColumnFiltersState>(
-      'TO_PODFIC_TABLE_COLUMN_FILTERS',
-      []
-    );
+    usePersistentState<ColumnFiltersState>('TO_PODFIC_TABLE_COLUMN_FILTERS', [
+      { id: 'tags', value: [] },
+      { id: 'exclude_tags', value: [] },
+    ]);
 
   const [editingTagsId, setEditingTagsId] = useState<string | null>(null);
   const [editingTags, setEditingTags] = useState<Tag[]>([]);
@@ -306,7 +306,21 @@ export default function ToPodficTable() {
         hidden: true,
         immutable: true,
       },
-      filterFn: tagFilter,
+      filterFn: (row, columnId, filterValue) =>
+        tagFilter(row, columnId, filterValue, false),
+    }),
+    columnHelper.accessor('tags', {
+      id: 'exclude_tags',
+      header: 'Exclude Tags',
+      cell: () => <></>,
+      meta: {
+        type: 'string',
+        filterType: FilterType.OTHER,
+        hidden: true,
+        immutable: true,
+      },
+      filterFn: (row, columnId, filterValue) =>
+        tagFilter(row, columnId, filterValue, true),
     }),
   ];
 
@@ -321,6 +335,13 @@ export default function ToPodficTable() {
 
   const tagFilterValue = useMemo(
     () => columnFilters.find((filter) => filter.id === 'tags')?.value as Tag[],
+    [columnFilters]
+  );
+
+  const excludeTagFilterValue = useMemo(
+    () =>
+      columnFilters.find((filter) => filter.id === 'exclude_tags')
+        ?.value as Tag[],
     [columnFilters]
   );
 
@@ -382,6 +403,38 @@ export default function ToPodficTable() {
                       {...params}
                       size='small'
                       label='Filter by tags&nbsp;&nbsp;'
+                    />
+                  );
+                }}
+              />
+              <Autocomplete
+                sx={{ minWidth: '200px' }}
+                loading={tagsLoading}
+                options={tags}
+                getOptionLabel={(option) => option.tag}
+                multiple
+                value={excludeTagFilterValue}
+                onChange={(_, newValue) => {
+                  setColumnFilters((prev) =>
+                    prev.map((filter) =>
+                      filter.id === 'exclude_tags'
+                        ? { id: 'exclude_tags', value: newValue }
+                        : filter
+                    )
+                  );
+                }}
+                renderTags={(values, getTagProps) => {
+                  return values.map((option: Tag, index: number) => {
+                    const { key, ...itemProps } = getTagProps({ index });
+                    return <Chip label={option.tag} key={key} {...itemProps} />;
+                  });
+                }}
+                renderInput={(params) => {
+                  return (
+                    <TextField
+                      {...params}
+                      size='small'
+                      label='Exclude tags&nbsp;&nbsp;'
                     />
                   );
                 }}
