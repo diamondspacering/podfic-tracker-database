@@ -16,7 +16,7 @@ interface MetadataDialogProps {
   onClose: () => void;
   metadata: WorkMetadata;
   tagMappings: TagMappings;
-  submitCallback: (metadata: Work) => void;
+  submitCallback: (metadata: WorkMetadata) => void;
   workUrl: string;
 }
 
@@ -44,12 +44,13 @@ export default function MetadataDialog({
         method: 'PATCH',
         body: JSON.stringify(localTagMappings),
       });
+      submitCallback(metadata);
     } catch (e) {
       console.error('Error submitting metadata', e);
     } finally {
       setSubmitting(false);
     }
-  }, [localTagMappings]);
+  }, [localTagMappings, metadata, submitCallback]);
 
   return (
     <Dialog

@@ -1,5 +1,6 @@
 import {
   TagMappings,
+  useAuthors,
   useFandomCategories,
   useFandoms,
 } from '@/app/lib/swrLoaders';
@@ -19,9 +20,14 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { mutate } from 'swr';
 import { Add, Check } from '@mui/icons-material';
 import RemovableItem from './RemovableItem';
-import { createUpdateFandom } from '@/app/lib/updaters';
-import { Category, Rating } from '@/app/types';
+import {
+  createUpdateAuthorClient,
+  createUpdateFandom,
+} from '@/app/lib/updaters';
+import { Category, PermissionStatus, Rating } from '@/app/types';
 import { LoadingButton } from '@mui/lab';
+import { socialMedia } from '@/app/lib/dataGeneral';
+import StatusBadge from '@/app/ui/StatusBadge';
 
 interface MetadataFormProps {
   metadata: Work & WorkMetadata;
@@ -35,12 +41,12 @@ export default function MetadataForm({
   metadata,
   setMetadata,
   tagMappings,
-  localTagMappings,
   setLocalTagMappings,
 }: MetadataFormProps) {
   // oh but these boys.....they are wrecking my mega mapping...curses on all variables
-  const { fandoms, isLoading: fandomsLoading } = useFandoms();
+  const { fandoms } = useFandoms();
   const { categories, isLoading: categoriesLoading } = useFandomCategories();
+  const { authors } = useAuthors();
 
   const [mappedFandomList, setMappedFandomList] = useState(
     getMappedItems(metadata.fandomList, tagMappings.fandom_mapping)
@@ -58,9 +64,10 @@ export default function MetadataForm({
   const [isNewCategory, setIsNewCategory] = useState(false);
   const [selectedRelationship, setSelectedRelationship] = useState('');
   const [selectedCharacter, setSelectedCharacter] = useState('');
+  const [newAuthorData, setNewAuthorData] = useState<any>({});
+  const [submittingAuthor, setSubmittingAuthor] = useState(false);
 
   const [chaptersLoading, setChaptersLoading] = useState(false);
-  const [chapterMetadata, setChapterMetadata] = useState<Chapter[]>([]);
 
   const selectedFandomId = useMemo(
     () =>
@@ -69,8 +76,24 @@ export default function MetadataForm({
     [fandoms, selectedFandom]
   );
 
-  useEffect(() => console.log({ selectedFandom }));
-  useEffect(() => console.log({ localTagMappings }), [localTagMappings]);
+  const selectedAuthorId = useMemo(
+    () =>
+      authors.find((author) => author.username === metadata.authorsString)
+        ?.author_id ?? '',
+    [authors, metadata.authorsString]
+  );
+
+  useEffect(() => {
+    if (selectedFandomId) {
+      setMetadata((prev) => ({ ...prev, fandom_id: selectedFandomId }));
+    }
+  }, [selectedFandomId, setMetadata]);
+
+  useEffect(() => {
+    if (selectedAuthorId) {
+      setMetadata((prev) => ({ ...prev, author_id: selectedAuthorId }));
+    }
+  }, [selectedAuthorId, setMetadata]);
 
   useEffect(() => {
     const mappedFandoms = getMappedItems(
@@ -108,21 +131,20 @@ export default function MetadataForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => console.log({ metadata }), [metadata]);
-
   const fetchChapters = useCallback(async () => {
     setChaptersLoading(true);
     try {
       const chapterResult = await fetch(
         `/db/metadata/chapters?work_url=${encodeURIComponent(metadata.link)}`
       );
-      setChapterMetadata(await chapterResult.json());
+      const chapters = await chapterResult.json();
+      setMetadata((prev) => ({ ...prev, chapters }));
     } catch (e) {
       console.error(e);
     } finally {
       setChaptersLoading(false);
     }
-  }, [metadata.link]);
+  }, [metadata.link, setMetadata]);
 
   const mappingOptions = useMemo(
     () => [
@@ -174,6 +196,18 @@ export default function MetadataForm({
     await mutate('/db/fandoms');
   }, [categoryId, categoryName, selectedFandom]);
 
+  const submitAuthor = useCallback(async () => {
+    setSubmittingAuthor(true);
+
+    await createUpdateAuthorClient({
+      ...newAuthorData,
+      username: metadata.authorsString,
+      ao3: metadata.authorsLink,
+    });
+    setSubmittingAuthor(false);
+    await mutate('/db/authors');
+  }, [metadata.authorsLink, metadata.authorsString, newAuthorData]);
+
   // TODO: option to remove any of these items?
   return (
     <div className={`${styles.flexColumn} ${styles.mt1}`}>
@@ -194,7 +228,89 @@ export default function MetadataForm({
         </RemovableItem>
       )}
 
-      {/* TODO: mega mapping. you know what I mean. */}
+      {metadata.authorsString !== null && (
+        <RemovableItem
+          removeCallback={() =>
+            setMetadata((prev) => ({ ...prev, authorsString: null }))
+          }
+        >
+          <TextField
+            size='small'
+            label='Author(s)'
+            value={metadata.authorsString ?? ''}
+            onChange={(e) =>
+              setMetadata((prev) => ({
+                ...prev,
+                authorsString: e.target.value,
+              }))
+            }
+          />
+          {!selectedAuthorId && (
+            <div className={styles.flexRow}>
+              <TextField
+                size='small'
+                sx={{
+                  width: '30px',
+                }}
+                label='Link'
+                value={metadata.authorsLink}
+                onChange={(e) =>
+                  setMetadata((prev) => ({
+                    ...prev,
+                    authorsLink: e.target.value,
+                  }))
+                }
+              />
+              <TextField
+                select
+                size='small'
+                sx={{
+                  width: '100px',
+                }}
+                label='Primary Social Media'
+                value={newAuthorData.primary_social_media}
+                onChange={(e) =>
+                  setNewAuthorData((prev) => ({
+                    ...prev,
+                    primary_social_media: e.target.value,
+                  }))
+                }
+              >
+                {socialMedia.map((sm) => (
+                  <MenuItem key={sm} value={sm}>
+                    {sm}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                size='small'
+                sx={{
+                  width: '175px',
+                }}
+                label='Permission Status'
+                value={newAuthorData.permission_status}
+                onChange={(e) =>
+                  setNewAuthorData((prev) => ({
+                    ...prev,
+                    permission_status: e.target.value,
+                  }))
+                }
+              >
+                {Object.values(PermissionStatus).map((status) => (
+                  <MenuItem key={status} value={status}>
+                    <StatusBadge status={status} />
+                  </MenuItem>
+                ))}
+              </TextField>
+              <Button onClick={submitAuthor}>
+                {submittingAuthor ? <CircularProgress /> : <Check />}
+              </Button>
+            </div>
+          )}
+        </RemovableItem>
+      )}
+
       {mappingOptions.map((option, index) => (
         <RemovableItem
           key={`${option.name}-${index}`}
@@ -240,21 +356,21 @@ export default function MetadataForm({
                         label={`Mapped ${option.name} name`}
                         value={option.mappedList[item].mappedItem}
                         onChange={(e) =>
-                          // option.mappedListSetter((prev) => ({
-                          //   ...prev,
-                          //   [item]: {
-                          //     mappedItem: e.target.value,
-                          //     manuallyMapped: true,
-                          //   },
-                          // }))
                           setLocalTagMappings((prev) => ({
                             ...prev,
-                            [`${option.name}_mapping`]: {
-                              ...prev[`${option.name}_mapping`],
-                              [item]: {
-                                mappedItem: e.target.value,
-                                manuallyMapped: true,
-                              },
+                            [`${
+                              option.name === 'main character'
+                                ? 'character'
+                                : option.name
+                            }_mapping`]: {
+                              ...prev[
+                                `${
+                                  option.name === 'main character'
+                                    ? 'character'
+                                    : option.name
+                                }_mapping`
+                              ],
+                              [item]: e.target.value,
                             },
                           }))
                         }
@@ -265,11 +381,10 @@ export default function MetadataForm({
               );
             })}
           </RadioGroup>
-          {/* TODO: this should be its own component tbh */}
           {option.name === 'fandom' &&
             !!selectedFandom &&
             !selectedFandomId && (
-              <div className={styles.flexColumn}>
+              <div className={styles.flexRow}>
                 <TextField
                   select
                   size='small'
@@ -393,7 +508,7 @@ export default function MetadataForm({
         </LoadingButton>
       )}
 
-      {chapterMetadata.map((chapter, i) => (
+      {metadata.chapters?.map((chapter, i) => (
         <Fragment key={`chapter-$`}>
           <Typography variant='body1'>{chapter.chapter_number}</Typography>
           <TextField
@@ -401,11 +516,12 @@ export default function MetadataForm({
             label='Chapter Title'
             value={chapter.chapter_title}
             onChange={(e) =>
-              setChapterMetadata((prev) =>
-                prev.map((val, index) =>
+              setMetadata((prev) => ({
+                ...prev,
+                chapters: prev.chapters.map((val, index) =>
                   index === i ? { ...val, chapter_title: e.target.value } : val
-                )
-              )
+                ),
+              }))
             }
           />
         </Fragment>

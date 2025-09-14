@@ -220,8 +220,19 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
           onClose={() => setMetadataDialogOpen(false)}
           metadata={metadata}
           tagMappings={tagMappings}
-          submitCallback={(metadata) => {
-            // TODO: set podfic conditionally from these, also yeah it'll have more ids and stuff
+          submitCallback={async (metadata) => {
+            if (metadata.fandom_id) {
+              const foundFandom = fandoms.find(
+                (fandom) => fandom.fandom_id === metadata.fandom_id
+              );
+              if (!foundFandom) await fetchFandoms();
+            }
+            if (metadata.author_id) {
+              const foundAuthor = authors.find(
+                (author) => author.author_id === metadata.author_id
+              );
+              if (!foundAuthor) await fetchAuthors();
+            }
             setPodfic((prev) => ({
               ...prev,
               title: metadata.title ?? prev.title,
@@ -233,9 +244,10 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
               main_character: metadata.main_character ?? prev.main_character,
               wordcount: metadata.wordcount ?? prev.wordcount,
               chapter_count: metadata.chapter_count ?? prev.chapter_count,
-              // TODO: chapters
               chaptered: metadata.chaptered ?? prev.chaptered,
+              chapters: metadata.chapters,
             }));
+            setMetadataDialogOpen(false);
           }}
           workUrl={podfic.link ?? ''}
         />

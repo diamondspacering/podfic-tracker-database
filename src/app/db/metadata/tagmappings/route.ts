@@ -1,10 +1,9 @@
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
-  // let tagMappings = readFileSync('./src/scripts/tag_mappings.json', 'utf-8');
-  // tagMappings = JSON.parse(tagMappings);
-  const tagMappings = null;
+  let tagMappings = readFileSync('./src/scripts/tag_mappings.json', 'utf-8');
+  tagMappings = JSON.parse(tagMappings);
 
   return NextResponse.json(
     tagMappings ?? {
@@ -17,7 +16,10 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   const newTagMappings = await request.json();
-  console.log({ newTagMappings });
+  writeFileSync(
+    './src/scripts/tag_mappings.json',
+    JSON.stringify(newTagMappings)
+  );
 
   return NextResponse.json({});
 }

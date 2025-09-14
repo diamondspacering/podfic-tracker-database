@@ -1,10 +1,9 @@
-import { Cheerio, load } from 'cheerio';
+import { load } from 'cheerio';
 import makeFetchCookie from 'fetch-cookie';
 import parse, { HTMLElement } from 'node-html-parser';
 import { WorkMetadata } from '../forms/podfic/metadataHelpers';
-import { getWork } from '@bobaboard/ao3.js';
 
-// ao3 login code from ao3.js PR
+// ao3 login code from ao3.js pr https://github.com/FujoWebDev/AO3.js/issues/60
 const AO3_LOGIN_URL = 'https://archiveofourown.org/users/login';
 const AO3_SESSION_COOKIE = '_otwarchive_session';
 
@@ -16,25 +15,21 @@ export default function loginFetcher() {
     const username = process.env.AO3_USERNAME;
     const password = process.env.AO3_PWD;
     const url = getUrl(params[0]);
-    console.log('Checking session cookie');
     const session = (await cookieJar.getCookies(url)).find(
       (cookie) => cookie.key === AO3_SESSION_COOKIE
     );
     if (!session || (session.expires && session.expires <= new Date()))
       await login(username, password);
-    console.log('Making request to url', params[0]);
     return await fetchCookie(...params);
   };
 }
 
 async function login(username: string, password: string): Promise<void> {
-  console.log('Getting login form');
   const loginForm = await fetchCookie(AO3_LOGIN_URL);
   const token = getAuthenticityToken(parse(await loginForm.text()));
   if (!token) throw new Error('Could not find authenticity token');
   const payload = getLoginPayload(username, password, token);
   const body = new URLSearchParams(payload).toString();
-  console.log('Logging in');
   await fetchCookie(AO3_LOGIN_URL, {
     method: 'POST',
     headers: {
@@ -72,71 +67,41 @@ function getUrl(requestInfo: RequestInfo | URL): URL {
 }
 
 const fetchWork = async (workUrl: string) => {
-  const initialWork = await getWork({ workId: workUrl.split('/').pop() });
   let fetcher = fetch;
-  if (initialWork.locked) fetcher = loginFetcher();
-  const result = await fetcher(workUrl);
-  const text = await result.text();
+  let result = await fetcher(workUrl);
+  let text = await result.text();
+  if (
+    text.includes(
+      'This work is only available to registered users of the Archive'
+    )
+  ) {
+    console.log('Work is locked, logging in...');
+    fetcher = loginFetcher();
+    result = await fetcher(workUrl);
+    text = await result.text();
+  }
   return text;
 };
 
-// export const login = async () => {
-//   console.log('logging in to AO3');
-//   const username = process.env.AO3_USERNAME;
-//   const password = process.env.AO3_PWD;
+const fetchFullWork = async (workUrl: string) => {
+  let fullWorkUrl = workUrl;
+  if (workUrl[workUrl.length - 1] === '/')
+    fullWorkUrl = `${workUrl.substring(
+      0,
+      workUrl.length - 1
+    )}?view_full_work=true`;
+  else fullWorkUrl = `${workUrl}?view_full_work=true`;
 
-//   const response = await fetch('https://archiveofourown.org/users/login', {
-//     headers: {
-//       Accept: 'text/html,*/*',
-//       Host: 'archiveofourown.org',
-//       Connection: 'keep-alive',
-//       'User-Agent':
-//         'ozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36',
-//       'Content-Type': 'application/x-www-form-urlencoded',
-//     },
-//   });
-//   // console.log({ response });
-//   const text = await response.text();
-//   // console.log({ text });
+  const text = await fetchWork(fullWorkUrl);
 
-//   const $ = load(text);
-//   const authenticityToken = $('input[name=authenticity_token]').attr('value');
+  return text;
+};
 
-//   // const data = {
-//   //   'user[login]': username,
-//   //   'user[password]': password,
-//   //   authenticity_token: authenticityToken,
-//   // };
-
-//   // const formData = new FormData();
-//   // formData.set('user[login]', username);
-//   // formData.set('user[password]', password);
-//   // formData.set('authenticity_token', authenticityToken);
-
-//   // const responsePage = await fetch('https://archiveofourownorg/users/login', {
-//   //   method: 'POST',
-//   //   headers: {
-//   //     Accept: 'text/html,*/*',
-//   //     Host: 'archiveofourown.org',
-//   //     Connection: 'keep-alive',
-//   //     'User-Agent':
-//   //       'ozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36',
-//   //     'Content-Type': 'application/x-www-form-urlencoded',
-//   //   },
-//   //   body: formData,
-//   // });
-
-//   // const newUrl = responsePage.url;
-//   // console.log({ newUrl });
-// };
-
-// ok so this works. so just scrape those pages as expected & return appropriate data. maybe try doing some things for ao3.js? or something? also improve this & make it more like how you do it
-export const fetchWorkMetadata = async (workUrl: string) => {
+export const fetchWorkMetadata = async (workUrl: string, logging = false) => {
   const text = await fetchWork(workUrl);
 
   const $ = load(text);
   const title = $('h2.title.heading').text().trim();
-  console.log({ title });
 
   const authors = $('h3.byline.heading').find('a').toArray();
   const authorsString = authors.map((author) => $(author).text()).join(' & ');
@@ -174,7 +139,6 @@ export const fetchWorkMetadata = async (workUrl: string) => {
 
   const wordcount = parseInt(meta.find('dd.words').text().replace(',', ''));
 
-  // TODO: chapters?
   const chapters = meta.find('dd.chapters').text();
   let chapterCountStr = chapters.split('/')[1];
   if (chapterCountStr === '?') {
@@ -186,7 +150,7 @@ export const fetchWorkMetadata = async (workUrl: string) => {
     chaptered = true;
   }
 
-  return {
+  const metadata = {
     title,
     authorsString,
     authorsLink,
@@ -198,24 +162,14 @@ export const fetchWorkMetadata = async (workUrl: string) => {
     wordcount,
     chapterCount,
     chaptered,
-  } as WorkMetadata;
+  };
+
+  if (logging) console.log(metadata);
+
+  return metadata as WorkMetadata;
 };
 
-const fetchFullWork = async (workUrl: string) => {
-  let fullWorkUrl = workUrl;
-  if (workUrl[workUrl.length - 1] === '/')
-    fullWorkUrl = `${workUrl.substring(
-      0,
-      workUrl.length - 1
-    )}?view_full_work=true`;
-  else fullWorkUrl = `${workUrl}?view_full_work=true`;
-
-  const text = await fetchWork(fullWorkUrl);
-
-  return text;
-};
-
-const getChapterData = (chapterElement) => {
+const getChapterData = (chapterElement, logging = false) => {
   const $ = load(chapterElement);
 
   const titleElement = $(chapterElement).find('h3.title');
@@ -240,24 +194,32 @@ const getChapterData = (chapterElement) => {
     .replaceAll("'", '');
   const chapterWordcount = chapterText.matchAll(/\w+/g).toArray().length - 2;
 
-  return {
+  const chapterMetadata = {
     link: chapterLink,
     chapter_number: parseInt(chapterNumber),
     chapter_title: title,
     wordcount: chapterWordcount,
-  } as Chapter;
+  };
+
+  if (logging) console.log(chapterMetadata);
+
+  return chapterMetadata as Chapter;
 };
 
-export const fetchChapterMetadata = async (workUrl: string) => {
+export const fetchChapterMetadata = async (
+  workUrl: string,
+  logging = false
+) => {
   const text = await fetchFullWork(workUrl);
 
   const $ = load(text);
   const chapters = $('div#chapters')
     .find('div.chapter')
     .filter((_i, el) => $(el).attr('id')?.startsWith('chapter-'));
-  console.log(chapters.length);
 
-  const chapterData = chapters.map((_i, el) => getChapterData(el)).toArray();
+  const chapterData = chapters
+    .map((_i, el) => getChapterData(el, logging))
+    .toArray();
   console.log(`Fetched ${chapterData.length} chapters.`);
 
   return chapterData;

@@ -1,4 +1,4 @@
-export interface WorkMetadata {
+interface Metadata {
   title?: string;
   authorsString?: string;
   authorsLink?: string;
@@ -10,7 +10,10 @@ export interface WorkMetadata {
   wordcount?: number;
   chapterCount?: number;
   chaptered?: boolean;
+  chapters?: Chapter[];
 }
+
+export type WorkMetadata = Work & Metadata;
 
 export interface ItemMapping {
   [originalItemName: string]: {
