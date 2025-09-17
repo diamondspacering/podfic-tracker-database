@@ -35,17 +35,19 @@ export const arrayIncludesFilter = (row, columnId, filterValue) => {
   return filterValue.includes(row.getValue(columnId));
 };
 
-export const tagFilter = (row, columnId, filterValue) => {
+export const tagFilter = (row, columnId, filterValue, exclude = false) => {
   if (Array.isArray(filterValue)) {
     if (!filterValue.length) return true;
     const value = row.getValue(columnId);
     if (Array.isArray(value)) {
+      if (exclude && !value.length) return true;
       const valueIds = value.map((tag) => tag.tag_id);
       const filterIds = filterValue.map((tag) => tag.tag_id);
-      return valueIds.some((tag) => filterIds.includes(tag));
+      const tagOverlap = valueIds.some((tag) => filterIds.includes(tag));
+      return exclude ? !tagOverlap : tagOverlap;
     }
   }
-  return false;
+  return exclude ? true : false;
 };
 
 export const filterActivated = (column, filterType: FilterType) => {

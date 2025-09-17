@@ -26,6 +26,8 @@ import {
 import { getLengthText } from '@/app/lib/format';
 import YearStats from './YearStats';
 
+export const revalidate = 30;
+
 // TODO: this is gonna need to be a client component my guy
 // more detailed overview & each year pages? switch to specific years/all years? topic-based guys like authors, time you did stuff, etc
 // actually put in charts lmao, figure out a charting library?

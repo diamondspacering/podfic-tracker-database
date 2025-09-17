@@ -1,5 +1,6 @@
 import { getClient } from '@/app/lib/db-helpers';
 import { NextRequest, NextResponse } from 'next/server';
+import { IS_REACT_LEGACY } from 'swr/_internal';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     const podfic = (
       await client.query(
-        `select wordcount from podfic inner join work on podfic.work_id = work.work_id where podfic.podfic_id = $1`,
+        `select wordcount,is_multivoice from podfic inner join work on podfic.work_id = work.work_id where podfic.podfic_id = $1`,
         [podficId]
       )
     ).rows[0];
@@ -39,11 +40,12 @@ export async function GET(request: NextRequest) {
       length: chapter.length,
       est_length: estimatedLength,
       html_string: chapter.html_string,
+      is_multivoice: podfic.is_multivoice,
     });
   } else {
     const podfic = (
       await client.query(
-        `select length,html_string from podfic where podfic_id = $1`,
+        `select length,html_string,is_multivoice from podfic where podfic_id = $1`,
         [podficId]
       )
     ).rows[0];
@@ -51,6 +53,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       length: podfic.length,
       html_string: podfic.html_string,
+      is_multivoice: podfic.is_multivoice,
     });
   }
 }

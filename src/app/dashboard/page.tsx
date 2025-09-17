@@ -10,6 +10,8 @@ import {
 import StatusBadge from '../ui/StatusBadge';
 import { getLengthText } from '../lib/format';
 
+export const revalidate = 30;
+
 export default async function Page() {
   const inProgressPodfics = await fetchInProgressPodfics();
   const recordedToday = await fetchRecordedToday();
