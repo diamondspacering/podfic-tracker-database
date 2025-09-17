@@ -1,5 +1,3 @@
-'use server';
-
 import { Typography } from '@mui/material';
 import dashboardStyles from '@/app/dashboard/dashboard.module.css';
 import styles from './stats.module.css';
