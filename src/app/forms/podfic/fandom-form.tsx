@@ -4,7 +4,11 @@ import { Add, Check } from '@mui/icons-material';
 import { Button, CircularProgress, MenuItem, TextField } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 
-export default function FandomForm({ updateCallback }) {
+interface FandomFormProps {
+  updateCallback: (fandom_id: number) => void;
+}
+
+export default function FandomForm({ updateCallback }: FandomFormProps) {
   const [fandomName, setFandomName] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [categoryName, setCategoryName] = useState('');

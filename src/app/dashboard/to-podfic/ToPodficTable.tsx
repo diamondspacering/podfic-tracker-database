@@ -374,7 +374,7 @@ export default function ToPodficTable() {
         additionalFilters={
           <div>
             <br />
-            <div style={{ display: 'flex' }}>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
               <Autocomplete
                 sx={{ minWidth: '200px' }}
                 loading={tagsLoading}

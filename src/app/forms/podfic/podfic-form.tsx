@@ -14,14 +14,17 @@ import { Add } from '@mui/icons-material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import FandomForm from './fandom-form';
 import AuthorForm from './author-form-inline';
-import { PodficStatus, PodficType } from '@/app/types';
+import { PodficStatus, PodficType, Rating } from '@/app/types';
 import { formatDateString, formatDateTimeString } from '@/app/lib/format';
 import StatusSelect from '@/app/ui/StatusSelect';
 import DatePicker from '@/app/ui/DatePicker';
 import SeriesForm from './series-form';
-import { usePodficcers } from '@/app/lib/swrLoaders';
+import { TagMappings, usePodficcers } from '@/app/lib/swrLoaders';
 import PodficcerDialog from '@/app/ui/podficcer/podficcer-dialog';
 import TagSelect from '@/app/ui/TagSelect';
+import { LoadingButton } from '@mui/lab';
+import MetadataDialog from './metadata-dialog';
+import { WorkMetadata } from './metadataHelpers';
 
 interface PodficFormProps {
   podfic: Podfic & Work;
@@ -30,6 +33,9 @@ interface PodficFormProps {
 
 export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
   const [isNewWork, setIsNewWork] = useState(true);
+  const [metadata, setMetadata] = useState<WorkMetadata>({});
+  const [tagMappings, setTagMappings] = useState<TagMappings | null>(null);
+  const [metadataLoading, setMetadataLoading] = useState(false);
   const [works, setWorks] = useState<(Work & Fandom)[]>([]);
   const [worksLoading, setWorksLoading] = useState(false);
   const [fandoms, setFandoms] = useState<(Fandom & FandomCategory)[]>([]);
@@ -49,6 +55,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
   const [isBackDated, setIsBackDated] = useState(false);
 
   const [podficcerDialogOpen, setPodficcerDialogOpen] = useState(false);
+  const [metadataDialogOpen, setMetadataDialogOpen] = useState(false);
 
   const [authors, setAuthors] = useState<Author[]>([]);
   const [authorsLoading, setAuthorsLoading] = useState(true);
@@ -74,6 +81,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
         posted_date: formatDateString(new Date(prev.posted_date)),
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [podfic.status, podfic.posted_date]);
 
   useEffect(() => {
@@ -87,7 +95,19 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
         ...prev,
         added_date: formatDateTimeString(new Date(podfic.added_date)),
       }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [podfic.added_date]);
+
+  const fetchMetadata = useCallback(async () => {
+    setMetadataLoading(true);
+    const metadataResult = await fetch(
+      `/db/metadata/work?work_url=${encodeURIComponent(podfic.link)}`
+    );
+    setMetadata(await metadataResult.json());
+    const tagResult = await fetch('/db/metadata/tagmappings');
+    setTagMappings(await tagResult.json());
+    setMetadataLoading(false);
+  }, [podfic.link]);
 
   const fetchAuthors = useCallback(async () => {
     setAuthorsLoading(true);
@@ -143,6 +163,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
     fetchEvents();
     fetchFandoms();
     fetchSeries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -154,6 +175,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
     setPodfic((prev) => ({
       ...prev,
     }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -172,6 +194,10 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
   useEffect(() => {
     if (isVoiceteam) fetchChallengesAndProjects(podfic.event_id);
   }, [isVoiceteam, podfic.event_id, fetchChallengesAndProjects]);
+
+  useEffect(() => {
+    console.log({ podfic });
+  }, [podfic]);
 
   useEffect(() => {
     if (isVoiceteam && podfic.vt_project_id && !challengesLoading) {
@@ -196,6 +222,44 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
           setPodficcerDialogOpen(false);
         }}
       />
+      {metadataDialogOpen && (
+        <MetadataDialog
+          isOpen={metadataDialogOpen}
+          onClose={() => setMetadataDialogOpen(false)}
+          metadata={metadata}
+          tagMappings={tagMappings}
+          submitCallback={async (metadata) => {
+            if (metadata.fandom_id) {
+              const foundFandom = fandoms.find(
+                (fandom) => fandom.fandom_id === metadata.fandom_id
+              );
+              if (!foundFandom) await fetchFandoms();
+            }
+            if (metadata.author_id) {
+              const foundAuthor = authors.find(
+                (author) => author.author_id === metadata.author_id
+              );
+              if (!foundAuthor) await fetchAuthors();
+            }
+            setPodfic((prev) => ({
+              ...prev,
+              title: metadata.title ?? prev.title,
+              author_id: metadata.author_id ?? prev.author_id,
+              fandom_id: metadata.fandom_id ?? prev.fandom_id,
+              rating: metadata.rating ?? prev.rating,
+              category: metadata.category ?? prev.category,
+              relationship: metadata.relationship ?? prev.relationship,
+              main_character: metadata.main_character ?? prev.main_character,
+              wordcount: metadata.wordcount ?? prev.wordcount,
+              chapter_count: metadata.chapter_count ?? prev.chapter_count,
+              chaptered: metadata.chaptered ?? prev.chaptered,
+              chapters: metadata.chapters,
+            }));
+            setMetadataDialogOpen(false);
+          }}
+          workUrl={podfic.link ?? ''}
+        />
+      )}
       <Button variant='contained' onClick={() => console.log({ podfic })}>
         Log podfic
       </Button>
@@ -267,8 +331,18 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
             setPodfic((prev) => ({ ...prev, link: e.target.value }))
           }
         />
+        <LoadingButton
+          variant='contained'
+          loading={metadataLoading}
+          onClick={async () => {
+            await fetchMetadata();
+            setMetadataDialogOpen(true);
+          }}
+        >
+          Fetch AO3 metadata
+        </LoadingButton>
         <FormControlLabel
-          label='Pull metadata from AO3?'
+          label='Pull metadata from AO3 later'
           control={
             <Checkbox
               checked={podfic.needs_update ?? false}
@@ -280,7 +354,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
               }
             />
           }
-        ></FormControlLabel>
+        />
       </div>
       <br />
       <Typography variant='h6'>Metadata</Typography>
@@ -398,18 +472,64 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
           )}
         </div>
       </div>
-      <TextField
-        size='small'
-        label='Wordcount'
-        value={wordcount}
-        onChange={(e) => {
-          setWordcount(e.target.value);
-          setPodfic((prev) => ({
-            ...prev,
-            wordcount: parseInt(e.target.value),
-          }));
-        }}
-      />
+      <div className={styles.flexColumn}>
+        <TextField
+          size='small'
+          label='Wordcount'
+          value={wordcount}
+          onChange={(e) => {
+            setWordcount(e.target.value);
+            setPodfic((prev) => ({
+              ...prev,
+              wordcount: parseInt(e.target.value),
+            }));
+          }}
+        />
+        {/* TODO: these do not visibly autofill for some reason. figure that out. */}
+        <div className={styles.flexRow}>
+          <TextField
+            size='small'
+            sx={{
+              width: '120px',
+            }}
+            select
+            label='Rating'
+            value={podfic.rating}
+            onChange={(e) =>
+              setPodfic((prev) => ({
+                ...prev,
+                rating: e.target.value as Rating,
+              }))
+            }
+          >
+            {Object.values(Rating).map((rating) => (
+              <MenuItem key={rating} value={rating}>
+                <span>{rating}</span>
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            size='small'
+            sx={{
+              width: '120px',
+            }}
+            select
+            label='Category'
+            value={podfic.category}
+            onChange={(e) =>
+              setPodfic((prev) => ({ ...prev, category: e.target.value }))
+            }
+          >
+            {['Gen', 'F/F', 'F/M', 'M/M', 'Other', 'Multi'].map((category) => (
+              <MenuItem key={category} value={category}>
+                {category}
+              </MenuItem>
+            ))}
+          </TextField>
+        </div>
+      </div>
+
+      {/* TODO: not sure how to do main character & relationship in good way - autocomplete w/ create...? */}
       {/* end metadata */}
 
       <br />

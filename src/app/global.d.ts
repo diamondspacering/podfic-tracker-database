@@ -161,13 +161,13 @@ enum Rating {
 
 interface Work {
   work_id?: number;
-  title: string;
+  title?: string;
   link?: string;
   nickname?: string;
   author_id?: number;
   fandom_id?: number;
   needs_update?: boolean;
-  wordcount: number | string;
+  wordcount?: number | string;
   chaptered?: boolean;
   chapter_count?: number;
   rating?: Rating;

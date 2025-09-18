@@ -21,6 +21,7 @@ export const usePersistentState = <T>(
 
   return [state, setState];
 };
+
 export const useDebouncedCallback = (callback, wait = 500) => {
   const argsRef = useRef<any>();
   const timeoutRef = useRef<any>();
