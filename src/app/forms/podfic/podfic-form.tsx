@@ -14,7 +14,7 @@ import { Add } from '@mui/icons-material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import FandomForm from './fandom-form';
 import AuthorForm from './author-form-inline';
-import { PodficStatus, PodficType } from '@/app/types';
+import { PodficStatus, PodficType, Rating } from '@/app/types';
 import { formatDateString, formatDateTimeString } from '@/app/lib/format';
 import StatusSelect from '@/app/ui/StatusSelect';
 import DatePicker from '@/app/ui/DatePicker';
@@ -81,6 +81,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
         posted_date: formatDateString(new Date(prev.posted_date)),
       }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [podfic.status, podfic.posted_date]);
 
   useEffect(() => {
@@ -94,6 +95,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
         ...prev,
         added_date: formatDateTimeString(new Date(podfic.added_date)),
       }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [podfic.added_date]);
 
   const fetchMetadata = useCallback(async () => {
@@ -161,6 +163,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
     fetchEvents();
     fetchFandoms();
     fetchSeries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -172,6 +175,7 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
     setPodfic((prev) => ({
       ...prev,
     }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -190,6 +194,10 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
   useEffect(() => {
     if (isVoiceteam) fetchChallengesAndProjects(podfic.event_id);
   }, [isVoiceteam, podfic.event_id, fetchChallengesAndProjects]);
+
+  useEffect(() => {
+    console.log({ podfic });
+  }, [podfic]);
 
   useEffect(() => {
     if (isVoiceteam && podfic.vt_project_id && !challengesLoading) {
@@ -464,18 +472,64 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
           )}
         </div>
       </div>
-      <TextField
-        size='small'
-        label='Wordcount'
-        value={wordcount}
-        onChange={(e) => {
-          setWordcount(e.target.value);
-          setPodfic((prev) => ({
-            ...prev,
-            wordcount: parseInt(e.target.value),
-          }));
-        }}
-      />
+      <div className={styles.flexColumn}>
+        <TextField
+          size='small'
+          label='Wordcount'
+          value={wordcount}
+          onChange={(e) => {
+            setWordcount(e.target.value);
+            setPodfic((prev) => ({
+              ...prev,
+              wordcount: parseInt(e.target.value),
+            }));
+          }}
+        />
+        {/* TODO: these do not visibly autofill for some reason. figure that out. */}
+        <div className={styles.flexRow}>
+          <TextField
+            size='small'
+            sx={{
+              width: '120px',
+            }}
+            select
+            label='Rating'
+            value={podfic.rating}
+            onChange={(e) =>
+              setPodfic((prev) => ({
+                ...prev,
+                rating: e.target.value as Rating,
+              }))
+            }
+          >
+            {Object.values(Rating).map((rating) => (
+              <MenuItem key={rating} value={rating}>
+                <span>{rating}</span>
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            size='small'
+            sx={{
+              width: '120px',
+            }}
+            select
+            label='Category'
+            value={podfic.category}
+            onChange={(e) =>
+              setPodfic((prev) => ({ ...prev, category: e.target.value }))
+            }
+          >
+            {['Gen', 'F/F', 'F/M', 'M/M', 'Other', 'Multi'].map((category) => (
+              <MenuItem key={category} value={category}>
+                {category}
+              </MenuItem>
+            ))}
+          </TextField>
+        </div>
+      </div>
+
+      {/* TODO: not sure how to do main character & relationship in good way - autocomplete w/ create...? */}
       {/* end metadata */}
 
       <br />

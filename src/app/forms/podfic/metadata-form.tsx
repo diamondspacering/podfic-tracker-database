@@ -447,6 +447,9 @@ export default function MetadataForm({
         >
           <TextField
             size='small'
+            sx={{
+              width: '100px',
+            }}
             select
             label='Rating'
             value={metadata.rating}
