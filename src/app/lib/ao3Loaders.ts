@@ -101,6 +101,16 @@ export const fetchWorkMetadata = async (workUrl: string, logging = false) => {
   const text = await fetchWork(workUrl);
 
   const $ = load(text);
+  if (
+    $('h2.title.heading').length == 0 &&
+    text.includes(
+      'This work is part of an ongoing challenge and will be revealed soon!'
+    )
+  ) {
+    console.log('Unrevealed work, returning');
+    return {};
+  }
+
   const title = $('h2.title.heading').text().trim();
 
   const authors = $('h3.byline.heading').find('a').toArray();
