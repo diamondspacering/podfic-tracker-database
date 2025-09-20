@@ -29,9 +29,14 @@ import { WorkMetadata } from './metadataHelpers';
 interface PodficFormProps {
   podfic: Podfic & Work;
   setPodfic: React.Dispatch<React.SetStateAction<Podfic & Work>>;
+  excludeChapters?: boolean;
 }
 
-export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
+export default function PodficForm({
+  podfic,
+  setPodfic,
+  excludeChapters = false,
+}: PodficFormProps) {
   const [isNewWork, setIsNewWork] = useState(true);
   const [metadata, setMetadata] = useState<WorkMetadata>({});
   const [tagMappings, setTagMappings] = useState<TagMappings | null>(null);
@@ -875,6 +880,68 @@ export default function PodficForm({ podfic, setPodfic }: PodficFormProps) {
           }
         />
       </div>
+      {podfic.chaptered && !excludeChapters && (
+        <TextField
+          size='small'
+          sx={{
+            width: '100px',
+          }}
+          label='Chapter Count'
+          value={podfic.chapter_count ? podfic.chapter_count.toString() : ''}
+          onChange={(e) =>
+            setPodfic((prev) => ({
+              ...prev,
+              chapter_count: parseInt(e.target.value),
+            }))
+          }
+        />
+      )}
+      {!excludeChapters &&
+        podfic.chapters?.map((chapter, index) => (
+          <ChapterForm
+            key={index}
+            chapter={chapter}
+            setChapter={
+              !podfic.podfic_id
+                ? (value) =>
+                    setPodfic((prev) => ({
+                      ...prev,
+                      chapters: prev.chapters.map((chapter, ci) =>
+                        index === ci ? value : chapter
+                      ),
+                    }))
+                : null
+            }
+          />
+        ))}
+      {podfic.chaptered && !excludeChapters && (
+        <Button
+          variant='contained'
+          className={styles.mlAuto}
+          onClick={() => {
+            let chapterCount = podfic.chapter_count;
+            if (!chapterCount) {
+              chapterCount = 1;
+            } else if (chapterCount === podfic.chapters?.length) {
+              chapterCount += 1;
+            }
+            setPodfic((prev) => ({
+              ...prev,
+              chapters: [
+                ...(prev.chapters ?? []),
+                {
+                  podfic_id: podfic.podfic_id,
+                  chapter_number: (prev.chapters?.length ?? 0) + 1,
+                },
+              ],
+              chapter_count: chapterCount,
+            }));
+          }}
+          startIcon={<Add />}
+        >
+          Add chapter
+        </Button>
+      )}
     </div>
   );
 }
