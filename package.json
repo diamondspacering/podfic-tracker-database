@@ -12,7 +12,6 @@
     "setup-data": "./src/scripts/setup-data.sh"
   },
   "dependencies": {
-    "@bobaboard/ao3.js": "^0.21.0",
     "@codemirror/lang-html": "^6.4.9",
     "@emotion/cache": "^11.13.1",
     "@emotion/react": "^11.13.3",

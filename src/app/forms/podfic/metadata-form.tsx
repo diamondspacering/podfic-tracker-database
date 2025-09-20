@@ -4,7 +4,7 @@ import {
   useFandomCategories,
   useFandoms,
 } from '@/app/lib/swrLoaders';
-import { getMappedItems, WorkMetadata } from './metadataHelpers';
+import { getMappedItems, ItemMapping, WorkMetadata } from './metadataHelpers';
 import styles from '@/app/forms/forms.module.css';
 import {
   Button,
@@ -43,18 +43,21 @@ export default function MetadataForm({
   tagMappings,
   setLocalTagMappings,
 }: MetadataFormProps) {
-  // oh but these boys.....they are wrecking my mega mapping...curses on all variables
   const { fandoms } = useFandoms();
   const { categories, isLoading: categoriesLoading } = useFandomCategories();
   const { authors } = useAuthors();
 
-  const [mappedFandomList, setMappedFandomList] = useState(
+  const [mappedFandomList, setMappedFandomList] = useState<ItemMapping>(
     getMappedItems(metadata.fandomList, tagMappings.fandom_mapping)
   );
-  const [mappedRelationshipList, setMappedRelationshipList] = useState(
-    getMappedItems(metadata.relationshipList, tagMappings.relationship_mapping)
-  );
-  const [mappedCharacterList, setMappedCharacterList] = useState(
+  const [mappedRelationshipList, setMappedRelationshipList] =
+    useState<ItemMapping>(
+      getMappedItems(
+        metadata.relationshipList,
+        tagMappings.relationship_mapping
+      )
+    );
+  const [mappedCharacterList, setMappedCharacterList] = useState<ItemMapping>(
     getMappedItems(metadata.characterList, tagMappings.character_mapping)
   );
   const [selectedFandom, setSelectedFandom] = useState('');
@@ -469,7 +472,6 @@ export default function MetadataForm({
         </RemovableItem>
       )}
 
-      {/* TODO: this should be a radio too prob */}
       {metadata.category !== null && (
         <RemovableItem
           removeCallback={() =>

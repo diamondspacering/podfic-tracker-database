@@ -37,20 +37,20 @@ export default function MetadataDialog({
   const [submitting, setSubmitting] = useState(false);
 
   const submitMetadata = useCallback(async () => {
-    console.log('submitting metadata');
     setSubmitting(true);
     try {
-      await fetch('/db/metadata/tagmappings', {
-        method: 'PATCH',
-        body: JSON.stringify(localTagMappings),
-      });
+      if (JSON.stringify(localTagMappings) !== JSON.stringify(tagMappingsProp))
+        await fetch('/db/metadata/tagmappings', {
+          method: 'PATCH',
+          body: JSON.stringify(localTagMappings),
+        });
       submitCallback(metadata);
     } catch (e) {
       console.error('Error submitting metadata', e);
     } finally {
       setSubmitting(false);
     }
-  }, [localTagMappings, metadata, submitCallback]);
+  }, [localTagMappings, metadata, submitCallback, tagMappingsProp]);
 
   return (
     <Dialog

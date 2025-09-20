@@ -331,7 +331,6 @@ export const useWorkMetadata = ({ workUrl }: { workUrl: string }) => {
     fetcher
   );
 
-  console.log({ data });
   const metadata = (data ?? {}) as WorkMetadata;
 
   return {
@@ -347,14 +346,12 @@ export interface TagMappings {
   character_mapping: Record<string, string>;
 }
 
-// TODO: may need to just put these in other location. ah well.
 export const useTagMappings = () => {
   const { data, error, isLoading } = useSWR(
     '/db/metadata/tagmappings',
     fetcher
   );
 
-  console.log({ data });
   const tagMappings = (data ?? {}) as TagMappings;
 
   return {
