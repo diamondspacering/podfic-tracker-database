@@ -25,6 +25,7 @@ import TagSelect from '@/app/ui/TagSelect';
 import { LoadingButton } from '@mui/lab';
 import MetadataDialog from './metadata-dialog';
 import { WorkMetadata } from './metadataHelpers';
+import ChapterForm from './chapter-form';
 
 interface PodficFormProps {
   podfic: Podfic & Work;
