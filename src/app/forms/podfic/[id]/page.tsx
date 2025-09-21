@@ -68,69 +68,7 @@ export default function Page({
         {podfic.podfic_id ? 'Edit' : 'New'} Podfic
       </Typography>
       <PodficForm podfic={podfic} setPodfic={setPodfic} />
-      {podfic.chaptered && (
-        <TextField
-          size='small'
-          sx={{
-            width: '100px',
-          }}
-          label='Chapter Count'
-          value={podfic.chapter_count ? podfic.chapter_count.toString() : ''}
-          onChange={(e) =>
-            setPodfic((prev) => ({
-              ...prev,
-              chapter_count: parseInt(e.target.value),
-            }))
-          }
-        />
-      )}
-      {podfic.chapters?.map((chapter, index) => (
-        <ChapterForm
-          key={index}
-          chapter={chapter}
-          setChapter={
-            !podfic.podfic_id
-              ? (value) =>
-                  setPodfic((prev) => ({
-                    ...prev,
-                    chapters: prev.chapters.map((chapter, ci) =>
-                      index === ci ? value : chapter
-                    ),
-                  }))
-              : null
-          }
-        />
-      ))}
-      {podfic.chaptered ? (
-        <>
-          <Button
-            variant='contained'
-            className={styles.mlAuto}
-            onClick={() => {
-              let chapterCount = podfic.chapter_count;
-              if (!chapterCount) {
-                chapterCount = 1;
-              } else if (chapterCount === podfic.chapters?.length) {
-                chapterCount += 1;
-              }
-              setPodfic((prev) => ({
-                ...prev,
-                chapters: [
-                  ...(prev.chapters ?? []),
-                  {
-                    podfic_id: podfic.podfic_id,
-                    chapter_number: (prev.chapters?.length ?? 0) + 1,
-                  },
-                ],
-                chapter_count: chapterCount,
-              }));
-            }}
-            startIcon={<Add />}
-          >
-            Add chapter
-          </Button>
-        </>
-      ) : (
+      {!podfic.chaptered && (
         <>
           <Typography variant='h6'>Length</Typography>
           <DurationPicker
