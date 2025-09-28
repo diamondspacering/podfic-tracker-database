@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build --no-lint",
-    "start": "next start",
+    "start": "next start -p 3001",
     "lint": "next lint",
     "update-metadata": "./src/scripts/run-python-script.sh src/scripts/update_metadata.py",
     "create-compilation": "./src/scripts/run-python-script.sh src/scripts/create_compilation_podfics.py",
