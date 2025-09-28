@@ -14,7 +14,12 @@ export async function middleware(request: NextRequest) {
     );
   }
 
-  return NextResponse.next();
+  const response = NextResponse.next();
+  response.headers.set(
+    'x-forwarded-host',
+    request.headers.get('origin')?.replace(/(http|https):\/\//, '') || '*'
+  );
+  return response;
 }
 
 export const config = {
