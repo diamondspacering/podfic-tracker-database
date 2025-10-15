@@ -400,6 +400,7 @@ export default function VoiceteamRoundPage({
             },
             allowHtml: true,
             renderer: (instance, td, row, col, prop, value) => {
+              // TODO: can you use custom ExternalLink component here?
               td.innerHTML = `<span class="truncated-text"><a href="${value}" target="_blank">${value}</a></span>`;
               const project = projects[row];
               if (!!project && (project.submitted || project.abandoned)) {

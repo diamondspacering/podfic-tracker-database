@@ -2,6 +2,7 @@ import styles from '@/app/forms/forms.module.css';
 import { createUpdateChapter } from '@/app/lib/updaters';
 import { getDefaultLength } from '@/app/types';
 import DurationPicker from '@/app/ui/DurationPicker';
+import ExternalLink from '@/app/ui/ExternalLink';
 // import StatusBadge from '@/app/ui/StatusBadge';
 // import StatusSelect from '@/app/ui/StatusSelect';
 import { Check, Edit } from '@mui/icons-material';
@@ -136,7 +137,7 @@ export default function ChapterForm({
           <span>{chapter.chapter_number}</span>
           <span>{chapterTitle}</span>
           <span>
-            <a href={link}>Link</a>
+            <ExternalLink href={link}>Link</ExternalLink>
           </span>
           <span>{wordcount} words</span>
           <Button onClick={() => setIsEditing(true)}>

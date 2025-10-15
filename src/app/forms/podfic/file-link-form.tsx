@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import styles from '@/app/forms/forms.module.css';
+import ExternalLink from '@/app/ui/ExternalLink';
 
 export default function FileLinkForm({
   link,
@@ -90,9 +91,7 @@ export default function FileLinkForm({
       )}
       {!!link.link && (
         <>
-          <a href={link.link} target='_blank'>
-            {link.link}
-          </a>
+          <ExternalLink href={link.link} />
           <audio src={link.link} controls preload='metadata'></audio>
         </>
       )}

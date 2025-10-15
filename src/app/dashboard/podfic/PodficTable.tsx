@@ -40,6 +40,7 @@ import { EditCell } from '@/app/ui/table/EditCell';
 import RecordingSessionTable from '@/app/ui/table/RecordingSessionTable';
 import { addLengths, getLengthValue } from '@/app/lib/lengthHelpers';
 import CustomTable from '@/app/ui/table/CustomTable';
+import ExternalLink from '@/app/ui/ExternalLink';
 
 export default function PodficTable() {
   const searchParams = useSearchParams();
@@ -718,9 +719,9 @@ export default function PodficTable() {
                                 maxWidth: '100px',
                               }}
                             >
-                              <a href={row.original.coverArt.image_link}>
-                                {row.original.coverArt.image_link}
-                              </a>
+                              <ExternalLink
+                                href={row.original.coverArt.image_link}
+                              />
                             </span>
                           </td>
                           <td>{row.original.coverArt.cover_artist_name}</td>

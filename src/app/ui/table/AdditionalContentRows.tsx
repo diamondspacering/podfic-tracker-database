@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
 import ResourceDialog from '../resource/resource-dialog';
+import ExternalLink from '../ExternalLink';
 
 interface AdditionalContentRowsProps {
   notes?: Note[];
@@ -72,7 +73,9 @@ export default function AdditionalContentRows({
         <DialogContent>
           <span>
             <b>{`${selectedResource?.resource_type}: `}</b>
-            <a href={selectedResource?.link}>{selectedResource?.label}</a>
+            <ExternalLink href={selectedResource?.link}>
+              {selectedResource?.label}
+            </ExternalLink>
             {selectedResource?.notes ? `, ${selectedResource?.notes}` : ''}
           </span>
         </DialogContent>
@@ -141,7 +144,7 @@ export default function AdditionalContentRows({
           <td colSpan={width} style={{ paddingLeft: '30px' }}>
             <span>
               <b>{`${resource.resource_type}: `}</b>
-              <a href={resource.link}>{resource.label}</a>
+              <ExternalLink href={resource.link}>{resource.label}</ExternalLink>
               {resource.notes ? `, ${resource.notes}` : ''}
               <IconButton
                 style={{ padding: '0px', paddingLeft: '5px' }}

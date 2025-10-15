@@ -9,6 +9,7 @@
 import { useMemo } from 'react';
 import styles from './ui.module.css';
 import { PartStatus, PermissionStatus, PodficStatus } from '../types';
+import ExternalLink from './ExternalLink';
 
 interface StatusBadgeProps {
   status: PodficStatus | PermissionStatus | PartStatus;
@@ -81,6 +82,7 @@ export default function StatusBadge({
       } ${className}`}
       onClick={onClick}
     >
+      {/* TODO: built-in component since it's an internal link? */}
       {linkTo ? (
         <a href={linkTo} className={styles.invisibleLink}>
           {status}

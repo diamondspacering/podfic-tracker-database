@@ -42,6 +42,7 @@ import {
   savePodficHTML,
 } from '@/app/lib/updaters';
 import { usePodficcer } from '@/app/lib/swrLoaders';
+import ExternalLink from '@/app/ui/ExternalLink';
 
 // TODO: swr?
 export default function HtmlPage() {
@@ -330,7 +331,7 @@ export default function HtmlPage() {
       <div>
         <Typography variant='h4'>Fic Info</Typography>
         <div className={styles.flexRow}>
-          <a href={podfic.link}>{podfic.link}</a>
+          <ExternalLink href={podfic.link} />
           <IconButton
             onClick={() => navigator.clipboard.writeText(podfic.link)}
             sx={{ width: 'fit-content' }}
@@ -340,9 +341,7 @@ export default function HtmlPage() {
         </div>
         {podfic.ao3_link && (
           <p>
-            <a href={podfic.ao3_link} target='_blank'>
-              Podfic link
-            </a>
+            <ExternalLink href={podfic.ao3_link}>Podfic link</ExternalLink>
           </p>
         )}
         <p>{`Author: ${podfic.username}`}</p>
@@ -374,7 +373,9 @@ export default function HtmlPage() {
                   }
                 />
                 <b>{`${resource.resource_type}: `}</b>
-                <a href={resource.link}>{resource.label}</a>
+                <ExternalLink href={resource.link}>
+                  {resource.label}
+                </ExternalLink>
                 {resource.notes ? `, ${resource.notes}` : ''}
               </span>
             </p>
@@ -393,9 +394,7 @@ export default function HtmlPage() {
       </div>
 
       {/* maybe a button and the openinnew icon? */}
-      <a href={postingURL} target='_blank'>
-        Post
-      </a>
+      <ExternalLink href={postingURL}>Post</ExternalLink>
 
       <div className={styles.flexRow}>
         <TextField
