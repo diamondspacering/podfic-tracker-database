@@ -13,7 +13,7 @@ import { TableCell } from '@/app/ui/table/TableCell';
 import { Add, Check, Edit, OpenInNew } from '@mui/icons-material';
 import { Autocomplete, Chip, IconButton, Link, TextField } from '@mui/material';
 import { ColumnFiltersState, createColumnHelper } from '@tanstack/react-table';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import tableStyles from '@/app/ui/table/table.module.css';
 import { FilterType, getDefaultLength, PodficStatus } from '@/app/types';
 import { HeaderCell } from '@/app/ui/table/HeaderCell';
@@ -154,7 +154,6 @@ export default function ToPodficTable() {
       header: (props) => <HeaderCell text='Rating' {...props} />,
       cell: TableCell,
       meta: {
-        // TODO: just custom enum types and filters...?
         type: 'rating',
         filterType: FilterType.STRING,
         columnName: 'Rating',
@@ -270,7 +269,6 @@ export default function ToPodficTable() {
       cell: TableCell,
       meta: {
         type: 'string',
-        // TODO: number filtering on this
         columnName: 'Chapters',
       },
     }),
@@ -345,11 +343,6 @@ export default function ToPodficTable() {
     [columnFilters]
   );
 
-  // TODO: how to efficiently add tags? just inline edit...? eh that might not work right
-  // add link to editing whole podfic
-  // tag filtering
-  // actually good tag display
-  // actually show notes & stuff
   return (
     <div>
       <CustomTable

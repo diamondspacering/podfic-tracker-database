@@ -16,7 +16,6 @@ export default function GeneratedLinksDialog({
   setFiles,
   submitCallback,
 }) {
-  // TODO: perhaps it should keep its own state?
   return (
     <Dialog open={isOpen} onClose={onClose}>
       <DialogTitle>Review Generated Files</DialogTitle>

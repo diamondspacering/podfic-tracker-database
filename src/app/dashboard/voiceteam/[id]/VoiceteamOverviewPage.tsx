@@ -15,9 +15,6 @@ import {
 import { useCallback, useMemo, useRef, useState } from 'react';
 import HotTable, { HotTableClass } from '@handsontable/react';
 import styles from '@/app/dashboard/dashboard.module.css';
-import { useEventResources } from '@/app/lib/swrLoaders';
-import AddMenu from '@/app/ui/AddMenu';
-import { mutate } from 'swr';
 import BonusValuesTable from './BonusValuesTable';
 import VoiceteamResourcesTable from './VoiceteamResourcesTable';
 
@@ -29,7 +26,6 @@ const lengthBonusOptions = {
 
 export default function VoiceteamOverviewPage({
   voiceteam,
-  setVoiceteam,
   rounds,
   setRounds,
 }: {
@@ -62,23 +58,7 @@ export default function VoiceteamOverviewPage({
     setAnchorElBtm(null);
   };
 
-  const { resources } = useEventResources(voiceteam.event_id);
-
-  const bonusData = useMemo(() => {
-    return Object.entries({
-      ...voiceteam.bonus_values,
-      ...lengthBonusOptions,
-    }).map(([key, value]) => {
-      return {
-        name: key,
-        points: value,
-      };
-    });
-  }, [voiceteam.bonus_values]);
-
   const hotRef = useRef<HotTableClass>(null);
-  const bonusHotRef = useRef<HotTableClass>(null);
-  const resourceHotRef = useRef<HotTableClass>(null);
 
   const challenges = useMemo(() => {
     return rounds.flatMap(
@@ -224,7 +204,6 @@ export default function VoiceteamOverviewPage({
           </Button>
         </DialogActions>
       </Dialog>
-      {/* TODO: figure out how to make these sticky instead of replicating challenge button at the bottom? */}
       <Button
         onClick={() => setRoundDialogOpen(true)}
         variant='contained'

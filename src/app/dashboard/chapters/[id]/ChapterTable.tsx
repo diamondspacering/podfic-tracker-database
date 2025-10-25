@@ -24,10 +24,8 @@ import {
 } from '@/app/lib/utils';
 import CustomTable from '@/app/ui/table/CustomTable';
 
-// TODO: general chapter table for all chapters?
 export default function ChapterTable({ podficId, podficTitle }) {
   const { chapters, isLoading } = useChaptersForPodfic(podficId);
-  // TODO: individual files and resources expanded per chapter
   const [filesExpanded, setFilesExpanded] = useState(false);
 
   const pathname = usePathname();
@@ -35,7 +33,6 @@ export default function ChapterTable({ podficId, podficTitle }) {
   const rawColorScale = useLengthColorScale(chapters, 'raw_length');
   const lengthColorScale = useLengthColorScale(chapters, 'length');
 
-  // TODO: wordcount global color scale??
   const wordcountColorScale = useColorScale(chapters, 'wordcount');
 
   const [columnVisibility, setColumnVisibility] = useState({
@@ -45,8 +42,6 @@ export default function ChapterTable({ podficId, podficTitle }) {
 
   const columnHelper = createColumnHelper<Chapter>();
 
-  // TODO: should these be defined in a separate file?
-  // TODO: column show/hide like podfic table
   const columns = [
     columnHelper.accessor('chapter_id', {
       header: 'ID',

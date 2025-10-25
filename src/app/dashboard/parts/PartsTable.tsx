@@ -46,7 +46,6 @@ export default function PartsTable() {
     }
   };
 
-  // TODO: easily visible submission instructions notes?
   const columns = [
     columnHelper.accessor('part_id', {
       header: 'ID',
@@ -123,7 +122,6 @@ export default function PartsTable() {
     columnHelper.accessor('type', {
       header: 'Type',
       cell: TableCell,
-      // TODO: make this selectable?
       meta: {
         type: 'string',
         immutable: true,

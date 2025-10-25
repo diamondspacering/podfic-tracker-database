@@ -51,11 +51,10 @@ export default function VoiceteamRoundPage({
   };
   const hotRef = useRef(null);
 
-  // questionable but sure ok
   const addProject = (challenge_id: number) => {
     setRound({
       ...round,
-      challenges: round.challenges.map((c, i) =>
+      challenges: round.challenges.map((c) =>
         c.challenge_id === challenge_id
           ? {
               ...c,
@@ -104,8 +103,6 @@ export default function VoiceteamRoundPage({
     [projects, round, setRound]
   );
 
-  // the origIndex method is wretched and badly named actually
-  // TODO: try improving this I'm scared of breaking it though
   const updatePoints = useCallback(
     (projectIndex) => {
       const project = projects[projectIndex];
@@ -264,17 +261,6 @@ export default function VoiceteamRoundPage({
     }
   );
 
-  // TODO: figure out a checkbox renderer (might have to do something more involved/specialized for the checkbox so it can be crossed out?)
-
-  // is it possible to have a number at the bottom of a checkbox row?
-  // const bottomRow = useMemo(() => ({  }), [projects])
-
-  // const checkboxRenderer = (instance, td, row, ...rest) => {
-  //   if (row === projects.length)
-  //     Handsontable.renderers.TextRenderer(instance, td, row, ...rest);
-  //   else Handsontable.renderers.CheckboxRenderer(instance, td, row, ...rest);
-  // };
-
   return (
     <div>
       <Typography variant='h4'>Round {round.number}</Typography>
@@ -319,21 +305,11 @@ export default function VoiceteamRoundPage({
         log round
       </Button>
 
-      {/* TODO:
-        - strikethrough styling for submitted/abandoned projects
-        - summary of projected & real pts - background color green when reached points cap? different green for projected pts?
-          - so abandoned not counted for anything, real only counting submitted
-        - better project selection, actually link it to challenge id?
-        - how best to add rows, etc. do it similarly to other one of adding new at end? or something?
-        - have the alternating colors so it's easier to follow lines?
-      */}
       <HotTable
         data={[...projects, {}]}
         ref={hotRef}
         licenseKey='non-commercial-and-evaluation'
-        // autoWrapCol={true}
         autoWrapCol={false}
-        // TODO: figure out how to make this work
         className={tableStyles.arial}
         afterChange={(change, source) => {
           console.log({ change, source });
@@ -382,7 +358,6 @@ export default function VoiceteamRoundPage({
           'Actual Pts',
         ]}
         columns={[
-          // TODO: make this actually work
           {
             type: 'dropdown',
             source: round.challenges.map((c) => c.name),
@@ -400,7 +375,6 @@ export default function VoiceteamRoundPage({
             },
             allowHtml: true,
             renderer: (instance, td, row, col, prop, value) => {
-              // TODO: can you use custom ExternalLink component here?
               td.innerHTML = `<span class="truncated-text"><a href="${value}" target="_blank">${value}</a></span>`;
               const project = projects[row];
               if (!!project && (project.submitted || project.abandoned)) {
@@ -542,7 +516,6 @@ export default function VoiceteamRoundPage({
               }
             },
           },
-          // TODO: how to have it conditionally display?
           {
             data: 'points_manual',
             renderer: (instance, td, row, col, prop, value, cellProperties) => {
@@ -584,8 +557,6 @@ export default function VoiceteamRoundPage({
             },
           },
         ]}
-        // hmmm just a custom row on the bottom might be best lol i want my own functions
-        // TODO: render these all bold perhaps?
         columnSummary={[
           {
             sourceColumn: 7,

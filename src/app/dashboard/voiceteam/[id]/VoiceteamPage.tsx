@@ -28,6 +28,7 @@ export default function VoiceteamPage({ voiceteamId }) {
   const router = useRouter();
   const tabParam = searchParams.get('round');
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => setCurrentTab(tabParam ?? '0'), []);
 
   const setRoundParam = useCallback(
@@ -51,7 +52,6 @@ export default function VoiceteamPage({ voiceteamId }) {
 
   useEffect(() => console.log({ voiceteamEvent }), [voiceteamEvent]);
 
-  // TODO: some method of updating points from here...? nah its fine
   const updateProjectData = useCallback(async (projects: Project[]) => {
     for (const project of projects) {
       await createUpdateProject(project);
@@ -67,9 +67,8 @@ export default function VoiceteamPage({ voiceteamId }) {
         await createUpdateChallenge(challenge);
       }
     }
-  }, [rounds]);
+  }, [rounds, updateProjectData]);
 
-  // TODO: other round updates?
   const updateData = useCallback(async () => {
     setIsSubmitting(true);
     await updateChallengeData();
