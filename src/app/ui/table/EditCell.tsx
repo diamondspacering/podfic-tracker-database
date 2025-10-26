@@ -10,7 +10,6 @@ export const EditCell = ({ row, table }) => {
     <div>
       {isEditing ? (
         <span>
-          {/* TODO: make not wrap? */}
           <Button
             onClick={() => {
               meta?.setEditingRowId(null);

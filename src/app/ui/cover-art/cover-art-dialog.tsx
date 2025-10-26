@@ -1,21 +1,3 @@
-/*
-interface Podficcer {
-  id?: number;
-  username?: string;
-  name?: string;
-  profile?: string;
-}
-
-interface CoverArt {
-  cover_art_id?: number;
-  podfic_id?: number;
-  cover_artist_name?: string;
-  podficcer_id?: number;
-  image_link?: string;
-  cover_art_status?: string;
-}
-*/
-
 import { createUpdateCoverArt } from '@/app/lib/updaters';
 import {
   Dialog,
@@ -27,15 +9,24 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import CoverArtForm from './cover-art-form';
 
+interface CoverArtDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  submitCallback: (coverArtId: number) => void;
+  cover_art_id?: number | null;
+  coverArt?: CoverArt | null;
+  podfic_id: number;
+  podficTitle?: string;
+}
+
 export default function CoverArtDialog({
   isOpen,
   onClose,
   submitCallback,
   cover_art_id = null,
-  coverArt: coverArtProp = null,
   podfic_id,
   podficTitle = '',
-}) {
+}: CoverArtDialogProps) {
   // TODO: use cover art prop instead of fetching
   const [coverArt, setCoverArt] = useState({ podficcer_id: 1 } as CoverArt);
 

@@ -37,8 +37,6 @@ export default function FileTable({
   const [selectedFile, setSelectedFile] = useState(-1);
 
   const deleteFile = useCallback(async () => {
-    // TODO: will be needed w/ swr
-    // const fileObject = files?.find((file) => file.file_id === selectedFile);
     await fetch(`/db/files/${selectedFile}`, {
       method: 'DELETE',
     });
@@ -114,8 +112,6 @@ export default function FileTable({
         type: 'string',
       },
     }),
-    // TODO: sideways headers like google sheets??
-    // TODO: fix links not being offset
     columnHelper.accessor(
       (row) =>
         row.links?.find((link) => link.host === 'archive.org') ?? ({} as any),
@@ -159,7 +155,6 @@ export default function FileTable({
         },
       }
     ),
-    // TODO: maybe embed if present? other links? linklist type?
     columnHelper.display({
       id: 'edit',
       header: 'Edit',
@@ -192,7 +187,6 @@ export default function FileTable({
     }),
   ];
 
-  // TODO: should this be passed the podfic title?
   return (
     <div>
       <FileDialog

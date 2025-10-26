@@ -41,7 +41,6 @@ export default function ResourceDialog({
     [resourceProp]
   );
 
-  // TODO: loading state
   useEffect(() => {
     const fetchResource = async () => {
       const response = await fetch(`/db/resources/${resourceId}`);
