@@ -19,7 +19,6 @@ import { Add } from '@mui/icons-material';
 import PodficcerDialog from '@/app/ui/podficcer/podficcer-dialog';
 import PodficForm from '../podfic/podfic-form';
 
-// TODO: be able to create a new podfic from here? and not show its part selection...?
 export default function PartForm({ part_id = null, returnUrl = null }) {
   const router = useRouter();
   const { podfics, isLoading: podficsLoading } = usePodficsFull({});
@@ -214,8 +213,6 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
             onChange={(val) => setDeadline(val)}
           />
         </div>
-
-        {/* TODO: pull deadline from event in podfic? */}
 
         <Button
           variant='contained'

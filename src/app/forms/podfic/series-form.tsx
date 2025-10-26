@@ -32,7 +32,6 @@ export default function SeriesForm({ updateCallback }) {
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
-      {/* TODO: use the loading button */}
       <Button onClick={submitSeries}>
         {submitting ? <CircularProgress /> : <Check />}
       </Button>

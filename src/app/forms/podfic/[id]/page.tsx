@@ -1,12 +1,10 @@
 'use client';
 
-import { Button, TextField, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import PodficForm from '@/app/forms/podfic/podfic-form';
 import styles from '@/app/forms/forms.module.css';
 import { useCallback, useEffect, useState } from 'react';
 import { createUpdatePodficClient } from '@/app/lib/updaters';
-import ChapterForm from '../chapter-form';
-import { Add } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { LoadingButton } from '@mui/lab';
 import DurationPicker from '@/app/ui/DurationPicker';
@@ -22,13 +20,11 @@ export default function Page({
 }) {
   const { podficcer: defaultPodficcer } = usePodficcer(1);
 
-  // TODO: use swr instead
   const [podfic, setPodfic] = useState({
     type: PodficType.PODFIC,
     podficcers: [defaultPodficcer],
   } as Podfic & Work);
-  // TODO: loading state
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const router = useRouter();
 
   const [submitting, setSubmitting] = useState(false);
@@ -60,7 +56,7 @@ export default function Page({
     } finally {
       setSubmitting(false);
     }
-  }, [podfic, router]);
+  }, [podfic, router, searchParams.return_url]);
 
   return (
     <div className={styles.flexColumn}>

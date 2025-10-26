@@ -11,13 +11,11 @@ import { useCallback, useEffect, useState } from 'react';
 
 interface ChapterFormProps {
   chapter: Chapter;
-  // setChapter: React.Dispatch<React.SetStateAction<Chapter>> | null;
   setChapter: (val: Chapter) => void | null;
   idCallback?: (val: number) => void;
   fullEdit?: boolean;
 }
 
-// determine whether to make request based on oh yeah it should be based on podfic id haha
 export default function ChapterForm({
   chapter,
   setChapter,
@@ -30,11 +28,9 @@ export default function ChapterForm({
   const [link, setLink] = useState(chapter.link);
   const [wordcount, setWordcount] = useState(chapter.wordcount);
   const [length, setLength] = useState(chapter.length ?? getDefaultLength());
-  // const [status, setStatus] = useState(chapter.status ?? null);
 
   const [submitting, setSubmitting] = useState(false);
 
-  // TODO: does not load things in properly haha
   useEffect(() => {
     if (!chapter.chapter_id) setIsEditing(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -50,7 +46,6 @@ export default function ChapterForm({
       wordcount: wordcount,
       length: length,
     };
-    // TODO: error state
     try {
       if (chapter.podfic_id) {
         if (chapter.chapter_id) {
@@ -91,7 +86,6 @@ export default function ChapterForm({
           <TextField
             size='small'
             type='number'
-            // TODO: may not need this label
             label='Chapter Number'
             value={chapterNumber}
             onChange={(e) => setChapterNumber(parseInt(e.target.value))}
@@ -121,11 +115,6 @@ export default function ChapterForm({
                 value={length}
                 onChange={(val) => setLength(val)}
               />
-              {/* <StatusSelect
-                value={chapter.status}
-                setValue={(val) => setChapter((prev) => ({ ...prev, status: val as PodficStatus }))}
-                type='podfic'
-              /> */}
             </>
           )}
           <Button onClick={submitChapter}>

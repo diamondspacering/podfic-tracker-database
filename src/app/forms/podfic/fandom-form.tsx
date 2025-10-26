@@ -20,7 +20,6 @@ export default function FandomForm({ updateCallback }: FandomFormProps) {
 
   const [submitting, setSubmitting] = useState(false);
 
-  // TODO: use swr instead
   useEffect(() => {
     fetch('/db/fandoms/categories')
       .then((res) => res.json())
