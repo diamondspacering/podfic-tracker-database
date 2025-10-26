@@ -15,11 +15,8 @@ import ColorScale from 'color-scales';
 import { getLengthValue } from './lengthHelpers';
 
 // TODO: still running into issues w/ this, try again
-export const formatTableDate = (
-  date: string,
-  isEditingRow: boolean,
-  editingRowVal?: string
-) => {
+// editingRowVal param?
+export const formatTableDate = (date: string, isEditingRow: boolean) => {
   let formattedDate = '';
   if (isEditingRow)
     formattedDate = date
@@ -127,6 +124,7 @@ export const useLengthColorScale = (data: any[], propertyName: string) => {
   return colorScale;
 };
 
+// TODO: doesn't work correctly
 export const dateFilter = (row, columnId, filterValue) => {
   if (!filterValue) return false;
   // TODO: the range stuff, will need more logging for that prob

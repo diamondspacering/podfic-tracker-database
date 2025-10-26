@@ -117,7 +117,6 @@ export default function CustomTable<T>({
       isLoading
         ? columns.map((column) => ({
             ...column,
-            // TODO: better skeleton styling?
             cell: () => <Skeleton width='100%' />,
           }))
         : columns,

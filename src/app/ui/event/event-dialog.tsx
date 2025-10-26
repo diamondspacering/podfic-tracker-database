@@ -26,7 +26,6 @@ export default function EventDialog({
   submitCallback,
   submitParentCallback,
   eventId,
-  eventParentId,
   parents,
 }: EventDialogProps) {
   const [event, setEvent] = useState<Event>({} as Event);

@@ -2,7 +2,6 @@ import { getClient } from '@/app/lib/db-helpers';
 import { unstable_noStore as noStore } from 'next/cache';
 import { NextResponse } from 'next/server';
 
-// have like a ?full=true?
 export async function GET() {
   noStore();
   const client = await getClient();

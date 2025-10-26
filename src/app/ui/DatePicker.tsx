@@ -32,7 +32,6 @@ export default function DatePicker({
           shrink: true,
         },
         input: {
-          // TODO: make these not focusable?
           endAdornment: (
             <>
               <InputAdornment position='end'>

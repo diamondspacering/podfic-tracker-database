@@ -11,18 +11,14 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import { Check } from '@mui/icons-material';
 
-// TODO: I was having Problems making this, try improving data fetching & revalidation (just swr it)
-export default function EventForm({
-  event,
-  setEvent,
-  parents = [],
-  submitParentCallback,
-}: {
+interface EventFormProps {
   event: Event;
   setEvent: React.Dispatch<React.SetStateAction<Event>>;
   parents?: EventParent[];
   submitParentCallback: () => void;
-}) {
+}
+
+export default function EventForm({ event, setEvent }: EventFormProps) {
   const [eventParents, setEventParents] = useState<EventParent[]>([]);
   const [parentsLoading, setParentsLoading] = useState(true);
 
@@ -48,9 +44,9 @@ export default function EventForm({
 
   useEffect(() => {
     fetchEventParents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // TODO: submitting state for it?
   const submitParent = useCallback(async () => {
     try {
       const parentId = await createUpdateEventParent({
@@ -147,7 +143,6 @@ export default function EventForm({
           setEvent((prev) => ({ ...prev, name: e.target.value }))
         }
       />
-      {/* TODO: this seems like a weird way to handle this tbh */}
       <TextField
         size='small'
         label='Year'

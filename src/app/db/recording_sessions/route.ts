@@ -9,8 +9,6 @@ export async function GET(request: NextRequest) {
 
   const client = await getClient();
 
-  // console.log({ podficId, chapterId, full });
-
   let result = null;
   if (!!chapterId) {
     result = await client.query(

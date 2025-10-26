@@ -17,13 +17,8 @@ import CustomTable from './CustomTable';
 import { useEvents } from '@/app/lib/swrLoaders';
 import { mutate } from 'swr';
 
-// TODO: better styling? this works but he ugly
-
-// TODO: a way to revalidate?
 export default function EventTable() {
   const { events, isLoading } = useEvents();
-
-  // useEffect(() => console.log({ events }), [events]);
 
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
 
@@ -31,7 +26,6 @@ export default function EventTable() {
 
   const [expandedEventIds, setExpandedEventIds] = useState<number[]>([]);
 
-  // TODO: expandable resources for event - use the usual resource table
   const columns = [
     columnHelper.accessor('event_parent_id', {
       header: 'Parent ID',
@@ -61,11 +55,6 @@ export default function EventTable() {
           <IconButton
             style={{
               padding: '0px',
-              // transitionDuration: '0.4s',
-              // transitionProperty: 'transform',
-              // ...(props.row.getIsExpanded()
-              //   ? { transform: 'rotate(90deg)' }
-              //   : {}),
             }}
             onClick={(e) => {
               e.stopPropagation();
@@ -105,8 +94,7 @@ export default function EventTable() {
         type: 'date',
       },
     }),
-    // TODO: display this conditionally
-    // also make it actually point to the right thing. make sure it does that my guy.
+    // TODO: display this conditionally and make it point to the right thing
     columnHelper.display({
       id: 'voiceteam-link',
       cell: (props) => (
@@ -155,7 +143,6 @@ export default function EventTable() {
         showRowCount
         editingRowId={null}
         setEditingRowId={() => {}}
-        // TODO: column filters bc this doesn't like. actually need em
         columnFilters={[]}
         setColumnFilters={() => {}}
         columnVisibility={columns.reduce((acc, column) => {

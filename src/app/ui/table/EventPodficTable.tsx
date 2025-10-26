@@ -79,21 +79,9 @@ export default function EventPodficTable({ eventId }) {
         immutable: true,
       },
     }),
-    // TODO: add fandoms? def do that later lmao
-    // columnHelper.accessor('fandom_name', {
-    //   header: 'Fandom',
-    //   cell: TableCell,
-    //   // TODO: figure out how to get the autocomplete data lol
-    //   // maybe have a fetcher function that returns the right things?
-    //   // yeahhh a client fetcher could make a lot of sense
-    //   meta: {
-    //     type: 'autocomplete',
-    //   },
-    // }),
     columnHelper.accessor('wordcount', {
       header: 'Wordcount',
       cell: TableCell,
-      // TODO: color scale lol
       meta: {
         type: 'colorScale',
         colorScale: wordcountColorScale,
@@ -167,7 +155,6 @@ export default function EventPodficTable({ eventId }) {
         </Link>
       ),
     }),
-    // TODO: ability to add notes
   ];
 
   // TODO: figure out how to include this custom footer?

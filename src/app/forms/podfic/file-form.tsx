@@ -34,6 +34,7 @@ export default function FileForm({
     [file, existingLength]
   );
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => setFile({ ...file }), []);
 
   return (

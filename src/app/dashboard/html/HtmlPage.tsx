@@ -13,6 +13,7 @@ import styles from '@/app/dashboard/dashboard.module.css';
 import {
   Button,
   Checkbox,
+  CircularProgress,
   FormControlLabel,
   IconButton,
   MenuItem,
@@ -44,7 +45,6 @@ import {
 import { usePodficcer } from '@/app/lib/swrLoaders';
 import ExternalLink from '@/app/ui/ExternalLink';
 
-// TODO: swr?
 export default function HtmlPage() {
   const searchParams = useSearchParams();
 
@@ -57,11 +57,6 @@ export default function HtmlPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
-
-  // TODO: use loading states
-  const [podficLoading, setPodficLoading] = useState(true);
-  const [chapterLoading, setChapterLoading] = useState(true);
-  const [filesLoading, setFilesLoading] = useState(true);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -114,28 +109,34 @@ export default function HtmlPage() {
 
   useEffect(() => setFilteredResources(resources), [resources]);
 
-  const fetchPodfic = useCallback(async (podficId) => {
-    const response = await fetch(
-      `/db/podfics/${podficId}?with_cover_art=true&with_author=true&with_podficcers=true`
-    );
-    const data = await response.json();
-    setPodfic(data);
-    if (data.html_string) {
-      console.log('setting generated html from podfic html');
-      setGeneratedHTML(podfic.html_string);
-    }
-  }, []);
+  const fetchPodfic = useCallback(
+    async (podficId) => {
+      const response = await fetch(
+        `/db/podfics/${podficId}?with_cover_art=true&with_author=true&with_podficcers=true`
+      );
+      const data = await response.json();
+      setPodfic(data);
+      if (data.html_string) {
+        console.log('setting generated html from podfic html');
+        setGeneratedHTML(podfic.html_string);
+      }
+    },
+    [podfic.html_string]
+  );
 
-  const fetchChapter = useCallback(async (chapterId) => {
-    // different endpoint than for all chapters in the podfic!
-    const response = await fetch(`/db/chapters?chapter_id=${chapterId}`);
-    const data = await response.json();
-    setChapter(data);
-    if (data.html_string) {
-      console.log('setting generated html from chapter html');
-      setGeneratedHTML(chapter.html_string);
-    }
-  }, []);
+  const fetchChapter = useCallback(
+    async (chapterId) => {
+      // different endpoint than for all chapters in the podfic!
+      const response = await fetch(`/db/chapters?chapter_id=${chapterId}`);
+      const data = await response.json();
+      setChapter(data);
+      if (data.html_string) {
+        console.log('setting generated html from chapter html');
+        setGeneratedHTML(chapter.html_string);
+      }
+    },
+    [chapter.html_string]
+  );
 
   const fetchFiles = useCallback(async (podficId, chapterId) => {
     console.log('fetchfiles running');
@@ -212,7 +213,7 @@ export default function HtmlPage() {
   // link generation
   useEffect(() => {
     if (generateChapterLinks && !generatedLinks.length) {
-      // TODO: change this as needed based on podfic
+      // change this as needed based on podfic
       console.log(files.sort((a, b) => a.chapter_id - b.chapter_id));
       const generated = files
         .sort((a, b) => a.chapter_id - b.chapter_id)
@@ -281,9 +282,9 @@ export default function HtmlPage() {
         setGeneratedHTML(beautify.html(generated));
       }
     }
+    // TODO: investigate if this is needed
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTemplate, files, resources, podfic, chapter, filteredResources]);
-
-  // TODO: format on paste?
 
   const saveHTML = useCallback(async () => {
     if (Object.keys(chapter).length !== 0) {
@@ -294,15 +295,9 @@ export default function HtmlPage() {
     console.log('saved html');
   }, [podfic, chapter, generatedHTML]);
 
-  // TODO:
-  // - better loading state
-  // - add drag & drop, or at least select which resources are included
-  // - better reload from DB, also load template?
-  // - select podfic/chapter if not already selected
-  // - proper chaptered support
-  //  - is_chapter state variable?
-
-  return (
+  return isLoading ? (
+    <CircularProgress />
+  ) : (
     <div className={`${styles.body} ${styles.flexColumn}`}>
       <GeneratedLinksDialog
         isOpen={generatedFilesDialogOpen}
@@ -440,7 +435,6 @@ export default function HtmlPage() {
           />
         </>
       )}
-      {/* TODO: at least be able to select what resources to include, & reorder files */}
 
       <CodeMirror
         value={generatedHTML}
@@ -449,7 +443,6 @@ export default function HtmlPage() {
         theme={okaidia}
         ref={editorRef}
       />
-      {/* TODO: show a thing that it's been copied? the little toast or snackbar or whatever? */}
       <div className={styles.flexRow}>
         <IconButton
           onClick={() => navigator.clipboard.writeText(generatedHTML)}
@@ -461,7 +454,6 @@ export default function HtmlPage() {
           <Save />
         </IconButton>
       </div>
-      {/* TODO: also be able to save specific HTML, with specific label? like for template or custom? just save it as a note for the podfic probably? maybe a resource.... */}
     </div>
   );
 }

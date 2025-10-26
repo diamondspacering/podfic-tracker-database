@@ -14,7 +14,5 @@ export async function GET() {
     order by part.created_at`
   );
 
-  // console.log('parts', result.rows);
-
   return NextResponse.json(result.rows ?? []);
 }

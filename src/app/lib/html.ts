@@ -1,8 +1,6 @@
-// TODO: fill out this file/format file/move formatting things into here why are they in there
 import { FileType } from '../types';
 import { format2Digits, getLengthText } from './format';
 
-// many lil functions?
 export const getFileHTML = (file: File) => {
   let htmlString = ``;
   if (file.label) {
@@ -32,7 +30,6 @@ export const getEmbedCode = (link: string) => {
   return `<iframe src="${link}&playlist=1&list_height=150" width="100%"></iframe>`;
 };
 
-// file label info? so like no music?
 // note that this is very specific to my file naming sorry
 export const generateAALink = ({
   title,
@@ -42,8 +39,7 @@ export const generateAALink = ({
   label = '',
 }) => {
   // the date string will always be provided bc it'll be generated for user to see
-  // TODO: figure out smart chapter info stuff. assume it's null for now
-  // TODO: change as needed based on podfic
+  // change as needed based on podfic
   let safeTitle = '';
   if (Object.keys(chapterInfo).length) {
     const chapterName = chapterInfo.chapter_title
@@ -59,6 +55,7 @@ export const generateAALink = ({
     safeTitle = title.replaceAll(/\s/g, '_').replaceAll(/'/g, '');
   }
   console.log({ safeTitle });
+  // TODO: AA domain now?
   const fullTitle = `https://podfic.jinjurly.com/audfiles2/${date}_${safeTitle}${
     label === 'Without Music'
       ? '_(no_music)'
@@ -90,13 +87,12 @@ export const generateHTMLAudioficArchive = (
       } MB, ${getLengthText(file.length)}]\n\n`;
     });
   } else {
-    // TODO: include splitting into sections
     podfic.chapters?.forEach((chapter) => {
       let filteredFiles = files.filter(
         (file) => file.chapter_id === chapter.chapter_id
       );
       console.log({ filteredFiles });
-      filteredFiles = filteredFiles.sort((a, b) =>
+      filteredFiles = filteredFiles.sort((a) =>
         !a.label || (a.label.includes('With') && !a.label.includes('Without'))
           ? -1
           : 1
@@ -152,26 +148,23 @@ export const generateHTMLAzdaema = (
   }
 
   htmlString += `<div class="content">`;
-  // TODO: figure out chaptered
   if (!podfic.chaptered || podfic.posted_unchaptered) {
-    // const filteredFiles = files.filter((file) => file.is_direct);
     const filteredFiles = files.filter((file) => Boolean(file));
-    // and yeah this is just trying to be smart but it's there for you to edit lol
+    // tries to be smart, but change as needed based on podfic
     if (filteredFiles.length === 1) {
       const file = filteredFiles[0];
       htmlString += `<h3>Details</h3>`;
       htmlString += `<ul>`;
-      // TODO: handle multiple files
       htmlString += `<li><b>Length:</b> ${getLengthText(file.length)}</li>`;
       const filetype = Object.entries(FileType).find(
-        ([_key, value]) => value === file.filetype
+        ([, value]) => value === file.filetype
       )?.[0];
       htmlString += `<li><b>File type:</b> ${filetype} (${file.size} MB)</li>`;
     } else {
       console.log('not supported');
     }
 
-    // TODO: this changes depending on whether information was given above
+    // this changes depending on whether information was given above
     if (filteredFiles.length) {
       htmlString += `<h3>Streaming & Hosting</h3>`;
       filteredFiles.forEach((file) => {
@@ -229,9 +222,8 @@ export const generateHTMLAzdaema = (
       });
     }
   } else if (!!chapter && !!Object.keys(chapter).length) {
-    // TODO: may need to filter the files for this chapter
+    // may need to filter the files for this chapter
     const filteredFiles = files.filter((file) => Boolean(file));
-    // this is assuming just direct links for now we will work on it. also more code needs to be shared don't worry about it
     // TODO: include all chapters html in first chapter
     if (filteredFiles.length) {
       htmlString += `<h3>Chapter ${chapter.chapter_number}${
@@ -243,7 +235,7 @@ export const generateHTMLAzdaema = (
           filteredFiles[0].length
         )}</li>`;
         const filetype = Object.entries(FileType).find(
-          ([_key, value]) => value === filteredFiles[0].filetype
+          ([, value]) => value === filteredFiles[0].filetype
         )?.[0];
         htmlString += `<li><b>File type:</b> ${filetype} (${filteredFiles[0].size} MB)</li>`;
         htmlString += `</ul>`;
@@ -273,9 +265,7 @@ export const generateHTMLAzdaema = (
         }`
       : podfic.nickname ?? podfic.title
   }</a></li>`;
-  // TODO: support multiple authors, if only by manually looking at string
   htmlString += `<li><b>Author:</b> <a href="${podfic.ao3}">${podfic.username}</a></li>`;
-  // TODO: support multiple readers, need to be able to pull from the podficcer thing. do links too
   const readers = podfic.podficcers ?? [defaultPodficcer];
   htmlString += `<li><b>Reader${readers.length > 1 ? 's' : ''}:</b>`;
   readers.forEach((reader, i) => {
@@ -285,14 +275,12 @@ export const generateHTMLAzdaema = (
     if (i !== readers.length - 1) htmlString += ',';
   });
   htmlString += `</li>`;
-  // TODO: cover artist link as well
   if (
     podfic.cover_artist_name &&
     podfic.cover_artist_name !== defaultPodficcer.username
   ) {
     htmlString += `<li><b>Cover art:</b> <a href="${coverArtistProfile}">${podfic.cover_artist_name}</a></li>`;
   }
-  // TODO: photo for cover art as well, + other resources incl. music. possibly smartly giving the up class as well? we'll see
   resources.forEach((resource) => {
     if (resource.notes) {
       htmlString += `<li><b>${resource.label}:</b> <a href="${resource.link}">${resource.notes}</a></li>`;
@@ -307,7 +295,6 @@ export const generateHTMLAzdaema = (
   return htmlString;
 };
 
-// TODO: resources also, when there's music
 export const generateHTMLBluedreamingChapter = (
   podfic: Podfic & Work & Author & CoverArt,
   chapter: Chapter,
@@ -322,7 +309,7 @@ export const generateHTMLBluedreamingChapter = (
   // chapter title but i dont do that rn
   htmlString += `<h3>Chapter ${chapter.chapter_number}</h3>`;
 
-  files.sort((a, b) => (a.label === 'With Music' ? -1 : 1));
+  files.sort((a) => (a.label === 'With Music' ? -1 : 1));
 
   files.forEach((file) => {
     if (file.label) {

@@ -36,7 +36,6 @@ export default function FileLinkForm({
     if (chapterId) fetchChapter();
   });
 
-  // DO NOT add other dependencies or it will maximum update depth exceeded. TODO: work on that I guess
   useEffect(() => {
     if (link.host === 'audiofic archive') {
       const dateString = generateAADate(aaDate);
@@ -48,6 +47,8 @@ export default function FileLinkForm({
       });
       setLink({ ...link, link: fileString });
     }
+    // if other dependencies are added, it will maximum update depth exceeded
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [link.host, aaDate]);
 
   return (
@@ -113,7 +114,6 @@ export default function FileLinkForm({
       </TextField>
       {link.host === 'audiofic archive' && (
         <>
-          {/* TODO: this should have nicknames as well? save that for podfic...? */}
           <span>
             Change date:
             <TextField

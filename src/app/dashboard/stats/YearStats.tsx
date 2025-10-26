@@ -13,7 +13,6 @@ import {
   getPodficLength,
   getPostedChapterWords,
   getPostedPodficWords,
-  getPostedWords,
   getRatingCount,
   getRawWordcount,
   getShortestChapter,

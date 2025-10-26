@@ -41,7 +41,7 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
 
   let podfics = result.rows;
   podfics = podfics.map((podfic) =>
-    // TODO: parts for these too man
+    // TODO: parts for these too
     podfic.chaptered
       ? {
           ...podfic,
@@ -93,11 +93,9 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
       HAVING string_agg(host, ',') NOT LIKE '%audiofic archive%'
     `)
     ).rows;
-    // ok just preload in the files ok
     podfics = podfics.filter((podfic) =>
       allFilesMissingAALinks.some((file) => file.podfic_id === podfic.podfic_id)
     );
-    // TODO: make sure the files are filtered too? just do it when fetching files I think. preloading files could work too but eh, would have to rejigger stuff
   }
 
   console.log(podfics.length);

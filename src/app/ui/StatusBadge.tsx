@@ -1,15 +1,6 @@
-// import styles from './ui.module.css';
-
-// export default function StatusBadge({ status }) {
-//   return (
-//     <div className={`${styles.statusBadge} ${styles[status]}`}>{status}</div>
-//   );
-// }
-
 import { useMemo } from 'react';
 import styles from './ui.module.css';
 import { PartStatus, PermissionStatus, PodficStatus } from '../types';
-import ExternalLink from './ExternalLink';
 
 interface StatusBadgeProps {
   status: PodficStatus | PermissionStatus | PartStatus;
