@@ -9,7 +9,6 @@ import { addLengths, getLengthValue } from './lengthHelpers';
 
 export const getPodficCountByYear = async () => {
   const client = await getClient();
-  // TODO: giving full date might be fine?
   const dateResult = await client.query(
     `select date_part('year', posted_date) as year, count(posted_date) from podfic group by year;`
   );

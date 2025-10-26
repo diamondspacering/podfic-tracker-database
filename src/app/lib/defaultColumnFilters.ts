@@ -114,14 +114,7 @@ export const resetAllColumns = (table: Table<any>) => {
     }
     return filters;
   }, []);
-  // const columnFilters = columns.map((c) => ({
-  //   id: c.id,
-  //   value: getResetFilterValueForColumn(c),
-  // }));
   return columnFilters;
-  // columns.forEach((column) => {
-  //   column.setFilterValue(getResetFilterValueForColumn(column));
-  // });
 };
 
 export const resetAllColumnsToDefault = (table: Table<any>) => {
