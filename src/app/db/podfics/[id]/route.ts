@@ -19,9 +19,7 @@ export async function GET(
   const client = await getClient();
 
   let podfic = null;
-  // TODO: make this more fine-grained
   if (withCoverArt && withAuthor) {
-    // console.log('fetching podfic full');
     const result = await client.query(
       `select *,cover_art.status as cover_art_status from podfic
         inner join work on podfic.work_id = work.work_id
@@ -71,8 +69,6 @@ export async function GET(
   const chapterResult = await client.query(
     `select * from chapter where chapter.podfic_id = ${id} order by chapter_number asc`
   );
-  // const podfic = { ...result.rows[0], podfic_id: parseInt(id) };
-  // console.log({ podfic });
   if (podfic) podfic.chapters = chapterResult.rows;
 
   return NextResponse.json(podfic ?? {});

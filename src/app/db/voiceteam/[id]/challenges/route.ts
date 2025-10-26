@@ -23,7 +23,6 @@ export async function GET(
     [voiceteamEventId]
   );
   const challenges = (challengeResult.rows ?? []) as Challenge[];
-  // console.log({ challenges });
   // TODO: is there a way to like do this inline in postgres??
   for (const challenge of challenges) {
     const projectResult = await client.query(

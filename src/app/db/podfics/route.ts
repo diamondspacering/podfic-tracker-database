@@ -1,5 +1,5 @@
 import { getClient } from '@/app/lib/db-helpers';
-import { fetchPodficsFull, fetchPodficsWithChapters } from '@/app/lib/loaders';
+import { fetchPodficsFull } from '@/app/lib/loaders';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
       where event_id = $1 order by added_date`,
       [eventId]
     );
-    // console.log(result.rows);
     podfics = result.rows;
 
     for (const podfic of podfics) {
@@ -25,17 +24,9 @@ export async function GET(request: NextRequest) {
         [podfic.podfic_id]
       );
       podfic.notes = noteResult.rows ?? [];
-
-      // TODO: don't get chapter resources
-      // const resourceResult = await client.query(
-      //   `select * from resource inner join resource_podfic on resource.resource_id = resource_podfic.resource_id where resource_podfic.podfic_id = $1`,
-      //   [podfic.podfic_id]
-      // );
-      // podfic.resources = resourceResult.rows ?? [];
     }
   } else {
     podfics = await fetchPodficsFull(missingAALinks);
-    // console.log(podfics);
   }
 
   return NextResponse.json(podfics ?? []);
