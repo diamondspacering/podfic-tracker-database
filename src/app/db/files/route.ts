@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
   }
 
   const files = fileResult.rows as File[];
-  // TODO: a Promise.all situation
   for (const file of files) {
     const fileLinkResult = await client.query(`
         select * from file_link where file_id = ${file.file_id}

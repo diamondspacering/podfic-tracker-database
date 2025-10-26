@@ -77,7 +77,6 @@ export default function RecordingSessionForm({
 
   useEffect(() => {
     const fetchPodfics = async () => {
-      // TODO: I want a more minified one
       const response = await fetch('/db/podfics');
       const data = await response.json();
       setPodficList(data);
@@ -300,7 +299,6 @@ export default function RecordingSessionForm({
         <PodficForm podfic={newPodfic} setPodfic={setNewPodfic} />
       ) : (
         <div className={styles.flexColumn}>
-          {/* TODO: sorting? */}
           <Autocomplete
             options={podficList}
             sx={{

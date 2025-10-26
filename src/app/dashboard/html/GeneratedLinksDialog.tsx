@@ -1,4 +1,5 @@
 import styles from '@/app/dashboard/dashboard.module.css';
+import ExternalLink from '@/app/ui/ExternalLink';
 import {
   Dialog,
   DialogTitle,
@@ -15,7 +16,6 @@ export default function GeneratedLinksDialog({
   setFiles,
   submitCallback,
 }) {
-  // TODO: perhaps it should keep its own state?
   return (
     <Dialog open={isOpen} onClose={onClose}>
       <DialogTitle>Review Generated Files</DialogTitle>
@@ -58,9 +58,7 @@ export default function GeneratedLinksDialog({
                     )
                   }
                 />
-                <a href={fileLink.link} target='_blank'>
-                  {fileLink.link}
-                </a>
+                <ExternalLink href={fileLink.link} />
                 <audio src={fileLink.link} controls preload='metadata'></audio>
                 <br />
                 <br />

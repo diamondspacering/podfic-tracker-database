@@ -1,4 +1,3 @@
-import { PermissionStatus, PodficStatus } from '@/app/types';
 import { ExpandMore, FilterAlt, FilterList, Search } from '@mui/icons-material';
 import {
   Accordion,
@@ -12,23 +11,27 @@ import {
   MenuItem,
   TextField,
 } from '@mui/material';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import styles from './table.module.css';
 import DatePicker from '../DatePicker';
 
-// TODO: props type
+// TODO: correctly determine types
+interface FilterMenuProps {
+  type: string;
+  options: any[];
+  filter: any;
+  setFilter: (filter: any) => void;
+  resetFilter: () => void;
+  isActivated?: boolean;
+}
 
-// options VERY tbd haha
-// TODO: expand & clean this up
-// TODO: render badges for badged things
 export default function FilterMenu({
   type,
   options,
   filter,
   setFilter,
-  resetFilter,
   isActivated = false,
-}) {
+}: FilterMenuProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const [localFilter, setLocalFilter] = useState(filter);
@@ -51,7 +54,6 @@ export default function FilterMenu({
     [options, searchValue]
   );
 
-  // TODO: click away listener or something for closing clicking outside of dialog?
   return (
     <IconButton
       id='filter-menu'
@@ -165,7 +167,6 @@ export default function FilterMenu({
             </>
           ) : (
             <>
-              {/* TODO: link buttons */}
               <div className={styles.flexRow}>
                 <Button
                   size='small'
@@ -185,7 +186,6 @@ export default function FilterMenu({
                   Clear
                 </Button>
               </div>
-              {/* TODO: consider using a mui checkboxes autocomplete - I think I prefer this setup though? */}
               {/* TODO: direct focus to here - should be examples in other dialogs bc he weird */}
               <TextField
                 // focused={!!searchValue && true}
@@ -200,7 +200,6 @@ export default function FilterMenu({
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
               />
-              {/* TODO: limit height, etc. */}
               <div className={styles.overflowContainer}>
                 <MenuItem key='blanks'>
                   <FormControlLabel

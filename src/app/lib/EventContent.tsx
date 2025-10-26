@@ -1,9 +1,3 @@
-// interface EventContentProps {
-//   podfic?: Podfic & Work;
-//   chapter?: Chapter;
-//   part?: Part;
-//   round?: Round;
-
 import { DateTime } from 'luxon';
 import { ScheduleEventType } from '../types';
 

@@ -33,7 +33,6 @@ export default function AuthorForm({ author, setAuthor }: AuthorFormProps) {
           setAuthor((prev) => ({ ...prev, ao3: e.target.value }))
         }
       />
-      {/* TODO: fix types here */}
       <StatusSelect
         type='permission'
         value={author.permission_status as unknown as PermissionStatus}

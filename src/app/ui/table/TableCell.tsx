@@ -14,6 +14,7 @@ import DatePicker from '../DatePicker';
 import { sourceCodePro } from '@/app/fonts/fonts';
 import { getLengthValue } from '@/app/lib/lengthHelpers';
 import RatingBadge from '../RatingBadge';
+import ExternalLink from '../ExternalLink';
 
 type Option = {
   label: string;
@@ -192,9 +193,7 @@ const DisplayCell = ({ value, meta, isExpanded }) => {
     case 'link':
       return (
         <span className={`${tableStyles.linkCell} ${meta.className ?? ''}`}>
-          <a href={value} onClick={(e) => e.stopPropagation()} target='_blank'>
-            {value}
-          </a>
+          <ExternalLink href={value} onClick={(e) => e.stopPropagation()} />
         </span>
       );
     case 'date':

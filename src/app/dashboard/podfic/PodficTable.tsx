@@ -40,6 +40,7 @@ import { EditCell } from '@/app/ui/table/EditCell';
 import RecordingSessionTable from '@/app/ui/table/RecordingSessionTable';
 import { addLengths, getLengthValue } from '@/app/lib/lengthHelpers';
 import CustomTable from '@/app/ui/table/CustomTable';
+import ExternalLink from '@/app/ui/ExternalLink';
 
 export default function PodficTable() {
   const searchParams = useSearchParams();
@@ -50,8 +51,6 @@ export default function PodficTable() {
 
   const pathname = usePathname();
 
-  const [filesExpanded, setFilesExpanded] = useState<number[]>([]);
-  const [resourcesExpanded, setResourcesExpanded] = useState<number[]>([]);
   const [recordingSessionsExpanded, setRecordingSessionsExpanded] = useState<
     number[]
   >([]);
@@ -106,11 +105,8 @@ export default function PodficTable() {
         <IconButton
           style={{ padding: '0px' }}
           onClick={(e) => {
-            // TODO: fill out this function, do the putting indices in an array or whatever
             const isExpanded = props.row.getIsExpanded();
             const isSelected = props.row.getIsSelected();
-            // TODO: this still doesn't work quite the way I want it to I think
-            // maybe select it when editing? and don't allow other things to be selected?
             // if it's expanded and deselected, don't select
             // if it's not expanded and selected, don't deselect
             if (isExpanded && !isSelected) e.stopPropagation();
@@ -422,7 +418,6 @@ export default function PodficTable() {
         columnName: 'AO3 Link',
       },
     }),
-    // TODO: add filtering based on chaptered status - toggle filter....? manually specified options? yeagh
     columnHelper.display({
       id: 'chapters',
       header: 'Chapters',
@@ -540,8 +535,6 @@ export default function PodficTable() {
         JSON.stringify({
           podfic_id: podfic.podfic_id,
           length: podfic.length,
-          // TODO: is any processing needed on this
-          // presumably not since it's been fine but do actually check that
           posted_date: podfic.posted_date,
           ao3_link: podfic.ao3_link,
           status: podfic.status,
@@ -718,9 +711,9 @@ export default function PodficTable() {
                                 maxWidth: '100px',
                               }}
                             >
-                              <a href={row.original.coverArt.image_link}>
-                                {row.original.coverArt.image_link}
-                              </a>
+                              <ExternalLink
+                                href={row.original.coverArt.image_link}
+                              />
                             </span>
                           </td>
                           <td>{row.original.coverArt.cover_artist_name}</td>
@@ -732,7 +725,6 @@ export default function PodficTable() {
                 </tr>
               </>
             )}
-            {/* TODO: files expanded state - should that be in additionalcontentrows */}
             <tr key={'files-expanded'}>
               <td
                 key='2'
@@ -794,7 +786,6 @@ export default function PodficTable() {
             <AdditionalContentRows
               width={row.getVisibleCells().length}
               notes={row.original.notes ?? []}
-              // TODO: pull in resources as well
               resources={row.original.resources ?? []}
               podfic_id={row.original.podfic_id}
             />

@@ -139,8 +139,6 @@ export default function AuthorTable() {
     }),
   ];
 
-  // TODO: include option for viewing works by that author? link to podfic table & set filter?
-
   return (
     <div>
       <CustomTable

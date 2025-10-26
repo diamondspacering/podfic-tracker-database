@@ -2,7 +2,6 @@ import { MenuItem, TextField } from '@mui/material';
 import { PartStatus, PermissionStatus, PodficStatus } from '../types';
 import StatusBadge from './StatusBadge';
 
-// or subcomponents for type? eh
 interface StatusSelectProps {
   value: string | PodficStatus | PermissionStatus;
   setValue: ((value: PodficStatus) => void) &

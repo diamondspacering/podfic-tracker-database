@@ -22,9 +22,8 @@ export const updateRecordingData = async (data: any) => {
       data.podficId = (await createUpdatePodfic(data.podfic)).podfic_id;
     }
 
-    // hmm how to default things into null?
     const client = await getClient();
-    const result = await client.query(
+    await client.query(
       `
       insert into recording_session (podfic_id, chapter_id, part_id, date, year, month, length, mic, device, location) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *;
     `,
@@ -81,7 +80,6 @@ export const createUpdateChapter = async (chapterData: Chapter) => {
     return;
   }
 
-  // TODO: how to make it null as needed?
   if (chapterData.length)
     chapterData.length = getLengthUpdateString(chapterData.length);
   let prevChapterStatus = null;
@@ -97,8 +95,6 @@ export const createUpdateChapter = async (chapterData: Chapter) => {
   const client = await getClient();
   // TODO: possibly handle things not updating from here?
   if (!chapterData.chapter_id) {
-    // TODO: any processing on the length fields?
-    // TODO: should it just be ?? null?
     const result = await client.query(
       `
       INSERT INTO chapter (
@@ -293,7 +289,7 @@ export const updatePodficMinified = async (data: any) => {
     podficData.length = getLengthUpdateString(podficData.length);
 
   const client = await getClient();
-  const result = await client.query(
+  await client.query(
     `UPDATE podfic SET
       length = $1,
       posted_date = $2,
@@ -335,7 +331,6 @@ export const createUpdatePodfic = async (
   if (!podficData.podfic_id) {
     if (podficData.work_id) {
       // console.log('linking new podfic to existing work');
-      // TODO: figure out if work needs to be updated
       await createUpdateWork(podficData);
 
       podficResult = await client.query(
@@ -529,7 +524,7 @@ export const createUpdateChapterHTML = async (chapterId, htmlString) => {
 
 export const createUpdateFandomCategory = async (categoryData) => {
   const client = await getClient();
-  // TODO: handle updating categories?
+  // TODO: handle updating categories
   const result = await client.query(
     `insert into fandom_category (name) values ($1) returning *`,
     [categoryData.category_name]
@@ -677,7 +672,6 @@ export const createUpdateResource = async ({
     );
     resourceResult = result.rows[0];
 
-    // TODO: linking
     if (podfic_id) {
       const podficJoinResult = await client.query(
         `select * from resource_podfic where resource_id = $1 and podfic_id = $2`,
@@ -708,7 +702,6 @@ export const createUpdateResource = async ({
         await joinResourceAuthor(resourceId, author_id, client);
       }
     }
-    // TODO: author & event (check functionality first)
     if (event_id) {
       const eventJoinResult = await client.query(
         `select * from resource_event where resource_id = $1 and event_id = $2`,
@@ -773,7 +766,7 @@ export const createUpdateFile = async (fileData): Promise<any> => {
   // console.log({ fileResult });
   const fileId = fileResult.file_id;
 
-  // TODO: also put these in the return data?
+  // also put these in the return data?
   if (fileData.links) {
     for (const fileLink of fileData.links) {
       await createUpdateFileLink({ ...fileLink, file_id: fileId });
@@ -882,7 +875,7 @@ export const createUpdateNote = async (noteData: Note): Promise<any> => {
 };
 
 const joinResourcePodfic = async (resourceId, podficId, client) => {
-  const joinResult = await client.query(
+  await client.query(
     `INSERT INTO resource_podfic (resource_id, podfic_id) VALUES ($1, $2)`,
     [resourceId, podficId]
   );
@@ -891,21 +884,21 @@ const joinResourcePodfic = async (resourceId, podficId, client) => {
 // includes podfic id for easier grabbing by podfic.
 // is it necessary? nah but who cares tbh
 const joinResourceChapter = async (resourceId, chapterId, podficId, client) => {
-  const joinResult = await client.query(
+  await client.query(
     `INSERT INTO resource_chapter (resource_id, chapter_id, podfic_id) VALUES ($1, $2, $3)`,
     [resourceId, chapterId, podficId]
   );
 };
 
 const joinResourceAuthor = async (resourceId, authorId, client) => {
-  const joinResult = await client.query(
+  await client.query(
     `INSERT INTO resource_author (resource_id, author_id) VALUES ($1, $2)`,
     [resourceId, authorId]
   );
 };
 
 const joinResourceEvent = async (resourceId, eventId, client) => {
-  const joinResult = await client.query(
+  await client.query(
     `INSERT INTO resource_event (resource_id, event_id) VALUES ($1, $2)`,
     [resourceId, eventId]
   );
@@ -1129,7 +1122,7 @@ export const createUpdateChallenge = async (challengeData: Challenge) => {
 
   const client = await getClient();
   if (!challengeData.challenge_id) {
-    const result = await client.query(
+    await client.query(
       `INSERT INTO challenge
         (round_id, name, description, points, bonus_points, bonus_is_additional, created_at)
       VALUES
@@ -1146,8 +1139,7 @@ export const createUpdateChallenge = async (challengeData: Challenge) => {
       ]
     );
   } else {
-    // console.log({ challengeData });
-    const result = await client.query(
+    await client.query(
       `UPDATE challenge SET
         name = $1,
         description = $2,
@@ -1165,7 +1157,6 @@ export const createUpdateChallenge = async (challengeData: Challenge) => {
         challengeData.challenge_id,
       ]
     );
-    // console.log({ result });
   }
 };
 
@@ -1239,7 +1230,7 @@ export const createUpdateProject = async (projectData: Project) => {
     projectResult = result.rows[0];
   }
 
-  // return projectResult;
+  return projectResult;
 };
 
 export const saveChapterHTML = async (chapterId, htmlString) => {
@@ -1372,7 +1363,7 @@ export const createUpdatePartData = async (partData) => {
     }
 
     if (!partData.part_id) {
-      const result = await client.query(
+      await client.query(
         `insert into part (podfic_id, chapter_id, doc, organizer, words, status, part, deadline, created_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *`,
         [
           partData.podfic_id,
@@ -1389,7 +1380,7 @@ export const createUpdatePartData = async (partData) => {
     } else {
       if (typeof partData.part_id !== 'number')
         partData.part_id = parseInt(partData.part_id);
-      const result = await client.query(
+      await client.query(
         `update part set
           podfic_id = $1,
           chapter_id = $2,
@@ -1426,8 +1417,6 @@ export const updatePartMinified = async (data: any) => {
 
   if (partData.length) partData.length = getLengthUpdateString(partData.length);
 
-  // console.log({ partData });
-
   if (typeof partData.part_id !== 'number')
     partData.part_id = parseInt(partData.part_id);
 
@@ -1452,10 +1441,7 @@ export const updatePartMinified = async (data: any) => {
     partData.status,
     partData.part_id,
   ];
-  // console.log({ parameterArray });
-  // console.log(parameterArray.length);
-  const result = await client.query(updateString, parameterArray);
-  // console.log(result.rows[0]);
+  await client.query(updateString, parameterArray);
 };
 
 export const linkPodficcerToPodfic = async (
@@ -1467,7 +1453,6 @@ export const linkPodficcerToPodfic = async (
     `INSERT INTO podfic_podficcer (podfic_id, podficcer_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *`,
     [podficId, podficcerId]
   );
-  // console.log(result.rows[0]);
   return result.rows[0];
 };
 

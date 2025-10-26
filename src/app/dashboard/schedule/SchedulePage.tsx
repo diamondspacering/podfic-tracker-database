@@ -4,10 +4,8 @@ import { Calendar, luxonLocalizer, View, Views } from 'react-big-calendar';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './schedule.css';
-import styles from './schedule.module.css';
 import { DateTime, Settings } from 'luxon';
 import { useScheduleEvents } from '@/app/lib/swrLoaders';
-import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import EventContent from '@/app/lib/EventContent';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
@@ -23,6 +21,7 @@ const timezone = DateTime.local().zoneName;
   - relevant link to thing based on its properties
   - limit query based on selected date
   - better date selection
+  - add changing deadlines on things by dragging?
 */
 export default function SchedulePage() {
   const { scheduleEvents, isLoading: scheduleEventsLoading } =
@@ -47,8 +46,6 @@ export default function SchedulePage() {
       );
     }
   }, [localEvents.length, scheduleEvents, scheduleEventsLoading]);
-
-  // TODO: add changing deadlines on things by dragging?
 
   const { getNow, localizer, scrollToTime } = useMemo(() => {
     Settings.defaultZone = timezone;
@@ -83,7 +80,6 @@ export default function SchedulePage() {
     <div>
       <Typography variant='h3'>Schedule</Typography>
       <Button onClick={() => console.log(localEvents)}>Log local events</Button>
-      {/* TODO: height flexing based on items? */}
       {!scheduleEventsLoading && localEvents.length && (
         <DnDCalendar
           view={view}
@@ -101,7 +97,6 @@ export default function SchedulePage() {
           // onEventDrop={moveEvent}
           onDoubleClickEvent={(event) => {
             console.log('double click event', event);
-            // TODO: switch statement for appropriate action based on event type
           }}
           selectable
           eventPropGetter={eventPropGetter}

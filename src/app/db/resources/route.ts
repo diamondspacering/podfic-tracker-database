@@ -8,15 +8,14 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const resourceType = searchParams.get('resource_type');
   const podficId = searchParams.get('podfic_id');
-  const isFull = searchParams.get('full');
+  // const isFull = searchParams.get('full');
   // console.log({ isFull });
   const chapterId = searchParams.get('chapter_id');
-  // TODO: author & event
+  // TODO: author
   const eventId = searchParams.get('event_id');
 
   let resourceResult = null;
   if (!!resourceType) {
-    // console.log('fetching resources by type');
     let result = null;
     if (resourceType === 'null') {
       result = await client.query(`select * from resource`);
@@ -28,14 +27,12 @@ export async function GET(request: NextRequest) {
     }
     resourceResult = result.rows ?? [];
   } else if (!!chapterId) {
-    // console.log('fetching resources for chapter');
     const chapterResult = await client.query(
       `select * from resource inner join resource_chapter on resource.resource_id = resource_chapter.resource_id where resource_chapter.chapter_id = $1`,
       [chapterId]
     );
     resourceResult = chapterResult.rows ?? [];
   } else if (!!podficId) {
-    // console.log('fetching resources for podfic');
     const podficResult = await client.query(
       `select * from resource inner join resource_podfic on resource.resource_id = resource_podfic.resource_id where resource_podfic.podfic_id = $1`,
       [podficId]
@@ -49,7 +46,6 @@ export async function GET(request: NextRequest) {
     //   resourceResult = [...resourceResult, ...(chapterResult.rows ?? [])];
     // }
   } else if (!!eventId) {
-    // console.log('fetching resources for event');
     const eventResult = await client.query(
       `select * from resource inner join resource_event on resource.resource_id = resource_event.resource_id where resource_event.event_id = $1`,
       [eventId]

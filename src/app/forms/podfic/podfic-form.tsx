@@ -69,8 +69,6 @@ export default function PodficForm({
 
   const { podficcers, isLoading: podficcersLoading } = usePodficcers();
 
-  // TODO: make it default type of podfic
-
   useEffect(() => {
     if (
       podfic.status === PodficStatus.POSTED &&
@@ -214,7 +212,6 @@ export default function PodficForm({
     }
   }, [isVoiceteam, podfic.vt_project_id, challengesLoading, projects]);
 
-  // TODO: consider a full FormControl for required fields & stuff?
   return (
     <div>
       <PodficcerDialog
@@ -535,7 +532,6 @@ export default function PodficForm({
         </div>
       </div>
 
-      {/* TODO: not sure how to do main character & relationship in good way - autocomplete w/ create...? */}
       {/* end metadata */}
 
       <br />
@@ -668,7 +664,6 @@ export default function PodficForm({
               />
             )}
           />
-          {/* TODO: consider creating a project from this page? */}
           {isVoiceteam && (
             <>
               <Autocomplete

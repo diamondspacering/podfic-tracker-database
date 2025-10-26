@@ -31,15 +31,7 @@ export async function GET(_, context: { params: { id: any } }) {
 
 export async function PUT(request) {
   const data = await request.json();
-  // const client = await getClient();
-  // console.log({ data });
-  // const result = await client.query(
-  //   'insert into chapter (podfic_id, chapter_number, title, length) values ($1, $2, $3, $4) returning *',
-  //   [data.podfic_id, data.chapter_number, data.title, data.length]
-  // );
   const chapter = await createUpdateChapter(data);
-  // console.log({ chapter });
 
-  // const chapter = result.rows[0];
   return NextResponse.json(chapter);
 }

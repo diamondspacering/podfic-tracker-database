@@ -1,6 +1,6 @@
 import { IconButton, TextField } from '@mui/material';
 import styles from './ui.module.css';
-import { Check, Close, X } from '@mui/icons-material';
+import { Check, Close } from '@mui/icons-material';
 import { useCallback, useState } from 'react';
 import { updateTag } from '../lib/updaters';
 
@@ -55,7 +55,6 @@ export default function TagBadge({
             value={tagValue}
             onChange={(e) => setTagValue(e.target.value)}
           />
-          {/* TODO: more styling, colors */}
           <IconButton onClick={updateTagValue}>
             <Check style={{ maxHeight: '15px' }} />
           </IconButton>

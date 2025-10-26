@@ -9,10 +9,8 @@ import AuthorForm from '../author-form';
 import { LoadingButton } from '@mui/lab';
 
 export default function Page({ params }: { params: { id: any } }) {
-  // TODO: use SWR instead
   const [author, setAuthor] = useState({} as Author);
-  // TODO: loading state
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const router = useRouter();
 
   const [submitting, setSubmitting] = useState(false);

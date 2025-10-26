@@ -1,11 +1,3 @@
-// import styles from './ui.module.css';
-
-// export default function StatusBadge({ status }) {
-//   return (
-//     <div className={`${styles.statusBadge} ${styles[status]}`}>{status}</div>
-//   );
-// }
-
 import { useMemo } from 'react';
 import styles from './ui.module.css';
 import { PartStatus, PermissionStatus, PodficStatus } from '../types';
@@ -81,6 +73,7 @@ export default function StatusBadge({
       } ${className}`}
       onClick={onClick}
     >
+      {/* TODO: built-in component since it's an internal link? */}
       {linkTo ? (
         <a href={linkTo} className={styles.invisibleLink}>
           {status}

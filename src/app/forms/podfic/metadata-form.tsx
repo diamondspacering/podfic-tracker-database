@@ -441,7 +441,6 @@ export default function MetadataForm({
         );
       })}
 
-      {/* TODO: colors? just letters? look at stats mapping & generalize? */}
       {metadata.rating !== null && (
         <RemovableItem
           removeCallback={() =>

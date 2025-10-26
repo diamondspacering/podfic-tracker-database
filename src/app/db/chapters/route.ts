@@ -10,9 +10,6 @@ export async function GET(request: NextRequest) {
 
   const client = await getClient();
   if (chapterId && chapterId !== 'null') {
-    // const result = await client.query(`
-    //   select * from file where file.chapter_id = ${chapterId}
-    // `);
     const result = await client.query(`
       select * from chapter where chapter_id = ${chapterId}
     `);
@@ -24,7 +21,6 @@ export async function GET(request: NextRequest) {
   `);
     return Response.json(result.rows);
   }
-  // TODO: some method of sorting?
   const result = await client.query(`select * from chapter`);
   return Response.json(result.rows);
 }
