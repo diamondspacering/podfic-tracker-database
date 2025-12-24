@@ -20,21 +20,22 @@ export default function FileLinkForm({
   link,
   setLink,
   podficTitle,
-  chapterId,
+  sectionId,
   label,
 }) {
   const [aaDate, setAADate] = useState(formatDateString(new Date()));
+  // TODO: hmmm section info w/ embedded chapter?
   const [chapter, setChapter] = useState({} as Chapter);
 
-  useEffect(() => {
-    const fetchChapter = async () => {
-      const response = await fetch(`/db/chapters?chapter_id=${chapterId}`);
-      const data = await response.json();
-      setChapter(data);
-    };
+  // useEffect(() => {
+  //   const fetchChapter = async () => {
+  //     const response = await fetch(`/db/chapters?chapter_id=${chapterId}`);
+  //     const data = await response.json();
+  //     setChapter(data);
+  //   };
 
-    if (chapterId) fetchChapter();
-  });
+  //   if (chapterId) fetchChapter();
+  // });
 
   useEffect(() => {
     if (link.host === 'audiofic archive') {

@@ -108,3 +108,11 @@ export enum Category {
   OTHER = 'Other',
   MULTI = 'Multi',
 }
+
+export enum SectionType {
+  DEFAULT = 'default',
+  SINGLE_TO_MULTIPLE = 'single-to-multiple',
+  MULTIPLE_TO_SINGLE = 'multiple-to-single',
+  CHAPTERS_SPLIT = 'chapters-split',
+  CHAPTERS_COMBINE = 'chapters-combine',
+}

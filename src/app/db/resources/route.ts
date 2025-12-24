@@ -10,7 +10,8 @@ export async function GET(request: NextRequest) {
   const podficId = searchParams.get('podfic_id');
   // const isFull = searchParams.get('full');
   // console.log({ isFull });
-  const chapterId = searchParams.get('chapter_id');
+  // const chapterId = searchParams.get('chapter_id');
+  const sectionId = searchParams.get('section_id');
   // TODO: author
   const eventId = searchParams.get('event_id');
 
@@ -26,12 +27,12 @@ export async function GET(request: NextRequest) {
       );
     }
     resourceResult = result.rows ?? [];
-  } else if (!!chapterId) {
-    const chapterResult = await client.query(
-      `select * from resource inner join resource_chapter on resource.resource_id = resource_chapter.resource_id where resource_chapter.chapter_id = $1`,
-      [chapterId]
+  } else if (!!sectionId) {
+    const sectionResult = await client.query(
+      `select * from resource inner join resource_section on resource.resource_id = resource_section.resource_id where resource_section.section_id = $1`,
+      [sectionId]
     );
-    resourceResult = chapterResult.rows ?? [];
+    resourceResult = sectionResult.rows ?? [];
   } else if (!!podficId) {
     const podficResult = await client.query(
       `select * from resource inner join resource_podfic on resource.resource_id = resource_podfic.resource_id where resource_podfic.podfic_id = $1`,

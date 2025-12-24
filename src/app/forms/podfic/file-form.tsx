@@ -18,7 +18,7 @@ interface FileFormProps {
   file?: File;
   setFile?: React.Dispatch<React.SetStateAction<File>>;
   podficTitle?: string;
-  chapterId?: number;
+  sectionId?: number;
   existingLength?: Length;
 }
 
@@ -26,7 +26,7 @@ export default function FileForm({
   file,
   setFile,
   podficTitle,
-  chapterId,
+  sectionId,
   existingLength,
 }: FileFormProps) {
   const length = useMemo(
@@ -110,7 +110,7 @@ export default function FileForm({
             }))
           }
           podficTitle={podficTitle}
-          chapterId={chapterId}
+          sectionId={sectionId}
           label={file.label}
         />
       ))}

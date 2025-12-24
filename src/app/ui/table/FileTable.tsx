@@ -22,7 +22,7 @@ export default function FileTable({
   podficTitle,
   onlyNonAAFiles = false,
   chapterId,
-  lengthColorScale,
+  lengthColorScale = null,
 }) {
   const { files, isLoading } = useFiles({
     podficId,
@@ -57,14 +57,6 @@ export default function FileTable({
     }),
     columnHelper.accessor('podfic_id', {
       header: 'Podfic ID',
-      cell: TableCell,
-      meta: {
-        type: 'number',
-        immutable: true,
-      },
-    }),
-    columnHelper.accessor('chapter_id', {
-      header: 'ID',
       cell: TableCell,
       meta: {
         type: 'number',
@@ -199,7 +191,6 @@ export default function FileTable({
         file={editingFile}
         podficId={podficId}
         podficTitle={podficTitle}
-        chapterId={chapterId}
         existingLength={editingFile?.length}
       />
       <Dialog

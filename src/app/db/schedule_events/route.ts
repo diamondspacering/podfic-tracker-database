@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   const max_date = searchParams.get('max_date');
   const client = await getClient();
 
+  // TODO: section changes?
   let queryString = `
    select schedule_event_id,schedule_event.podfic_id,schedule_event.chapter_id,schedule_event.part_id,schedule_event.round_id,
        start,"end",allday,schedule_event.type,

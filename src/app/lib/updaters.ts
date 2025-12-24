@@ -2,7 +2,7 @@
 
 import { getLengthUpdateString } from './format';
 import { getClient } from './db-helpers';
-import { PARTIAL_STATUSES, PodficStatus } from '../types';
+import { PARTIAL_STATUSES, PodficStatus, SectionType } from '../types';
 
 // TODO: clean this up
 export const updateRecordingData = async (data: any) => {
@@ -25,12 +25,11 @@ export const updateRecordingData = async (data: any) => {
     const client = await getClient();
     await client.query(
       `
-      insert into recording_session (podfic_id, chapter_id, part_id, date, year, month, length, mic, device, location) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *;
+      insert into recording_session (podfic_id, section_id, date, year, month, length, mic, device, location) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *;
     `,
       [
         data.podficId,
-        data.chapterId ? data.chapterId : null,
-        data.partId ? data.partId : null,
+        data.sectionId ? data.sectionId : null,
         data.date ? data.date : null,
         data.year ? data.year : null,
         data.month ? data.month : null,
@@ -41,115 +40,189 @@ export const updateRecordingData = async (data: any) => {
       ]
     );
 
-    if (data.podficId && data.completesPodfic) {
+    if (data.podficId) {
       const statusResult = await client.query(
         `select status from podfic where podfic_id = $1`,
         [data.podficId]
       );
       const status = statusResult.rows[0].status as PodficStatus;
-      if (PARTIAL_STATUSES.includes(status) || !status) {
+      if (
+        data.completesPodfic &&
+        (PARTIAL_STATUSES.includes(status) || !status)
+      ) {
         await client.query(
           `update podfic set status = $1 where podfic_id = $2`,
           [PodficStatus.RECORDED, data.podficId]
         );
-      }
-    }
-
-    if (data.chapterId && data.completesChapter) {
-      const chapterResult = await client.query(
-        `select status from chapter where chapter_id = $1`,
-        [data.chapterId]
-      );
-      const status = chapterResult.rows[0].status as PodficStatus;
-      if (PARTIAL_STATUSES.includes(status) || !status) {
+      } else if (!data.completesPodfic && status === PodficStatus.PLANNING) {
         await client.query(
-          `update chapter set status = $1 where chapter_id = $2`,
-          [PodficStatus.RECORDED, data.chapterId]
+          `update podfic set status = $1 where podfic_id = $2`,
+          [PodficStatus.RECORDING, data.podficId]
         );
       }
     }
+
+    // TODO: update it to RECORDING as well if needed
+    // TODO: handle this appropriately w/ sections
+    // if (data.chapterId && data.completesChapter) {
+    //   const chapterResult = await client.query(
+    //     `select status from chapter where chapter_id = $1`,
+    //     [data.chapterId]
+    //   );
+    //   const status = chapterResult.rows[0].status as PodficStatus;
+    //   if (PARTIAL_STATUSES.includes(status) || !status) {
+    //     await client.query(
+    //       `update chapter set status = $1 where chapter_id = $2`,
+    //       [PodficStatus.RECORDED, data.chapterId]
+    //     );
+    //   }
+    // }
   } catch (e) {
     console.error('Error updating recording data', e);
   }
 };
 
+export const createUpdateSection = async (sectionData: Section) => {
+  if (sectionData.length) {
+    sectionData.length = getLengthUpdateString(sectionData.length);
+  }
+
+  // hmmm we'll have to see if we want statuses on sections
+  // let prevSectionStatus = null;
+  // if (!!sectionData.posted_date && sectionData.status !== PodficStatus.POSTED && sectionData.status !== PodficStatus.FINISHED)
+
+  const client = await getClient();
+  if (!sectionData.section_id) {
+    const result = await client.query(
+      `INSERT INTO section (
+        podfic_id,
+        number,
+        title,
+        wordcount,
+        text_link,
+        deadline,
+        updated_at
+      ) VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7 
+      )`,
+      [
+        sectionData.podfic_id,
+        sectionData.number,
+        sectionData.title,
+        sectionData.wordcount,
+        sectionData.text_link,
+        sectionData.deadline,
+        new Date(),
+      ]
+    );
+    return result.rows[0];
+  } else {
+    const result = await client.query(
+      `UPDATE section SET
+        number = $1,
+        title = $2,
+        wordcount = $3,
+        text_link = $4,
+        deadline = $5,
+        length = $6,
+        ao3_link = $7,
+        posted_date = $8,
+        updated_at = $9
+      WHERE section_id = $10
+      RETURNING *
+      `,
+      [
+        sectionData.number,
+        sectionData.title,
+        sectionData.wordcount,
+        sectionData.text_link,
+        sectionData.deadline ? sectionData.deadline : null,
+        sectionData.length,
+        sectionData.ao3_link,
+        sectionData.posted_date ? sectionData.posted_date : null,
+        new Date(),
+        sectionData.section_id,
+      ]
+    );
+    return result.rows[0];
+  }
+};
+
+export const createUpdateSectionClient = async (sectionData: Section) => {
+  await createUpdateSection(sectionData);
+};
+
 export const createUpdateChapter = async (chapterData: Chapter) => {
-  // console.log({ chapterData });
+  console.log({ chapterData });
   if (!chapterData.podfic_id) {
     console.warn('No podfic for chapter! Please be creating a new podfic');
     return;
   }
 
-  if (chapterData.length)
-    chapterData.length = getLengthUpdateString(chapterData.length);
-  let prevChapterStatus = null;
-  if (
-    !!chapterData.posted_date &&
-    chapterData.status !== PodficStatus.POSTED &&
-    chapterData.status !== PodficStatus.FINISHED
-  ) {
-    prevChapterStatus = chapterData.status;
-    chapterData.status = PodficStatus.POSTED;
-  }
+  // TODO: handle auto updates with sections
+  // if (chapterData.length)
+  //   chapterData.length = getLengthUpdateString(chapterData.length);
+  // let prevChapterStatus = null;
+  // if (
+  //   !!chapterData.posted_date &&
+  //   chapterData.status !== PodficStatus.POSTED &&
+  //   chapterData.status !== PodficStatus.FINISHED
+  // ) {
+  //   prevChapterStatus = chapterData.status;
+  //   chapterData.status = PodficStatus.POSTED;
+  // }
 
   const client = await getClient();
   // TODO: possibly handle things not updating from here?
   if (!chapterData.chapter_id) {
     const result = await client.query(
-      `
-      INSERT INTO chapter (
+      `INSERT INTO chapter (
         podfic_id,
         link,
         chapter_number,
         chapter_title,
-        wordcount,
-        length,
-        status,
-        ao3_link,
-        posted_date,
-        deadline
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING chapter_id
-      `,
+        wordcount
+      ) VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
       [
         chapterData.podfic_id,
         chapterData.link,
         chapterData.chapter_number,
         chapterData.chapter_title,
         chapterData.wordcount,
-        chapterData.length,
-        chapterData.status,
-        chapterData.ao3_link,
-        chapterData.posted_date ? chapterData.posted_date : null,
-        chapterData.deadline ? chapterData.deadline : null,
       ]
     );
-    // console.log(result);
     return result.rows[0];
   } else {
-    if (!prevChapterStatus) {
-      prevChapterStatus = (
-        await client.query(`SELECT status FROM chapter WHERE chapter_id = $1`, [
-          chapterData.chapter_id,
-        ])
-      ).rows[0].status;
-    }
+    // if (!prevChapterStatus) {
+    //   prevChapterStatus = (
+    //     await client.query(`SELECT status FROM chapter WHERE chapter_id = $1`, [
+    //       chapterData.chapter_id,
+    //     ])
+    //   ).rows[0].status;
+    // }
 
-    // if updating to posted do that separately from length bc I think that's what's breaking the auto updates?
-    if (
-      chapterData.status === PodficStatus.POSTED &&
-      prevChapterStatus !== PodficStatus.POSTED &&
-      !!chapterData.posted_date
-    ) {
-      await client.query(
-        `
-        UPDATE chapter SET
-        posted_date = $1
-        WHERE chapter_id = $2
-      `,
-        [chapterData.posted_date, chapterData.chapter_id]
-      );
-    }
+    // // if updating to posted do that separately from length bc I think that's what's breaking the auto updates?
+    // if (
+    //   chapterData.status === PodficStatus.POSTED &&
+    //   prevChapterStatus !== PodficStatus.POSTED &&
+    //   !!chapterData.posted_date
+    // ) {
+    //   await client.query(
+    //     `
+    //     UPDATE chapter SET
+    //     posted_date = $1
+    //     WHERE chapter_id = $2
+    //   `,
+    //     [chapterData.posted_date, chapterData.chapter_id]
+    //   );
+    // }
 
     const result = await client.query(
       `UPDATE chapter SET
@@ -157,12 +230,8 @@ export const createUpdateChapter = async (chapterData: Chapter) => {
       chapter_number = $2,
       chapter_title = $3,
       wordcount = $4,
-      length = $5,
-      status = $6,
-      ao3_link = $7,
-      posted_date = $8,
-      deadline = $9
-    WHERE chapter_id = $10
+      status = $5
+    WHERE chapter_id = $6
     RETURNING *
     `,
       [
@@ -170,11 +239,8 @@ export const createUpdateChapter = async (chapterData: Chapter) => {
         chapterData.chapter_number,
         chapterData.chapter_title,
         chapterData.wordcount,
-        chapterData.length,
         chapterData.status,
-        chapterData.ao3_link,
-        chapterData.posted_date ? chapterData.posted_date : null,
-        chapterData.deadline ? chapterData.deadline : null,
+        // chapterData.deadline ? chapterData.deadline : null,
         chapterData.chapter_id,
       ]
     );
@@ -333,8 +399,9 @@ export const createUpdatePodfic = async (
       // console.log('linking new podfic to existing work');
       await createUpdateWork(podficData);
 
+      // TODO: add posting dates too
       podficResult = await client.query(
-        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, posted_date, exclude_stats, type, giftee_id, deadline, added_date, posted_year, vt_project_id, series_id, posted_unchaptered, is_multivoice, updated_at) VALUES (
+        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, section_type, updated_at) VALUES (
         $1,
         $2,
         $3,
@@ -350,9 +417,7 @@ export const createUpdatePodfic = async (
         $13,
         $14,
         $15,
-        $16,
-        $17,
-        $18
+        $16
       )
       RETURNING *
     `,
@@ -363,26 +428,28 @@ export const createUpdatePodfic = async (
           podficData.length,
           podficData.event_id,
           podficData.ao3_link,
-          podficData.posted_date ? podficData.posted_date : null,
           podficData.exclude_stats,
           podficData.type ?? 'podfic',
           podficData.giftee_id,
           podficData.deadline,
           podficData.added_date,
-          podficData.posted_year,
           podficData.vt_project_id,
           podficData.series_id,
-          podficData.posted_unchaptered,
           podficData.is_multivoice,
+          podficData.section_type,
           new Date(),
         ]
       );
+      const podfic_id = podficResult.rows[0].podfic_id;
+      podficData.podfic_id = podfic_id;
+      console.log({ podfic_id });
     } else {
       // console.log('creating new podfic and work');
       const work_id = (await createUpdateWork(podficData)).work_id;
+      console.log({ work_id });
 
       podficResult = await client.query(
-        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, posted_date, exclude_stats, type, giftee_id, deadline, added_date, posted_year, vt_project_id, series_id, posted_unchaptered, is_multivoice, updated_at) VALUES (
+        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, section_type, updated_at) VALUES (
         $1,
         $2,
         $3,
@@ -398,9 +465,7 @@ export const createUpdatePodfic = async (
         $13,
         $14,
         $15,
-        $16,
-        $17,
-        $18
+        $16
       )
       RETURNING *
     `,
@@ -411,29 +476,138 @@ export const createUpdatePodfic = async (
           podficData.length,
           podficData.event_id,
           podficData.ao3_link,
-          podficData.posted_date ? podficData.posted_date : null,
           podficData.exclude_stats,
           podficData.type ?? 'podfic',
           podficData.giftee_id,
           podficData.deadline,
           podficData.added_date,
-          podficData.posted_year,
           podficData.vt_project_id,
           podficData.series_id,
-          podficData.posted_unchaptered,
           podficData.is_multivoice,
+          podficData.section_type,
           new Date(),
         ]
       );
       const podfic_id = podficResult.rows[0].podfic_id;
       podficData.podfic_id = podfic_id;
+      console.log({ podfic_id });
+    }
 
-      if (podficData.chapters?.length)
+    console.log('section type:', podficData.section_type);
+    // TODO: these need statuses lmao bc we moved em off chapters
+    switch (podficData.section_type) {
+      // if splitting non-chaptered into multiple sections, create those
+      case SectionType.SINGLE_TO_MULTIPLE:
+        for (const section of podficData.sections) {
+          const section_id = (
+            await createUpdateSection({
+              ...section,
+              podfic_id: podficData.podfic_id,
+            })
+          ).section_id;
+          section.section_id = section_id;
+        }
+        break;
+      // if combining multiple chapters into one
+      // create negative-numbered sections for all of the chapters to track progress in them
+      // and a section number 1 for actual posting
+      // this is, perhaps, an evil method
+      case SectionType.MULTIPLE_TO_SINGLE:
+        // TODO: should there be able to be posted dates set manually?
         for (const chapter of podficData.chapters) {
+          const section_id = (
+            await createUpdateSection({
+              number: -chapter.chapter_number,
+              wordcount: chapter.wordcount,
+              podfic_id: podficData.podfic_id,
+            })
+          ).section_id;
           const chapter_id = (
-            await createUpdateChapter({ ...chapter, podfic_id: podfic_id })
+            await createUpdateChapter({
+              ...chapter,
+              podfic_id: podficData.podfic_id,
+            })
           ).chapter_id;
-          chapter.chapter_id = chapter_id;
+          await linkChapterAndSection(chapter_id, section_id);
+
+          await createUpdateSection({
+            number: 1,
+            wordcount:
+              typeof podficData.wordcount === 'number'
+                ? podficData.wordcount
+                : parseInt(podficData.wordcount),
+            podfic_id: podficData.podfic_id,
+          });
+        }
+        break;
+      // if splitting chapters into smaller sections
+      // create each chapter and then create its subsections and link them
+      case SectionType.CHAPTERS_SPLIT:
+        for (const chapter of podficData.chapters) {
+          console.log({ chapter });
+          const chapter_id = (
+            await createUpdateChapter({
+              ...chapter,
+              podfic_id: podficData.podfic_id,
+            })
+          ).chapter_id;
+          console.log({ chapter_id });
+          const sectionsForChapter =
+            podficData.sections?.filter(
+              (section) =>
+                section.chapters?.[0]?.chapter_number === chapter.chapter_number
+            ) ?? [];
+          console.log({ sectionsForChapter });
+          for (const section of sectionsForChapter) {
+            const section_id = (
+              await createUpdateSection({
+                ...section,
+                podfic_id: podficData.podfic_id,
+              })
+            ).section_id;
+            console.log({ section_id });
+            await linkChapterAndSection(chapter_id, section_id);
+            console.log('linked chapter and section');
+          }
+        }
+        break;
+      // if combining multiple chapters into one section
+      // create sections and then create the chapters contained in each one
+      // and link them
+      // this will be implemented later since I don't post like this and it's annoying to implement
+      case SectionType.CHAPTERS_COMBINE:
+        console.log('combined chapters not supported yet!');
+        break;
+      // in the default case
+      // if work is chaptered create and link single chapters & sections
+      // if work is non-chaptered create a single section
+      case SectionType.DEFAULT:
+      default:
+        if (podficData.chapters?.length) {
+          for (const chapter of podficData.chapters) {
+            const chapter_id = (
+              await createUpdateChapter({
+                ...chapter,
+                podfic_id: podficData.podfic_id,
+              })
+            ).chapter_id;
+            const section_id = await createUpdateSection({
+              number: chapter.chapter_number,
+              wordcount: chapter.wordcount,
+              podfic_id: podficData.podfic_id,
+            });
+
+            await linkChapterAndSection(chapter_id, section_id);
+          }
+        } else {
+          await createUpdateSection({
+            number: 1,
+            wordcount:
+              typeof podficData.wordcount === 'number'
+                ? podficData.wordcount
+                : parseInt(podficData.wordcount),
+            podfic_id: podficData.podfic_id,
+          });
         }
     }
   } else {
@@ -447,19 +621,17 @@ export const createUpdatePodfic = async (
       length = $4,
       event_id = $5,
       ao3_link = $6,
-      posted_date = $7,
-      exclude_stats = $8,
-      type = $9,
-      giftee_id = $10,
-      deadline = $11,
-      added_date = $12,
-      posted_year = $13,
-      vt_project_id = $14,
-      series_id = $15,
-      posted_unchaptered = $16,
-      is_multivoice = $17,
-      updated_at = $18
-    WHERE podfic_id = $19
+      exclude_stats = $7,
+      type = $8,
+      giftee_id = $9,
+      deadline = $10,
+      added_date = $11,
+      vt_project_id = $12,
+      series_id = $13,
+      is_multivoice = $14,
+      section_type = $15,
+      updated_at = $16
+    WHERE podfic_id = $17
     RETURNING *
     `,
       [
@@ -469,17 +641,15 @@ export const createUpdatePodfic = async (
         podficData.length,
         podficData.event_id,
         podficData.ao3_link,
-        podficData.posted_date ? podficData.posted_date : null,
         podficData.exclude_stats,
         podficData.type,
         podficData.giftee_id,
         podficData.deadline,
         new Date(podficData.added_date),
-        podficData.posted_year,
         podficData.vt_project_id,
         podficData.series_id,
-        podficData.posted_unchaptered,
         podficData.is_multivoice,
+        podficData.section_type,
         new Date(),
         podficData.podfic_id,
       ]
@@ -513,12 +683,12 @@ export const createUpdatePodficHTML = async (podficId, htmlString) => {
   );
 };
 
-export const createUpdateChapterHTML = async (chapterId, htmlString) => {
+export const createUpdateSectionHTML = async (sectionId, htmlString) => {
   const client = await getClient();
 
   await client.query(
-    `UPDATE chapter SET html_string = $1 where chapter_id = $2`,
-    [htmlString, chapterId]
+    `UPDATE section SET html_string = $1 where section_id = $2`,
+    [htmlString, sectionId]
   );
 };
 
@@ -604,13 +774,13 @@ export const createUpdateAuthor = async (authorData): Promise<any> => {
 export const createUpdateResource = async ({
   resourceData,
   podfic_id,
-  chapter_id,
+  section_id,
   author_id,
   event_id,
 }: {
   resourceData: Resource;
   podfic_id?: number;
-  chapter_id?: number;
+  section_id?: number;
   author_id?: number;
   event_id?: number;
 }) => {
@@ -642,8 +812,8 @@ export const createUpdateResource = async ({
     if (podfic_id) {
       await joinResourcePodfic(resourceId, podfic_id, client);
     }
-    if (chapter_id) {
-      await joinResourceChapter(resourceId, chapter_id, podfic_id, client);
+    if (section_id) {
+      await joinResourceSection(resourceId, section_id, podfic_id, client);
     }
     if (author_id) {
       await joinResourceAuthor(resourceId, author_id, client);
@@ -682,14 +852,14 @@ export const createUpdateResource = async ({
         await joinResourcePodfic(resourceId, podfic_id, client);
       }
     }
-    if (chapter_id) {
-      const chapterJoinResult = await client.query(
-        `select * from resource_chapter where resource_id = $1 and chapter_id = $2`,
-        [resourceId, chapter_id]
+    if (section_id) {
+      const sectionJoinResults = await client.query(
+        `select * from resource_section where resource_id = $1 and section_id = $2`,
+        [resourceId, section_id]
       );
       // console.log({ chapterJoinResult });
-      if (!chapterJoinResult.rows?.length) {
-        await joinResourceChapter(resourceId, chapter_id, podfic_id, client);
+      if (!sectionJoinResults.rows?.length) {
+        await joinResourceSection(resourceId, section_id, podfic_id, client);
       }
     }
     if (author_id) {
@@ -726,11 +896,11 @@ export const createUpdateFile = async (fileData): Promise<any> => {
   if (!fileData.file_id) {
     const result = await client.query(
       `INSERT INTO file (
-      podfic_id, chapter_id, length, size, filetype, label, is_plain
+      podfic_id, section_id, length, size, filetype, label, is_plain
     ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
       [
         fileData.podficId,
-        fileData.chapterId,
+        fileData.sectionId,
         fileData.length,
         fileData.size,
         fileData.filetype,
@@ -830,13 +1000,13 @@ export const createUpdateNote = async (noteData: Note): Promise<any> => {
     const result = await client.query(
       `
       INSERT INTO note
-      (podfic_id, chapter_id, author_id, event_id, label, value)
+      (podfic_id, section_id, author_id, event_id, label, value)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     `,
       [
         noteData.podfic_id,
-        noteData.chapter_id,
+        noteData.section_id,
         noteData.author_id,
         noteData.event_id,
         noteData.label,
@@ -849,7 +1019,7 @@ export const createUpdateNote = async (noteData: Note): Promise<any> => {
       `
       UPDATE note SET
         podfic_id = $1,
-        chapter_id = $2,
+        section_id = $2,
         author_id = $3,
         event_id = $4,
         label = $5,
@@ -859,7 +1029,7 @@ export const createUpdateNote = async (noteData: Note): Promise<any> => {
     `,
       [
         noteData.podfic_id,
-        noteData.chapter_id,
+        noteData.section_id,
         noteData.author_id,
         noteData.event_id,
         noteData.label,
@@ -881,12 +1051,10 @@ const joinResourcePodfic = async (resourceId, podficId, client) => {
   );
 };
 
-// includes podfic id for easier grabbing by podfic.
-// is it necessary? nah but who cares tbh
-const joinResourceChapter = async (resourceId, chapterId, podficId, client) => {
+const joinResourceSection = async (resourceId, sectionId, podficId, client) => {
   await client.query(
-    `INSERT INTO resource_chapter (resource_id, chapter_id, podfic_id) VALUES ($1, $2, $3)`,
-    [resourceId, chapterId, podficId]
+    `INSERT INTO resource_section (resource_id, section_id, podfic_id) VALUES ($1, $2, $3)`,
+    [resourceId, sectionId, podficId]
   );
 };
 
@@ -1233,12 +1401,12 @@ export const createUpdateProject = async (projectData: Project) => {
   return projectResult;
 };
 
-export const saveChapterHTML = async (chapterId, htmlString) => {
+export const saveSectionHTML = async (sectionId, htmlString) => {
   const client = await getClient();
 
   await client.query(
-    `UPDATE chapter SET html_string = $1 WHERE chapter_id = $2`,
-    [htmlString, chapterId]
+    `UPDATE section SET html_string = $1 WHERE section_id = $2`,
+    [htmlString, sectionId]
   );
 };
 
@@ -1251,6 +1419,7 @@ export const savePodficHTML = async (podficId, htmlString) => {
   );
 };
 
+// TODO: update for handling sections
 export const createUpdateScheduleEvents = async (events) => {
   const client = await getClient();
 
@@ -1300,6 +1469,7 @@ export const createUpdateScheduleEvents = async (events) => {
   }
 };
 
+// TODO: update for handling sections
 export const createUpdateScheduleEvent = async (event) => {
   const client = await getClient();
 
@@ -1351,6 +1521,7 @@ export const createUpdateScheduleEvent = async (event) => {
   }
 };
 
+// TODO: update to handle w/ sections (create section for it?)
 export const createUpdatePartData = async (partData) => {
   // console.log({ partData });
 
@@ -1411,6 +1582,7 @@ export const createUpdatePartData = async (partData) => {
   }
 };
 
+// TODO: update for handling sections
 export const updatePartMinified = async (data: any) => {
   const partData = JSON.parse(data);
   // console.log({ partData });
@@ -1480,6 +1652,18 @@ export const updateTag = async (tagId: number, tagText: string) => {
   const result = await client.query(
     'UPDATE tag SET tag = $1 WHERE tag_id = $2 RETURNING *',
     [tagText, tagId]
+  );
+  return result.rows[0];
+};
+
+export const linkChapterAndSection = async (
+  chapterId: number,
+  sectionId: number
+) => {
+  const client = await getClient();
+  const result = await client.query(
+    `INSERT INTO chapter_section (chapter_id, section_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *`,
+    [chapterId, sectionId]
   );
   return result.rows[0];
 };

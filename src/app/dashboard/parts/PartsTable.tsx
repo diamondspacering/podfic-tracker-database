@@ -21,6 +21,7 @@ import { FilterType, PartStatus } from '@/app/types';
 import { HeaderCell } from '@/app/ui/table/HeaderCell';
 import CustomTable from '@/app/ui/table/CustomTable';
 
+// parts to section is one-to-many technically but we are ignoring that
 export default function PartsTable() {
   const { parts, isLoading } = useParts();
 
@@ -75,7 +76,7 @@ export default function PartsTable() {
         hidden: true,
       },
     }),
-    columnHelper.accessor('doc', {
+    columnHelper.accessor('text_link', {
       header: 'Doc',
       cell: TableCell,
       meta: {
@@ -112,7 +113,7 @@ export default function PartsTable() {
         type: 'text',
       },
     }),
-    columnHelper.accessor('words', {
+    columnHelper.accessor('wordcount', {
       header: 'Words',
       cell: TableCell,
       meta: {
@@ -193,7 +194,7 @@ export default function PartsTable() {
       id: 'add-recording-session',
       cell: (props) => (
         <Link
-          href={`/forms/recording-session/new?podfic_id=${props.row.original.podfic_id}&part_id=${props.row.original.part_id}&return_url=${pathname}`}
+          href={`/forms/recording-session/new?section_id=${props.row.original.section_id}&part_id=${props.row.original.part_id}&return_url=${pathname}`}
           onClick={(e) => e.stopPropagation()}
         >
           <Button variant='contained' style={{ padding: '0px' }}>

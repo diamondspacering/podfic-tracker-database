@@ -99,6 +99,18 @@ export default function MetadataForm({
   }, [selectedAuthorId, setMetadata]);
 
   useEffect(() => {
+    if (selectedRelationship) {
+      setMetadata((prev) => ({ ...prev, relationship: selectedRelationship }));
+    }
+  }, [selectedRelationship, setMetadata]);
+
+  useEffect(() => {
+    if (selectedCharacter) {
+      setMetadata((prev) => ({ ...prev, main_character: selectedCharacter }));
+    }
+  }, [selectedCharacter, setMetadata]);
+
+  useEffect(() => {
     const mappedFandoms = getMappedItems(
       metadata.fandomList,
       tagMappings.fandom_mapping
@@ -141,7 +153,11 @@ export default function MetadataForm({
         `/db/metadata/chapters?work_url=${encodeURIComponent(metadata.link)}`
       );
       const chapters = await chapterResult.json();
-      setMetadata((prev) => ({ ...prev, chapters }));
+      setMetadata((prev) => ({
+        ...prev,
+        chapters,
+        chapter_count: chapters.length,
+      }));
     } catch (e) {
       console.error(e);
     } finally {
@@ -215,6 +231,10 @@ export default function MetadataForm({
 
   return (
     <div className={`${styles.flexColumn} ${styles.mt1}`}>
+      <Button variant='contained' onClick={() => console.log(metadata)}>
+        Log metadata
+      </Button>
+
       {metadata.title !== null && (
         <RemovableItem
           removeCallback={() =>

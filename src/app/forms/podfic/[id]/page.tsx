@@ -8,7 +8,7 @@ import { createUpdatePodficClient } from '@/app/lib/updaters';
 import { useRouter } from 'next/navigation';
 import { LoadingButton } from '@mui/lab';
 import DurationPicker from '@/app/ui/DurationPicker';
-import { PodficType } from '@/app/types';
+import { PodficType, SectionType } from '@/app/types';
 import { usePodficcer } from '@/app/lib/swrLoaders';
 
 export default function Page({
@@ -23,6 +23,7 @@ export default function Page({
   const [podfic, setPodfic] = useState({
     type: PodficType.PODFIC,
     podficcers: [defaultPodficcer],
+    section_type: SectionType.DEFAULT,
   } as Podfic & Work);
   const [, setLoading] = useState(true);
   const router = useRouter();

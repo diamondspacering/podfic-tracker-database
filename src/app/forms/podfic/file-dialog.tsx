@@ -17,7 +17,7 @@ interface FileDialogProps {
   existingLength?: Length;
   podficId?: number;
   podficTitle?: string;
-  chapterId?: number;
+  sectionId?: number;
   file?: File;
 }
 
@@ -28,7 +28,7 @@ export default function FileDialog({
   existingLength,
   podficId,
   podficTitle,
-  chapterId,
+  sectionId,
   file: fileProp,
 }: FileDialogProps) {
   const [file, setFile] = useState(fileProp ?? getDefaultFile(existingLength));
@@ -43,7 +43,7 @@ export default function FileDialog({
     await createUpdateFile({
       file_id: file.file_id,
       podficId,
-      chapterId,
+      sectionId,
       length: file.length,
       label: file.label,
       size: file.size,
@@ -67,7 +67,7 @@ export default function FileDialog({
     file.is_plain,
     file.links,
     podficId,
-    chapterId,
+    sectionId,
     submitCallback,
     existingLength,
   ]);
@@ -84,7 +84,7 @@ export default function FileDialog({
           file={file}
           setFile={setFile}
           podficTitle={podficTitle}
-          chapterId={chapterId}
+          sectionId={sectionId}
           existingLength={existingLength}
         />
       </DialogContent>

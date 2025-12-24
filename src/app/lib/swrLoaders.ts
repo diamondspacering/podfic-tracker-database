@@ -1,5 +1,6 @@
 import useSWR from 'swr';
 import { WorkMetadata } from '../forms/podfic/metadataHelpers';
+import { getDefaultLength, SectionType } from '../types';
 export const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export const useChaptersForPodfic = (podficId) => {
@@ -10,6 +11,79 @@ export const useChaptersForPodfic = (podficId) => {
 
   return {
     chapters: (data ?? []) as Chapter[],
+    error,
+    isLoading,
+  };
+};
+
+export const useSectionsForPodfic = (podficId) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/sections/${podficId}`,
+    fetcher
+  );
+
+  return {
+    sections: (data ?? []) as Section[],
+    error,
+    isLoading,
+  };
+};
+
+export const useDefaultSectionChaptersForPodfic = ({ podficId }) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/chapters/${podficId}?section_type=${SectionType.DEFAULT}`,
+    fetcher
+  );
+
+  return {
+    sections: (data ?? []) as (Section & Chapter)[],
+    error,
+    isLoading,
+  };
+};
+
+export const usePodficChaptersWithSubSections = ({ podficId }) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/chapters/${podficId}?section_type=${SectionType.CHAPTERS_SPLIT}`,
+    fetcher
+  );
+
+  return {
+    chapters: (data ?? []) as Chapter[],
+    error,
+    isLoading,
+  };
+};
+
+export const useMaxSectionLength = ({ podficId }) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/max-section-length/${podficId}`,
+    fetcher
+  );
+
+  return {
+    maxSectionLength: (data ?? getDefaultLength()) as Length,
+    error,
+    isLoading,
+  };
+};
+
+export const useChaptersAndSectionsForPodfic = ({
+  podficId,
+  sectionType,
+}: {
+  podficId: number;
+  sectionType: SectionType;
+}) => {
+  // TODO: should the logic for which is nested in which be like. in the route or in here. I think it should be in the route tbh.
+  // oh noooo but it needs it for the data type,,,
+  const { data, error, isLoading } = useSWR(
+    ['/db/sections/', podficId, sectionType],
+    () => fetcher(`/db/sections/${podficId}?section_type=${sectionType}`)
+  );
+
+  return {
+    chaptersAndSections: (data ?? []) as (Section | Chapter)[],
     error,
     isLoading,
   };
@@ -117,13 +191,13 @@ export const useVoiceteamEvent = (id) => {
 
 const recordingSessionFetcher = async (
   podficId,
-  chapterId = null,
+  sectionId = null,
   full = false
 ) => {
   let response = null;
-  if (!!chapterId) {
+  if (!!sectionId) {
     response = await fetch(
-      `/db/recording_sessions?podfic_id=${podficId}&chapter_id=${chapterId}`
+      `/db/recording_sessions?podfic_id=${podficId}&section_id=${sectionId}`
     );
   } else if (!!full) {
     response = await fetch(
@@ -245,10 +319,10 @@ export const useScheduleEvents = ({
   };
 };
 
-export const useRecordingSessions = ({ podficId, chapterId, full }) => {
+export const useRecordingSessions = ({ podficId, sectionId, full }) => {
   const { data, error, isLoading } = useSWR(
-    ['/db/recording_sessions', podficId, chapterId, full],
-    () => recordingSessionFetcher(podficId, chapterId, full)
+    ['/db/recording_sessions', podficId, sectionId, full],
+    () => recordingSessionFetcher(podficId, sectionId, full)
   );
 
   const recordingSessions = (data ?? []) as RecordingSession[];

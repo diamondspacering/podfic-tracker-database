@@ -16,6 +16,7 @@ interface ChapterFormProps {
   fullEdit?: boolean;
 }
 
+// TODO: how is this being used?
 export default function ChapterForm({
   chapter,
   setChapter,

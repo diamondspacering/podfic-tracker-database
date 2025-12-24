@@ -6,6 +6,7 @@ import { getClient } from './db-helpers';
 import { addLengths, getLengthValue } from './lengthHelpers';
 
 // TODO: revamp these a bit because there's something deeply wrong w/ your numbers
+// TODO: also revamp these to work with sections that'll be extremely fun
 
 export const getPodficCountByYear = async () => {
   const client = await getClient();

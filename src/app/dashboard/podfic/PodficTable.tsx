@@ -29,6 +29,7 @@ import {
   arrayIncludesFilter,
   dateFilter,
   formatTableDate,
+  useFixedColorScale,
 } from '@/app/lib/utils';
 import { usePersistentState } from '@/app/lib/utilsFrontend';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -55,8 +56,10 @@ export default function PodficTable() {
     number[]
   >([]);
 
-  const lengthColorScale = new ColorScale(0, 3600, ['#ffffff', '#4285f4']);
-  const wordcountColorScale = new ColorScale(0, 150000, ['#ffffff', '#4285f4']);
+  // const lengthColorScale = new ColorScale(0, 3600, ['#ffffff', '#4285f4']);
+  const lengthColorScale = useFixedColorScale(3600);
+  const wordcountColorScale = useFixedColorScale(150000);
+  // const wordcountColorScale = new ColorScale(0, 150000, ['#ffffff', '#4285f4']);
 
   const columnHelper = createColumnHelper<Podfic & Work & Fandom & Event>();
   const [columnFilters, setColumnFilters] =
@@ -410,6 +413,25 @@ export default function PodficTable() {
       },
       filterFn: dateFilter,
     }),
+    columnHelper.display({
+      id: 'posted',
+      header: (props) => <HeaderCell text='Posted' {...props} />,
+      cell: ({ row, ...rest }) => {
+        const getValue = () => {
+          const sortedSections = row.original.sections?.sort(
+            (a, b) =>
+              new Date(a.posted_date ?? '').getTime() -
+              new Date(b.posted_date ?? '').getTime()
+          );
+          console.log({ sortedSections });
+          const latestSectionDate = sortedSections?.[0].posted_date;
+          if (editingRowId !== row.id) return latestSectionDate;
+          else
+            return formatTableDate(latestSectionDate, editingRowId === row.id);
+        };
+        return <TableCell getValue={getValue} row={row} {...rest} />;
+      },
+    }),
     columnHelper.accessor('ao3_link', {
       header: 'Link',
       cell: TableCell,
@@ -510,6 +532,7 @@ export default function PodficTable() {
     columnHelper.display({
       id: 'generate-html',
       cell: (props) => (
+        // TODO: fix this to work w/ sections
         <Link href={`/dashboard/html?podfic_id=${props.row.id}`}>
           <Button style={{ padding: '0px' }} variant='contained'>
             HTML
@@ -531,6 +554,7 @@ export default function PodficTable() {
 
   const updatePodfic = async (podfic: Podfic & Work & Fandom) => {
     try {
+      // TODO: work on that correctly. also that may be worth duplicating idk
       await updatePodficMinified(
         JSON.stringify({
           podfic_id: podfic.podfic_id,

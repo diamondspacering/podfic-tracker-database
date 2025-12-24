@@ -42,7 +42,7 @@ import {
 } from '@/app/lib/defaultColumnFilters';
 import { filterActivated } from '@/app/lib/utils';
 
-interface CustomTableProps<T> {
+export interface CustomTableProps<T> {
   isLoading: boolean;
   data: T[];
   columns: any[];
@@ -51,14 +51,18 @@ interface CustomTableProps<T> {
   showRowCount?: boolean;
   numLoadingRows?: number;
 
+  // styling
+  rowClassName?: string;
+
   // editing
-  editingRowId: string | null;
-  setEditingRowId: Dispatch<SetStateAction<string | null>>;
-  updateItemInline: (item: T) => Promise<void>;
+  // TODO: make this optional
+  editingRowId?: string | null;
+  setEditingRowId?: Dispatch<SetStateAction<string | null>>;
+  updateItemInline?: (item: T) => Promise<void>;
 
   // filtering
-  columnFilters: ColumnFiltersState;
-  setColumnFilters: Dispatch<SetStateAction<ColumnFiltersState>>;
+  columnFilters?: ColumnFiltersState;
+  setColumnFilters?: Dispatch<SetStateAction<ColumnFiltersState>>;
   showClearFilters?: boolean;
   showResetDefaultFilters?: boolean;
   globalFilterFn?: FilterFnOption<T>;
@@ -85,11 +89,12 @@ export default function CustomTable<T>({
   rowKey,
   rowCanExpand,
   rowsAlwaysExpanded,
-  editingRowId,
-  setEditingRowId,
+  rowClassName,
+  editingRowId = null,
+  setEditingRowId = () => {},
   initialState,
-  columnFilters,
-  setColumnFilters,
+  columnFilters = [],
+  setColumnFilters = () => {},
   showClearFilters = false,
   showResetDefaultFilters = false,
   globalFilterFn,
@@ -97,7 +102,7 @@ export default function CustomTable<T>({
   showColumnVisibility = false,
   columnVisibility = {},
   setColumnVisibility = () => {},
-  updateItemInline,
+  updateItemInline = async () => {},
   showRowCount = false,
   getExpandedContent = () => <></>,
   getSubRows,
@@ -297,7 +302,7 @@ export default function CustomTable<T>({
                   key={row.id}
                   className={`${tableStyles.clickable} ${
                     row.getIsSelected() ? tableStyles.selected : ''
-                  }`}
+                  } ${rowClassName ? rowClassName : ''}`}
                   onClick={row.getToggleSelectedHandler()}
                 >
                   {row.getVisibleCells().map((cell) => (

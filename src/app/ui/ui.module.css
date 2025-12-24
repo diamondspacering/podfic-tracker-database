@@ -1,3 +1,16 @@
+.detailsWrapper {
+  border: 1px solid gray;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.detailsWrapperHeader {
+  display: flex;
+  flex-direction: row;
+  cursor: pointer;
+  width: fit-content;
+}
+
 .roundBadge {
   border-radius: 50px;
   width: fit-content;

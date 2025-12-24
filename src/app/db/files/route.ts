@@ -7,15 +7,16 @@ export async function GET(request: NextRequest) {
   const client = await getClient();
   const searchParams = request.nextUrl.searchParams;
   const podficId = searchParams.get('podfic_id');
+  const sectionId = searchParams.get('section_id');
   const chapterId = searchParams.get('chapter_id');
   const withChapters = searchParams.get('with_chapters');
   const onlyNonAAFiles = searchParams.get('only_non_aa_files');
 
   let fileResult = {} as any;
 
-  if (chapterId && chapterId !== 'null') {
+  if (sectionId && sectionId !== 'null') {
     fileResult = await client.query(`
-      select * from file where file.chapter_id = ${chapterId}
+      select * from file where file.section_id = ${sectionId}
     `);
   } else {
     if (withChapters && withChapters === 'true') {
@@ -35,8 +36,9 @@ export async function GET(request: NextRequest) {
           [podficId]
         );
     } else {
+      // TODO: oh no we need a better way to indicate what's a summary/general podfic file vs a section/chapter file
       fileResult = await client.query(`
-        select * from file where file.podfic_id = ${podficId} and file.chapter_id is null
+        select * from file where file.podfic_id = ${podficId} and file.section_id is null
       `);
     }
   }

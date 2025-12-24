@@ -13,7 +13,7 @@ interface ResourceDialogProps {
   resourceId?: number;
   resource?: Resource;
   podfic_id?: number;
-  chapter_id?: number;
+  section_id?: number;
   event_id?: number;
   author_id?: number;
   isOpen: boolean;
@@ -25,7 +25,7 @@ export default function ResourceDialog({
   resourceId,
   resource: resourceProp,
   podfic_id,
-  chapter_id,
+  section_id,
   event_id,
   author_id,
   isOpen,
@@ -56,7 +56,7 @@ export default function ResourceDialog({
       await createUpdateResource({
         resourceData: resource,
         podfic_id,
-        chapter_id,
+        section_id,
         event_id,
         author_id,
       });
@@ -65,7 +65,7 @@ export default function ResourceDialog({
     } catch (e) {
       console.error('Error submitting resource:', e);
     }
-  }, [author_id, chapter_id, event_id, podfic_id, resource, submitCallback]);
+  }, [author_id, section_id, event_id, podfic_id, resource, submitCallback]);
 
   return (
     <Dialog

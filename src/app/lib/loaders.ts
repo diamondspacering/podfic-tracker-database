@@ -26,6 +26,7 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
   const coverArtResult = await client.query(
     'select *,status as cover_art_status from cover_art'
   );
+  const sectionResult = await client.query('select * from section');
   const chapterResult = await client.query('select * from chapter');
   const partResult = await client.query('select * from part');
   // console.log('parts', partResult.rows);
@@ -42,49 +43,34 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
   let podfics = result.rows;
   podfics = podfics.map((podfic) =>
     // TODO: parts for these too
-    podfic.chaptered
-      ? {
-          ...podfic,
-          chapters: chapterResult.rows.filter(
-            (chapter) => chapter.podfic_id === podfic.podfic_id
-          ),
-          coverArt:
-            coverArtResult.rows.find(
-              (coverArt) => coverArt.podfic_id === podfic.podfic_id
-            ) ?? null,
-          notes: noteResult.rows.filter(
-            (note) => note.podfic_id === podfic.podfic_id
-          ),
-          resources: resourceResult.rows.filter(
-            (resource) => resource.podfic_id === podfic.podfic_id
-          ),
-          tags: tagResult.rows.filter(
-            (tag) => tag.podfic_id === podfic.podfic_id
-          ),
-        }
-      : {
-          ...podfic,
-          coverArt:
-            coverArtResult.rows.find(
-              (coverArt) => coverArt.podfic_id === podfic.podfic_id
-            ) ?? null,
-          parts: partResult.rows.filter(
-            (part) => part.podfic_id === podfic.podfic_id
-          ),
-          notes: noteResult.rows.filter(
-            (note) => note.podfic_id === podfic.podfic_id
-          ),
-          resources: resourceResult.rows.filter(
-            (resource) => resource.podfic_id === podfic.podfic_id
-          ),
-          tags: tagResult.rows.filter(
-            (tag) => tag.podfic_id === podfic.podfic_id
-          ),
-        }
+    ({
+      ...podfic,
+      sections: sectionResult.rows.filter(
+        (section) => section.podfic_id === podfic.podfic_id
+      ),
+      chapters: chapterResult.rows.filter(
+        (chapter) => chapter.podfic_id === podfic.podfic_id
+      ),
+      parts: partResult.rows.filter(
+        (part) => part.podfic_id === podfic.podfic_id
+      ),
+      coverArt:
+        coverArtResult.rows.find(
+          (coverArt) => coverArt.podfic_id === podfic.podfic_id
+        ) ?? null,
+      notes: noteResult.rows.filter(
+        (note) => note.podfic_id === podfic.podfic_id
+      ),
+      resources: resourceResult.rows.filter(
+        (resource) => resource.podfic_id === podfic.podfic_id
+      ),
+      tags: tagResult.rows.filter((tag) => tag.podfic_id === podfic.podfic_id),
+    })
   );
 
   if (onlyNonAAPodfics) {
     console.log('getting podfics');
+    // TODO: more refined search? some files don't need aa links
     const allFilesMissingAALinks = (
       await client.query(`
       SELECT file.file_id,podfic_id,chapter_id,length,size,filetype,label,is_plain,string_agg(host, ',') from file
@@ -203,6 +189,7 @@ export const fetchVoiceteams = async () => {
 export const fetchRecordedToday = async () => {
   const client = await getClient();
 
+  // TODO: refine this it'll grab yesterday's
   const result = await client.query(`
     select sum(length), count(length), date from recording_session where date > current_date - interval '2 days' group by date order by date desc;
   `);

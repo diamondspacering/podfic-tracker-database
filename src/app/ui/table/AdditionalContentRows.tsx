@@ -99,7 +99,7 @@ export default function AdditionalContentRows({
         }}
         author_id={author_id}
         podfic_id={podfic_id}
-        chapter_id={chapter_id}
+        section_id={chapter_id}
         event_id={event_id}
         note={selectedNote}
       />
@@ -116,7 +116,6 @@ export default function AdditionalContentRows({
         }}
         author_id={author_id}
         podfic_id={podfic_id}
-        chapter_id={chapter_id}
         event_id={event_id}
         resource={selectedResource}
       />

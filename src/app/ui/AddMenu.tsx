@@ -13,6 +13,7 @@ import CoverArtDialog from './cover-art/cover-art-dialog';
 interface AddMenuProps {
   podficId?: number;
   podficTitle?: string;
+  sectionId?: number;
   chapterId?: number;
   authorId?: number;
   eventId?: number;
@@ -23,6 +24,7 @@ interface AddMenuProps {
 
 export default function AddMenu({
   podficId,
+  sectionId,
   chapterId,
   authorId,
   eventId,
@@ -46,6 +48,7 @@ export default function AddMenu({
   const [coverArtFormOpen, setCoverArtFormOpen] = useState(false);
   const [noteFormOpen, setNoteFormOpen] = useState(false);
 
+  // TODO: add section ids to all of these
   return (
     <>
       <CoverArtDialog
@@ -68,7 +71,7 @@ export default function AddMenu({
         existingLength={length}
         podficId={podficId}
         podficTitle={podficTitle}
-        chapterId={chapterId}
+        sectionId={sectionId}
       />
       <ResourceDialog
         isOpen={resourceFormOpen}
@@ -78,7 +81,7 @@ export default function AddMenu({
           submitCallback?.();
         }}
         podfic_id={podficId}
-        chapter_id={chapterId}
+        section_id={sectionId}
         author_id={authorId}
         event_id={eventId}
       />
@@ -90,7 +93,7 @@ export default function AddMenu({
           submitCallback?.();
         }}
         podfic_id={podficId}
-        chapter_id={chapterId}
+        section_id={chapterId}
         author_id={authorId}
         event_id={eventId}
       />

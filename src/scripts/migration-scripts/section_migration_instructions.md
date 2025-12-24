@@ -1,0 +1,12 @@
+- Back up your data
+- Create new tables and fields, update functions, etc.
+- Manually make sure everything is marked as posted_unchaptered that should be - it's possible this is inaccurate
+  - The new view helps w/ this
+- Run the code to update podfic section types, or rerun the code to set multiple-to-single after correcting posted_unchaptered if you already did it
+- Delete old functions & triggers
+- Run the code to create default & multiple-to-single podfic sections
+- Back up your data again just in case
+- Run the code to remove old fields (TODO: does this need to be forced or something? didn't love me running things) and make necessary fields required (I don't know if any of them are? shouldn't be required on files tbh) and delete old tables
+- Check that everything looks ok
+  - `SELECT resource_id from resource_chapter WHERE resource_id not in (select resource_id from resource_section);`
+- Consider finagling to reset things so fields are in a "better" order but like who cares organizing the data is difficult

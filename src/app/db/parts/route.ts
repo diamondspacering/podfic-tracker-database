@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   const client = await getClient();
 
+  // TODO: there's prob changes here bc of sections
   const result = await client.query(
     `select part.part_id,part.podfic_id,part.chapter_id,doc,audio_link,username,part,part.words as words,part.type as type,part.length as length,part.raw_length as raw_length,part.status as status,work.title as title,event.name as event_name from part
       left join podficcer on podficcer.podficcer_id = part.organizer

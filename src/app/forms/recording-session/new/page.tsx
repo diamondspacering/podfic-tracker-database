@@ -10,6 +10,9 @@ export default function Page({ searchParams }) {
     ? parseInt(searchParams.chapter_id)
     : null;
   const partId = searchParams.part_id ? parseInt(searchParams.part_id) : null;
+  const sectionId = searchParams.section_id
+    ? parseInt(searchParams.section_id)
+    : null;
   const returnUrl = searchParams.return_url;
 
   return (
@@ -19,6 +22,7 @@ export default function Page({ searchParams }) {
         podfic_id={podficId}
         chapter_id={chapterId}
         part_id={partId}
+        section_id={sectionId}
         returnUrl={returnUrl}
       />
     </div>

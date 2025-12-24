@@ -66,10 +66,17 @@ export async function GET(
     podfic.tags = tagResult.rows ?? [];
   }
 
+  // TODO: does this need sections,
   const chapterResult = await client.query(
     `select * from chapter where chapter.podfic_id = ${id} order by chapter_number asc`
   );
-  if (podfic) podfic.chapters = chapterResult.rows;
+  const sectionResult = await client.query(
+    `select * from section where section.podfic_id = ${id} order by number asc`
+  );
+  if (podfic) {
+    podfic.chapters = chapterResult.rows;
+    podfic.sections = sectionResult.rows;
+  }
 
   return NextResponse.json(podfic ?? {});
 }

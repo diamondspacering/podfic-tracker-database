@@ -10,13 +10,14 @@ import {
   PodficStatus,
   PermissionStatus,
   PartStatus,
+  SectionType,
 } from '../types';
 import ColorScale from 'color-scales';
 import { getLengthValue } from './lengthHelpers';
 
 // TODO: still running into issues w/ this, try again
 // editingRowVal param?
-export const formatTableDate = (date: string, isEditingRow: boolean) => {
+export const formatTableDate = (date: any, isEditingRow: boolean) => {
   let formattedDate = '';
   if (isEditingRow)
     formattedDate = date
@@ -101,6 +102,10 @@ export const useColorScale = (data: any[], propertyName: string) => {
   return colorScale;
 };
 
+export const useFixedColorScale = (max: number) => {
+  return new ColorScale(0, max, ['#ffffff', '#4285f4']);
+};
+
 export const useLengthColorScale = (data: any[], propertyName: string) => {
   const colorScale = useMemo(
     () =>
@@ -175,4 +180,25 @@ export const dateFilter = (row, columnId, filterValue) => {
   }
 
   return matchesDate;
+};
+
+export const getDefaultColumnVisibility = (columns: any[]) => {
+  return columns.reduce((acc, column) => {
+    if ((column.meta as any)?.hidden && (column as any)?.accessorKey) {
+      acc[(column as any).accessorKey as string] = false;
+    }
+    return acc;
+  }, {});
+};
+
+// TODO: single to multiple???
+export const getIsPostedChaptered = (
+  sectionType: SectionType,
+  chaptered: boolean
+) => {
+  return (
+    (sectionType === SectionType.DEFAULT && chaptered) ||
+    sectionType === SectionType.CHAPTERS_COMBINE ||
+    sectionType === SectionType.CHAPTERS_SPLIT
+  );
 };
