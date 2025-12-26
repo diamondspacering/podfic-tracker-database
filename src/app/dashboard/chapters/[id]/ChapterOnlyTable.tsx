@@ -10,11 +10,11 @@ import AddMenu from '@/app/ui/AddMenu';
 import { EditCell } from '@/app/ui/table/EditCell';
 import { usePathname } from 'next/navigation';
 import CustomTable from '@/app/ui/table/CustomTable';
-import { ChapterTableContext } from './ChapterTable';
 import {
   getDefaultColumnVisibility,
   useLengthColorScale,
 } from '@/app/lib/utils';
+import { ChapterTableContext } from './ChapterTableContext';
 
 export default function ChapterOnlyTable() {
   const {
@@ -25,13 +25,13 @@ export default function ChapterOnlyTable() {
     podficId,
     podficTitle,
   } = useContext(ChapterTableContext);
-  const { sections, isLoading } = useDefaultSectionChaptersForPodfic({
+  const { sections, isLoading, mutate } = useDefaultSectionChaptersForPodfic({
     podficId,
   });
 
   const pathname = usePathname();
 
-  const { mainColumns } = useChapterColumns();
+  const { mainColumns } = useChapterColumns({});
   const { metaColumns, postingColumns } = useSectionColumns({
     sections,
     editingRowId,
@@ -70,7 +70,6 @@ export default function ChapterOnlyTable() {
             podficTitle={podficTitle}
             podficId={props.row.getValue('podfic_id')}
             sectionId={props.row.getValue('section_id')}
-            chapterId={props.row.getValue('chapter_id')}
             length={props.row.getValue('length')}
             options={['file', 'resource', 'note']}
           />
@@ -141,9 +140,9 @@ export default function ChapterOnlyTable() {
       setColumnVisibility={setColumnVisibility}
       updateItemInline={async (section) => {
         console.log(section);
+        // await mutate();
         // await updateChapterSection(section);
       }}
-      // well this crashes,
       getExpandedContent={(row) =>
         getExpandedContentCellComponent(lengthColorScale, row)
       }

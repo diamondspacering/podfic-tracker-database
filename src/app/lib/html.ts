@@ -332,7 +332,9 @@ export const generateHTMLAzdaema = (
       ? `${podfic.nickname ?? podfic.title} ${getSectionName({
           section,
           sectionType: podfic.section_type,
-        })}`
+        })
+          .charAt(0)
+          .toLowerCase()}`
       : podfic.nickname ?? podfic.title
   }</a></li>`;
   htmlString += `<li><b>Author:</b> <a href="${podfic.ao3}">${podfic.username}</a></li>`;

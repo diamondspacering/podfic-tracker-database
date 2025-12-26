@@ -69,7 +69,44 @@ export default function HtmlPage() {
     [podfic.chaptered, sectionType]
   );
 
-  const [isLoading, setIsLoading] = useState(true);
+  // -- Loading State --
+  const [podficLoading, setPodficLoading] = useState(true);
+  const [sectionLoading, setSectionLoading] = useState(true);
+  const [chapterLoading, setChapterLoading] = useState(true);
+  const [filesLoading, setFilesLoading] = useState(true);
+  const [resourcesLoading, setResourcesLoading] = useState(true);
+  const isLoading = useMemo(
+    () =>
+      podficLoading ||
+      sectionLoading ||
+      chapterLoading ||
+      filesLoading ||
+      resourcesLoading,
+    [
+      chapterLoading,
+      filesLoading,
+      podficLoading,
+      resourcesLoading,
+      sectionLoading,
+    ]
+  );
+  useEffect(
+    () =>
+      console.log({
+        podficLoading,
+        sectionLoading,
+        chapterLoading,
+        filesLoading,
+        resourcesLoading,
+      }),
+    [
+      chapterLoading,
+      filesLoading,
+      podficLoading,
+      resourcesLoading,
+      sectionLoading,
+    ]
+  );
 
   // -- HTML Generation --
   const [selectedTemplate, setSelectedTemplate] = useState('');
@@ -96,12 +133,12 @@ export default function HtmlPage() {
     searchParams.set('podfic_id', podficId ? podficId.toString() : 'null');
     searchParams.set('chapter_id', chapterId ? chapterId.toString() : 'null');
 
-    if (isPostedChaptered) {
+    if (isPostedChaptered && !!podfic.ao3_link) {
       const url = new URL(
         `${
-          section.ao3_link.slice(-1) === '/'
-            ? section.ao3_link
-            : `${section.ao3_link}/`
+          podfic.ao3_link.slice(-1) === '/'
+            ? podfic.ao3_link
+            : `${podfic.ao3_link}/`
         }chapters/new`
       );
       url.search = searchParams.toString();
@@ -117,7 +154,7 @@ export default function HtmlPage() {
     podficId,
     chapterId,
     isPostedChaptered,
-    section.ao3_link,
+    podfic.ao3_link,
     podfic.link,
   ]);
 
@@ -130,128 +167,120 @@ export default function HtmlPage() {
   useEffect(() => setSectionType(podfic.section_type), [podfic.section_type]);
 
   const fetchPodfic = useCallback(async (podficId) => {
-    const response = await fetch(
-      `/db/podfics/${podficId}?with_cover_art=true&with_author=true&with_podficcers=true`
-    );
-    const data = await response.json();
-    setPodfic(data);
-    // if (data.html_string) {
-    //   console.log('setting generated html from podfic html');
-    //   setGeneratedHTML(podfic.html_string);
-    // }
+    setPodficLoading(true);
+    if (podficId) {
+      const response = await fetch(
+        `/db/podfics/${podficId}?with_cover_art=true&with_author=true&with_podficcers=true`
+      );
+      const data = await response.json();
+      setPodfic(data);
+      setPodficLoading(false);
+      return data;
+    }
+    setPodficLoading(false);
   }, []);
 
-  const fetchSection = useCallback(
-    async (sectionId) => {
+  const fetchChapter = useCallback(async (chapterId) => {
+    setChapterLoading(true);
+    // different endpoint than for all chapters in the podfic!
+    if (chapterId) {
+      const response = await fetch(`/db/chapters?chapter_id=${chapterId}`);
+      const data = await response.json();
+      setChapter(data);
+    }
+    setChapterLoading(false);
+  }, []);
+
+  const fetchSection = useCallback(async (sectionId) => {
+    setSectionLoading(true);
+    if (sectionId) {
       const response = await fetch(`/db/sections/${sectionId}`);
       const data = await response.json();
       setSection(data);
       if (data.html_string) {
         console.log('setting generated html from section');
-        setGeneratedHTML(section.html_string);
+        setGeneratedHTML(data.html_string);
       }
 
-      if (!Object.keys(podfic).length) {
-        await fetchPodfic(data.podfic_id);
+      if (data.podfic_id) {
+        setPodficId(data.podfic_id);
       }
-    },
-    [section.html_string]
-  );
 
-  const fetchChapter = useCallback(async (chapterId) => {
-    // different endpoint than for all chapters in the podfic!
-    const response = await fetch(`/db/chapters?chapter_id=${chapterId}`);
-    const data = await response.json();
-    setChapter(data);
-    // if (data.html_string) {
-    //   console.log('setting generated html from chapter html');
-    //   setGeneratedHTML(chapter.html_string);
-    // }
+      if (data.chapters?.length) {
+        setChapterId(data.chapters[0].chapter_id);
+      }
+    }
+    setSectionLoading(false);
   }, []);
 
-  // const fetchFiles = useCallback(async (podficId, chapterId) => {
-  //   console.log('fetchfiles running');
-  //   let response = null;
-  //   if (!chapterId)
-  //     response = await fetch(
-  //       `/db/files?podfic_id=${podficId}&with_chapters=true`
-  //     );
-  //   else
-  //     response = await fetch(
-  //       `/db/files?podfic_id=${podficId}&chapter_id=${chapterId}`
-  //     );
-  //   const data = await response.json();
-  //   setFiles(data);
-  // }, []);
   const fetchFiles = useCallback(async (podficId, sectionId) => {
-    console.log('fetchfiles running');
-    let response = null;
-    if (!sectionId) {
-      response = await fetch(
-        `/db/files?podfic_id=${podficId}&with_chapters=true`
-      );
-    } else {
-      response = await fetch(
-        `/db/files?podfic_id=${podficId}&section_id=${sectionId}`
-      );
+    setFilesLoading(true);
+    if (podficId) {
+      console.log('fetchfiles running');
+      let response = null;
+      if (!sectionId) {
+        response = await fetch(
+          `/db/files?podfic_id=${podficId}&with_chapters=true`
+        );
+      } else {
+        response = await fetch(
+          `/db/files?podfic_id=${podficId}&section_id=${sectionId}`
+        );
+      }
+      const data = await response.json();
+      setFiles(data);
     }
-    const data = await response.json();
-    setFiles(data);
+    setFilesLoading(false);
   }, []);
 
   const fetchResources = useCallback(async (podficId, sectionId) => {
-    console.log('fetchresources running');
-    let response = null;
-    if (!sectionId)
-      response = await fetch(
-        `/db/resources?podfic_id=${podficId}&with_chapters=true`
-      );
-    else
-      response = await fetch(
-        `/db/resources?podfic_id=${podficId}&section_id=${sectionId}`
-      );
-    const data = await response.json();
-    setResources(data);
+    setResourcesLoading(true);
+    if (podficId) {
+      console.log('fetchresources running');
+      let response = null;
+      if (!sectionId)
+        response = await fetch(
+          `/db/resources?podfic_id=${podficId}&with_chapters=true`
+        );
+      else
+        response = await fetch(
+          `/db/resources?podfic_id=${podficId}&section_id=${sectionId}`
+        );
+      const data = await response.json();
+      setResources(data);
+    }
+    setResourcesLoading(false);
   }, []);
 
+  useEffect(() => {
+    fetchPodfic(podficId);
+  }, [fetchPodfic, podficId]);
+
+  useEffect(() => {
+    fetchChapter(chapterId);
+  }, [chapterId, fetchChapter]);
+
+  useEffect(() => {
+    fetchSection(sectionId);
+  }, [fetchSection, sectionId]);
+
+  useEffect(() => {
+    fetchFiles(podficId, sectionId);
+    fetchResources(podficId, sectionId);
+  }, [fetchFiles, fetchResources, podficId, sectionId]);
+
   const updateData = useCallback(async () => {
-    setIsLoading(true);
     const params = new URLSearchParams(searchParams);
     const podficId = parseInt(params.get('podfic_id'));
     const sectionId = parseInt(params.get('section_id'));
     const chapterId = parseInt(params.get('chapter_id'));
-    console.log({ podficId, chapterId });
 
-    if (isNaN(podficId)) setPodfic({} as PodficFull);
-    else await fetchPodfic(podficId);
     setPodficId(isNaN(podficId) ? null : podficId);
 
-    if (isNaN(chapterId)) setChapter({} as Chapter);
-    else await fetchChapter(chapterId);
     setChapterId(isNaN(chapterId) ? null : chapterId);
 
-    if (isNaN(sectionId)) setSection({} as Section);
-    else await fetchSection(sectionId);
     setSectionId(isNaN(sectionId) ? null : sectionId);
-
-    await fetchFiles(
-      isNaN(podficId) ? null : podficId,
-      isNaN(sectionId) ? null : sectionId
-    );
-    await fetchResources(
-      isNaN(podficId) ? null : podficId,
-      isNaN(sectionId) ? null : sectionId
-    );
-
-    setIsLoading(false);
-  }, [
-    searchParams,
-    fetchPodfic,
-    fetchSection,
-    fetchChapter,
-    fetchFiles,
-    fetchResources,
-  ]);
+  }, [searchParams]);
 
   useEffect(() => {
     updateData();

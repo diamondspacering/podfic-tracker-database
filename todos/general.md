@@ -39,6 +39,8 @@
   - [ ] Check if any processing is needed on posted date
   - [ ] Should files expanded state be in AdditionalContentRows?
   - [ ] Pull in resources in podfic loader for AdditionalContentRows
+  - [ ] Filtering on dates
+  - [ ] Filtering on chaptered/chapter numbers
 - SchedulePage.tsx
   - [ ] Set up automatic triggers to create schedule events for deadlines (partially implemented)
     - make sure you know how date is being sent
@@ -61,6 +63,7 @@
   - [ ] Just custom enum types and filters for rating/statuses/etc.
 - Voiceteam
   - [ ] Figure out how to make buttons on overview page sticky instead of replicating add challenge button at the bottom
+  - [ ] Actually create voiceteam_events in application
   - VoiceteamResourcesTable.tsx
     - [ ] Can you use the custom ExternalLink component for the link column?
   - [ ] Gernally improve points update methods, etc., origIndex is cursed. Scared of breaking it though
@@ -75,6 +78,8 @@
   - [ ] Custom row at bottom might be best for own functions, render them all in bold?
 - [x] Make metadata pulling actually set number of chapters as well
 - [ ] Make filters update when data is updated (e.g., new author) - prob have more `null` support?
+- [x] Podfic deletion
+- [ ] Actually use giftee_id and designating a podficcer who something is gifted to
 
 ## Routes
 

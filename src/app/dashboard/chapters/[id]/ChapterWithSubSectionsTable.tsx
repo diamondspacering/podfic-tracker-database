@@ -1,31 +1,23 @@
-import { usePathname } from 'next/navigation';
 import useChapterColumns from './useChapterColumns';
-import {
-  useMaxSectionLength,
-  usePodficChaptersWithSubSections,
-} from '@/app/lib/swrLoaders';
+import { usePodficChaptersWithSubSections } from '@/app/lib/swrLoaders';
 import { useContext, useState } from 'react';
-import { ChapterTableContext } from './ChapterTable';
 import {
   getDefaultColumnVisibility,
   useFixedColorScale,
-  useLengthColorScale,
 } from '@/app/lib/utils';
 import { createColumnHelper } from '@tanstack/react-table';
 import { EditCell } from '@/app/ui/table/EditCell';
 import CustomTable from '@/app/ui/table/CustomTable';
 import SectionOnlyTable from './SectionOnlyTable';
-import { getLengthValue } from '@/app/lib/lengthHelpers';
+import { ChapterTableContext } from './ChapterTableContext';
 
 export default function ChapterWithSubSectionsTable() {
   const { podficId, getDefaultTableProps } = useContext(ChapterTableContext);
-  const { chapters, isLoading } = usePodficChaptersWithSubSections({
+  const { chapters, isLoading, mutate } = usePodficChaptersWithSubSections({
     podficId,
   });
 
-  const pathname = usePathname();
-
-  const { mainColumns } = useChapterColumns();
+  const { mainColumns } = useChapterColumns({ longChapterNumber: true });
 
   const [columnVisibility, setColumnVisibility] = useState(
     getDefaultColumnVisibility(mainColumns)
@@ -35,8 +27,12 @@ export default function ChapterWithSubSectionsTable() {
 
   // TODO: hmmm you can't do that chapters don't got length any more. a fixed max? alternately getting the max len from a select?
   // const lengthColorScale = useLengthColorScale(chapters, 'length');
-  const { maxSectionLength } = useMaxSectionLength({ podficId });
-  const lengthColorScale = useFixedColorScale(getLengthValue(maxSectionLength));
+  // TODO: fix this
+  // const { maxSectionLength } = useMaxSectionLength({ podficId });
+  // const lengthColorScale = useFixedColorScale(
+  //   getLengthValue(maxSectionLength) ? getLengthValue(maxSectionLength) : 1
+  // );
+  const lengthColorScale = useFixedColorScale(1);
 
   const chapterColumns = [
     ...mainColumns,
@@ -69,21 +65,12 @@ export default function ChapterWithSubSectionsTable() {
             colSpan={row.getVisibleCells().length}
             style={{ paddingLeft: '5px' }}
           >
-            {/* <CustomTable
-          isLoading={isLoading}
-          data={row.original.sections}
-          // TODO: uh oh! my hook needs the data! optional fixed??
-          columns={[]}
-          rowKey='section_id'
-          showColumnVisibility={false}
-          // TODO: this needs its own context my evil and beloathed child
-        /> */}
             <SectionOnlyTable
               sections={row.original.sections ?? []}
               isLoading={isLoading}
-              submitCallback={() => {
+              submitCallback={async () => {
                 console.log('submit callback');
-                // put mutate here
+                await mutate();
               }}
               lengthColorScale={lengthColorScale}
             />

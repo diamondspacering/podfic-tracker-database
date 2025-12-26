@@ -1,15 +1,10 @@
-import { arrayIncludesFilter } from '@/app/lib/utils';
-import { FilterType, PodficStatus } from '@/app/types';
-import { EditCell } from '@/app/ui/table/EditCell';
-import { HeaderCell } from '@/app/ui/table/HeaderCell';
 import { TableCell } from '@/app/ui/table/TableCell';
 import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
-export default function useChapterColumns() {
+export default function useChapterColumns({ longChapterNumber = false }) {
   const columnHelper = createColumnHelper<Chapter>();
 
-  // hmmm should these be in multiple parts. to split up different bits.
   const mainColumns = useMemo(
     () => [
       columnHelper.accessor('chapter_id', {
@@ -30,18 +25,14 @@ export default function useChapterColumns() {
           hidden: true,
         },
       }),
-      columnHelper.accessor('chapter_title', {
-        header: 'Title',
-        cell: TableCell,
-        meta: {
-          type: 'text',
-        },
-      }),
       columnHelper.accessor('chapter_number', {
         header: 'Number',
-        cell: (props) => (
+        cell: ({ getValue, ...rest }) => (
           <TableCell
-            {...props}
+            getValue={() =>
+              longChapterNumber ? `Chapter ${getValue()}` : getValue()
+            }
+            {...rest}
             extraFieldParams={{
               sx: {
                 width: '50px',
@@ -51,6 +42,13 @@ export default function useChapterColumns() {
         ),
         meta: {
           type: 'number',
+        },
+      }),
+      columnHelper.accessor('chapter_title', {
+        header: 'Title',
+        cell: TableCell,
+        meta: {
+          type: 'text',
         },
       }),
       // columnHelper.accessor('link', {
@@ -69,7 +67,7 @@ export default function useChapterColumns() {
       // }),
       // TODO: should there be an add related that adds to all sections....?
     ],
-    [columnHelper]
+    [columnHelper, longChapterNumber]
   );
 
   return { mainColumns };

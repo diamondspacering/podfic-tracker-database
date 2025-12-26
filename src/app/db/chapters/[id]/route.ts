@@ -77,6 +77,8 @@ export async function GET(
         }
         chapter.sections = sections;
       }
+
+      return NextResponse.json(chapters ?? []);
     // TODO: chapters_combine - I don't use this much so I can put in support later
     default:
       return NextResponse.json([]);

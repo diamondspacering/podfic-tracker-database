@@ -1,5 +1,5 @@
 import { createColumnHelper } from '@tanstack/react-table';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { TableCell } from './TableCell';
 import tableStyles from '@/app/ui/table/table.module.css';
 import {
@@ -21,12 +21,12 @@ export default function FileTable({
   podficId,
   podficTitle,
   onlyNonAAFiles = false,
-  chapterId,
+  sectionId,
   lengthColorScale = null,
 }) {
   const { files, isLoading } = useFiles({
     podficId,
-    chapterId,
+    sectionId,
     onlyNonAAFiles,
   });
 

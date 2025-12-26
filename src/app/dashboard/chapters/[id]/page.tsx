@@ -4,5 +4,11 @@ import ChapterTable from './ChapterTable';
 export default async function Page({ params }: { params: { id: any } }) {
   const podfic = await fetchPodfic(params.id);
 
-  return <ChapterTable podficId={params.id} podficTitle={podfic.title} />;
+  return (
+    <ChapterTable
+      podficId={params.id}
+      podficTitle={podfic.title}
+      sectionType={podfic.section_type}
+    />
+  );
 }

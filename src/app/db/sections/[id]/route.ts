@@ -23,7 +23,6 @@ export async function GET(
     [sectionId]
   );
   const section = result.rows[0];
-  console.log(chapterResult.rows);
   section.chapters = chapterResult.rows;
 
   return NextResponse.json(section);

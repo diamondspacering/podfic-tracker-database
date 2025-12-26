@@ -235,11 +235,11 @@ DECLARE sum_length interval;
         sum_raw_length interval;
         sum_plain_length interval;
         sum_not_plain_length interval;
-        section_type sectiontype;
+        sectiontype sectiontype;
 BEGIN
     RAISE NOTICE 'updating podfic length from its sections';
     -- TODO: there needs to be a way to distinguish summary sections/sections that don't count? bc of the whole negative numbers posted in one thing
-    SELECT section_type INTO section_type from podfic WHERE podfic.podfic_id = new.podfic_id;
+    SELECT section_type INTO sectiontype from podfic WHERE podfic.podfic_id = new.podfic_id;
 
     IF new.number < 0 THEN
         RETURN null;
@@ -271,6 +271,8 @@ BEGIN
         RAISE NOTICE 'sum not plain length: %', sum_not_plain_length;
         UPDATE podfic SET plain_length = sum_plain_length + sum_not_plain_length WHERE podfic_id = new.podfic_id;
     END IF;
+
+    RETURN null;
 END;
 $$;
 
@@ -283,7 +285,7 @@ $$
 BEGIN
     RAISE NOTICE 'updating dependent resources for podfic (%), chapter (%), section (%)', podficid, chapterid, sectionid;
 
-    IF sectionid is not null THEN
+    IF partid is not null THEN
         UPDATE recording_session SET section_id = sectionid WHERE part_id = partid AND podfic_id = podficid;
     ELSEIF chapterid is not null THEN
         UPDATE recording_session SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;

@@ -32,6 +32,19 @@ export default function useSectionColumns({
   const lengthColorScale = useLengthColorScale(sections, 'length');
   const wordcountColorScale = useColorScale(sections, 'wordcount');
 
+  const titleColumn = useMemo(
+    () => [
+      columnHelper.accessor('title', {
+        header: 'Title',
+        cell: TableCell,
+        meta: {
+          type: 'string',
+        },
+      }),
+    ],
+    [columnHelper]
+  );
+
   const metaColumns = useMemo(
     () => [
       columnHelper.accessor('section_id', {
@@ -154,5 +167,5 @@ export default function useSectionColumns({
     [columnHelper, editingRowId]
   );
 
-  return { metaColumns, postingColumns };
+  return { titleColumn, metaColumns, postingColumns };
 }

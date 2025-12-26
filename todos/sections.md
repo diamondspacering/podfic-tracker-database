@@ -1,14 +1,14 @@
 - [ ] Migrate data
   - [x] Create new tables
   - [x] Add fields to existing tables
-  - [ ] Create sections for existing podfics
-    - [ ] Regular podfics
-    - [ ] Regular chaptered podfics
-    - [ ] Chapters posted all in one
+  - [x] Create sections for existing podfics
+    - [x] Regular podfics
+    - [x] Regular chaptered podfics
+    - [x] Chapters posted all in one
       - NOTE: not all are properely marked as posted_unchaptered, manually check some & clean up data as needed
         - create utility for deleting chapter sections?
       - consider manually marking these first
-    - [ ] Multivoices (one section for each part atm)
+    - [x] Multivoices (one section for each part atm)
   - [x] Functions
     - don't need to explicitly remove triggers, just remove from the DDL anything that doesn't need to be created (so do a migration, remove triggers & functions, then regenerate DDL...?)
       - so maybe do in migration
@@ -21,18 +21,19 @@
       - make sure master plain length also updates from this - this should update sections
     - [x] `update_raw_length_from_recording_session`
     - [x] `update_recording_session_length`
-  - [ ] Add section triggers
-  - [ ] Make sure all dependent records are updated to be linked to appropriate sections
+  - [x] Add section triggers
+  - [x] Make sure all dependent records are updated to be linked to appropriate sections
     - mostly do this when creating sections? esp chapter sections? manually do some podfic ones?
-  - [ ] Update & add functions as necessary for automatic DB updates
-  - [ ] Data to check that it's updated correctly:
+    - ok this isn't working correctly
+  - [x] Update & add functions as necessary for automatic DB updates
+  - [x] Data to check that it's updated correctly:
     - Every resource in `resource_chapter` should have a resource in `resource_section`
-  - [ ] [FINAL STEP] Delete unnecessary DB fields & make fields mandatory as necessary
+  - [x] [FINAL STEP] Delete unnecessary DB fields & make fields mandatory as necessary
     - may need extra work to let it do that
-  - [ ] [FINAL STEP] Delete unnecessary DB tables as well
+  - [x] [FINAL STEP] Delete unnecessary DB tables as well
 - [ ] Figure out how to handle podfic posting dates :sob:
 - [ ] Update routes & loaders
-  - [ ] New section routes?
+  - [x] New section routes?
   - [ ] Make sure all previous routes are fetching/asking for correct information structured correctly
   - [ ] Make sure all code is calling routes correctly and getting correct types/info
 - [ ] Tables
@@ -41,12 +42,15 @@
     - make everything as reusable as possible w/ columns, etc.
   - [ ] Parts table
   - [ ] Podfic table
+    - [x] make sure sections update properly, can update inline appropriately, etc.
   - [ ] Smaller resources/content tables
 - [ ] Test all types of podfic
-- [ ] Figure out what's going on w/ section status
+- [x] Figure out what's going on w/ section status
   - Lowkey maybe sections should have status but NOT chapters. Chapters should be. like. vestigial atp.
   - Like if you have chapters_split then you kinda want to be able to track where you're at in them!
     - but then top level chapters do you wanna know...no you don't. idiot.
   - then just a completesChapter flag in recording sessions that shows different text if it's chapter/section/part
 - [ ] Length color scale not working on chapter tables
-- [ ] Chapter tables freezing
+- [x] Chapter tables freezing
+  - ok so podfic table is fine everythings just evil
+  - yeah it was the classic reference value default value rerendering infinitely

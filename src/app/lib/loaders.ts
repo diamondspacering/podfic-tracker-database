@@ -26,7 +26,9 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
   const coverArtResult = await client.query(
     'select *,status as cover_art_status from cover_art'
   );
-  const sectionResult = await client.query('select * from section');
+  const sectionResult = await client.query(
+    'select * from section order by number asc'
+  );
   const chapterResult = await client.query('select * from chapter');
   const partResult = await client.query('select * from part');
   // console.log('parts', partResult.rows);

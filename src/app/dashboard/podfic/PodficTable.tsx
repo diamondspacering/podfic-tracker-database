@@ -6,6 +6,7 @@ import {
   getDefaultLength,
   PodficStatus,
   PodficType,
+  SectionType,
 } from '@/app/types';
 import AddMenu from '@/app/ui/AddMenu';
 import { TableCell } from '@/app/ui/table/TableCell';
@@ -14,10 +15,14 @@ import ColorScale from 'color-scales';
 import { useEffect, useMemo, useState } from 'react';
 import styles from '@/app/dashboard/dashboard.module.css';
 import tableStyles from '@/app/ui/table/table.module.css';
-import { updatePodficMinified } from '@/app/lib/updaters';
+import {
+  updatePodficMinified,
+  updateSectionMinified,
+} from '@/app/lib/updaters';
 import Link from 'next/link';
 import { Button, Checkbox, FormControlLabel, IconButton } from '@mui/material';
 import {
+  Delete,
   KeyboardArrowDown,
   KeyboardArrowRight,
   Mic,
@@ -29,6 +34,7 @@ import {
   arrayIncludesFilter,
   dateFilter,
   formatTableDate,
+  getIsPostedChaptered,
   useFixedColorScale,
 } from '@/app/lib/utils';
 import { usePersistentState } from '@/app/lib/utilsFrontend';
@@ -42,6 +48,7 @@ import RecordingSessionTable from '@/app/ui/table/RecordingSessionTable';
 import { addLengths, getLengthValue } from '@/app/lib/lengthHelpers';
 import CustomTable from '@/app/ui/table/CustomTable';
 import ExternalLink from '@/app/ui/ExternalLink';
+import DeletePodficDialog from '@/app/ui/table/delete-podfic-dialog';
 
 export default function PodficTable() {
   const searchParams = useSearchParams();
@@ -55,6 +62,12 @@ export default function PodficTable() {
   const [recordingSessionsExpanded, setRecordingSessionsExpanded] = useState<
     number[]
   >([]);
+  const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
+  const [selectedDeletionProps, setSelectedDeletionProps] = useState<{
+    podficId: number;
+    workId: number;
+    podficTitle: string;
+  }>({ podficId: 0, workId: 0, podficTitle: '' });
 
   // const lengthColorScale = new ColorScale(0, 3600, ['#ffffff', '#4285f4']);
   const lengthColorScale = useFixedColorScale(3600);
@@ -99,7 +112,7 @@ export default function PodficTable() {
         type: 'number',
         immutable: true,
         hidden: true,
-        columName: 'Work ID',
+        columnName: 'Work ID',
       },
     }),
     columnHelper.display({
@@ -125,6 +138,21 @@ export default function PodficTable() {
         </IconButton>
       ),
       enableHiding: false,
+    }),
+    columnHelper.display({
+      id: 'log',
+      cell: (props) => (
+        <Button
+          variant='contained'
+          onClick={() => console.log(props.row.original)}
+        >
+          Log
+        </Button>
+      ),
+      meta: {
+        columnName: 'log',
+        hidden: true,
+      },
     }),
     columnHelper.display({
       id: 'number',
@@ -413,25 +441,6 @@ export default function PodficTable() {
       },
       filterFn: dateFilter,
     }),
-    columnHelper.display({
-      id: 'posted',
-      header: (props) => <HeaderCell text='Posted' {...props} />,
-      cell: ({ row, ...rest }) => {
-        const getValue = () => {
-          const sortedSections = row.original.sections?.sort(
-            (a, b) =>
-              new Date(a.posted_date ?? '').getTime() -
-              new Date(b.posted_date ?? '').getTime()
-          );
-          console.log({ sortedSections });
-          const latestSectionDate = sortedSections?.[0].posted_date;
-          if (editingRowId !== row.id) return latestSectionDate;
-          else
-            return formatTableDate(latestSectionDate, editingRowId === row.id);
-        };
-        return <TableCell getValue={getValue} row={row} {...rest} />;
-      },
-    }),
     columnHelper.accessor('ao3_link', {
       header: 'Link',
       cell: TableCell,
@@ -440,8 +449,9 @@ export default function PodficTable() {
         columnName: 'AO3 Link',
       },
     }),
+    // TODO: should this be labeled as chapters or sections....?
     columnHelper.display({
-      id: 'chapters',
+      id: 'sections',
       header: 'Chapters',
       cell: (props) =>
         props.row.original.chaptered ? (
@@ -450,13 +460,17 @@ export default function PodficTable() {
             onClick={(e) => e.stopPropagation()}
           >
             {`${
-              props.row.original.chapters?.filter(
-                (c) =>
-                  c.status === PodficStatus.POSTED ||
-                  c.status === PodficStatus.FINISHED ||
-                  c.status === PodficStatus.POSTING
-              ).length ?? '0'
-            }/${props.row.original.chapter_count ?? '?'}`}
+              props.row.original.sections?.filter((s) => {
+                return (
+                  s.status === PodficStatus.POSTED ||
+                  s.status === PodficStatus.FINISHED ||
+                  s.status === PodficStatus.POSTING ||
+                  (props.row.original.section_type ===
+                    SectionType.MULTIPLE_TO_SINGLE &&
+                    s.number < 0)
+                );
+              }).length ?? '0'
+            }/${props.row.original.sections?.length ?? '?'}`}
             &nbsp;
             <IconButton
               style={{
@@ -531,13 +545,41 @@ export default function PodficTable() {
     }),
     columnHelper.display({
       id: 'generate-html',
+      cell: (props) => {
+        const isPostedChaptered = getIsPostedChaptered(
+          props.row.original.section_type,
+          props.row.original.chaptered
+        );
+        let url = `/dashboard/html?podfic_id=${props.row.id}`;
+        if (!isPostedChaptered) {
+          const sectionId = props.row.original.sections?.[0].section_id;
+          if (sectionId) url += `&section_id=${sectionId}`;
+        }
+        return (
+          <Link href={url}>
+            <Button style={{ padding: '0px' }} variant='contained'>
+              HTML
+            </Button>
+          </Link>
+        );
+      },
+    }),
+    columnHelper.display({
+      id: 'delete',
       cell: (props) => (
-        // TODO: fix this to work w/ sections
-        <Link href={`/dashboard/html?podfic_id=${props.row.id}`}>
-          <Button style={{ padding: '0px' }} variant='contained'>
-            HTML
-          </Button>
-        </Link>
+        <Button
+          onClick={() => {
+            setSelectedDeletionProps({
+              podficId: props.row.getValue('podfic_id'),
+              workId: props.row.getValue('work_id'),
+              podficTitle: props.row.getValue('title'),
+            });
+            setDeleteConfirmDialogOpen(true);
+          }}
+          style={{ padding: '0px' }}
+        >
+          <Delete />
+        </Button>
       ),
     }),
   ];
@@ -554,7 +596,6 @@ export default function PodficTable() {
 
   const updatePodfic = async (podfic: Podfic & Work & Fandom) => {
     try {
-      // TODO: work on that correctly. also that may be worth duplicating idk
       await updatePodficMinified(
         JSON.stringify({
           podfic_id: podfic.podfic_id,
@@ -564,6 +605,25 @@ export default function PodficTable() {
           status: podfic.status,
         })
       );
+      const isPostedChaptered = getIsPostedChaptered(
+        podfic.section_type,
+        podfic.chaptered
+      );
+      // TODO: hmmm ideally the section would be updated and the podfic would be updated from it
+      // but we're not doing that rn
+      if (!isPostedChaptered) {
+        const section = podfic.sections?.[0];
+        console.log('updating section', section);
+        if (section) {
+          await updateSectionMinified({
+            section_id: section.section_id,
+            length: podfic.length,
+            posted_date: podfic.posted_date,
+            ao3_link: podfic.ao3_link,
+            status: podfic.status,
+          });
+        }
+      }
       await mutate((key) => Array.isArray(key) && key[0] === '/db/podfics');
     } catch (e) {
       console.error('Error updating podfic inline:', e);
@@ -572,6 +632,16 @@ export default function PodficTable() {
 
   return (
     <div>
+      <DeletePodficDialog
+        isOpen={deleteConfirmDialogOpen}
+        onClose={() => setDeleteConfirmDialogOpen(false)}
+        submitCallback={async () => {
+          await mutate((key) => Array.isArray(key) && key[0] === '/db/podfics');
+        }}
+        podficId={selectedDeletionProps.podficId}
+        workId={selectedDeletionProps.workId}
+        podficTitle={selectedDeletionProps.podficTitle}
+      />
       <CustomTable
         isLoading={isLoading}
         data={podfics}
@@ -759,7 +829,7 @@ export default function PodficTable() {
                   podficId={row.original.podfic_id}
                   podficTitle={row.getValue('title')}
                   onlyNonAAFiles={missingAALinks}
-                  chapterId={null}
+                  sectionId={null}
                   lengthColorScale={lengthColorScale}
                 />
               </td>

@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { ChapterTableContext } from './ChapterTable';
+import { ChapterTableContext } from './ChapterTableContext';
 import useSectionColumns from './useSectionColumns';
 import CustomTable from '@/app/ui/table/CustomTable';
 import ColorScale from 'color-scales';
@@ -10,11 +10,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Mic } from '@mui/icons-material';
 import { Button } from '@mui/material';
+import { TableCell } from '@/app/ui/table/TableCell';
+import { getDefaultColumnVisibility } from '@/app/lib/utils';
+import { createUpdateSection } from '@/app/lib/updaters';
 
 interface SectionOnlyTableProps {
   sections: Section[];
   isLoading: boolean;
-  submitCallback: () => void;
+  submitCallback: () => Promise<void>;
   lengthColorScale: ColorScale;
 }
 
@@ -35,18 +38,29 @@ export default function SectionOnlyTable({
 
   const pathname = usePathname();
 
-  const { metaColumns, postingColumns } = useSectionColumns({
+  const { titleColumn, metaColumns, postingColumns } = useSectionColumns({
     sections,
     editingRowId,
   });
   const columnHelper = createColumnHelper<Section>();
 
   // TODO: add the other boys
+  // ^ what did I mean by that
   const columns = [
     columnHelper.display({
       id: 'expand',
       cell: expandCellComponent,
     }),
+    columnHelper.accessor('podfic_id', {
+      header: 'Podfic ID',
+      cell: TableCell,
+      meta: {
+        type: 'number',
+        immutable: true,
+        hidden: true,
+      },
+    }),
+    ...titleColumn,
     ...metaColumns,
     ...postingColumns,
     columnHelper.display({
@@ -71,7 +85,7 @@ export default function SectionOnlyTable({
         <Link
           href={`/forms/recording-session/new?section_id=${props.row.getValue(
             'section_id'
-          )}&return_url=${pathname}`}
+          )}&podfic_id=${podficId}&return_url=${pathname}`}
           onClick={(e) => e.stopPropagation()}
         >
           <Button
@@ -116,10 +130,13 @@ export default function SectionOnlyTable({
       data={sections}
       columns={columns}
       rowKey='section_id'
+      showRowCount={false}
       showColumnVisibility={false}
+      columnVisibility={getDefaultColumnVisibility(columns)}
       updateItemInline={async (section) => {
         console.log(section);
-        // await updatesection, then submit callback as well
+        await createUpdateSection(section);
+        await submitCallback();
       }}
       getExpandedContent={(row) =>
         getExpandedContentCellComponent(lengthColorScale, row)

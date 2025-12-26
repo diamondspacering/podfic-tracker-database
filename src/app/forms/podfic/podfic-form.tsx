@@ -68,7 +68,10 @@ export default function PodficForm({
   const [isMultivoice, setIsMultivoice] = useState(false);
   const [wordcount, setWordcount] = useState('');
   const [isBackDated, setIsBackDated] = useState(false);
-  const [sectionInfo, setSectionInfo] = useState<Partial<Section>[]>([]);
+  interface SectionInfo {
+    [index: number]: Partial<Section>[];
+  }
+  const [sectionInfo, setSectionInfo] = useState<SectionInfo>({});
 
   const [podficcerDialogOpen, setPodficcerDialogOpen] = useState(false);
   const [metadataDialogOpen, setMetadataDialogOpen] = useState(false);
@@ -78,6 +81,14 @@ export default function PodficForm({
   const [isNewAuthor, setIsNewAuthor] = useState(false);
 
   const { podficcers, isLoading: podficcersLoading } = usePodficcers();
+
+  // TODO: directly handle sectionInfo more it could be handy
+  useEffect(() => {
+    setPodfic((prev) => ({
+      ...prev,
+      sections: Object.values(sectionInfo).flat(),
+    }));
+  }, [setPodfic, sectionInfo]);
 
   useEffect(() => {
     if (
@@ -208,10 +219,6 @@ export default function PodficForm({
   useEffect(() => {
     if (isVoiceteam) fetchChallengesAndProjects(podfic.event_id);
   }, [isVoiceteam, podfic.event_id, fetchChallengesAndProjects]);
-
-  useEffect(() => {
-    console.log({ podfic });
-  }, [podfic]);
 
   useEffect(() => {
     if (isVoiceteam && podfic.vt_project_id && !challengesLoading) {
@@ -1067,41 +1074,52 @@ export default function PodficForm({
                                 ? ` - ${chapter.chapter_title}`
                                 : ''
                             }`}</Typography>
-                            {sectionInfo
-                              .filter(
-                                (section) =>
-                                  section.chapters?.[0]?.chapter_number ===
-                                  chapter.chapter_number
-                              )
-                              .map((section, index) => (
+                            {sectionInfo[chapter.chapter_number]?.map(
+                              (section, index) => (
                                 <SectionForm
                                   key={index}
                                   sectionType={podfic.section_type}
                                   section={section}
-                                  setSection={(value) =>
-                                    setSectionInfo((prev) =>
-                                      prev.map((s, i) =>
-                                        i === index ? value : s
-                                      )
-                                    )
-                                  }
+                                  setSection={(value) => {
+                                    setSectionInfo((prev) => {
+                                      return {
+                                        ...prev,
+                                        [chapter.chapter_number]: prev[
+                                          chapter.chapter_number
+                                        ].map((s, i) => {
+                                          return i === index ? value : s;
+                                        }),
+                                      };
+                                    });
+                                  }}
                                 />
-                              ))}
+                              )
+                            )}
                             <Button
                               variant='contained'
                               startIcon={<Add />}
                               onClick={() =>
-                                setSectionInfo((prev) => [
-                                  ...prev,
-                                  {
+                                setSectionInfo((prev) => {
+                                  // ok so append to end of that
+                                  // hmmm perhaps we should do it. differently. no i dont care.
+                                  // insert section at end of this chapter's sections
+                                  const chapNumber = chapter.chapter_number;
+                                  const newSection = {
                                     title: '',
-                                    chapters: [
-                                      {
-                                        chapter_number: chapter.chapter_number,
-                                      },
-                                    ],
-                                  },
-                                ])
+                                    chapters: [{ chapter_number: chapNumber }],
+                                  };
+                                  const prevSections = prev[chapNumber];
+                                  console.log({ chapNumber, prevSections });
+                                  if (!prevSections)
+                                    return {
+                                      ...prev,
+                                      [chapNumber]: [newSection],
+                                    };
+                                  return {
+                                    ...prev,
+                                    [chapNumber]: [...prevSections, newSection],
+                                  };
+                                })
                               }
                             >
                               Add Section
@@ -1111,23 +1129,27 @@ export default function PodficForm({
                       </>
                     ) : (
                       <>
-                        {sectionInfo.map((section, index) => (
+                        {sectionInfo[1]?.map((section, index) => (
                           <div className={styles.flexRow} key={index}>
                             <SectionForm
                               sectionType={podfic.section_type}
                               section={section}
                               setSection={(value) =>
-                                setSectionInfo((prev) =>
-                                  prev.map((s, i) => (i === index ? value : s))
-                                )
+                                setSectionInfo((prev) => ({
+                                  ...prev,
+                                  1: prev[1].map((s, i) =>
+                                    i === index ? value : s
+                                  ),
+                                }))
                               }
                               chapters={podfic.chapters}
                             />
                             <IconButton
                               onClick={() =>
-                                setSectionInfo((prev) =>
-                                  prev.toSpliced(index, 1)
-                                )
+                                setSectionInfo((prev) => ({
+                                  ...prev,
+                                  1: prev[1].toSpliced(index, 1),
+                                }))
                               }
                             >
                               <Close />
@@ -1138,10 +1160,13 @@ export default function PodficForm({
                           variant='contained'
                           startIcon={<Add />}
                           onClick={() =>
-                            setSectionInfo((prev) => [
+                            setSectionInfo((prev) => ({
                               ...prev,
-                              { number: sectionInfo.length + 1, title: '' },
-                            ])
+                              1: [
+                                ...prev[1],
+                                { number: prev[1].length + 1, title: '' },
+                              ],
+                            }))
                           }
                         >
                           Add Section

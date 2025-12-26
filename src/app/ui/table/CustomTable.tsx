@@ -82,6 +82,9 @@ export interface CustomTableProps<T> {
   extraParams?: any;
 }
 
+const DEFAULT_COLUMN_FILTERS = [];
+const DEFAULT_SET_COLUMN_FILTERS = () => {};
+
 export default function CustomTable<T>({
   isLoading,
   data,
@@ -93,8 +96,8 @@ export default function CustomTable<T>({
   editingRowId = null,
   setEditingRowId = () => {},
   initialState,
-  columnFilters = [],
-  setColumnFilters = () => {},
+  columnFilters = DEFAULT_COLUMN_FILTERS,
+  setColumnFilters = DEFAULT_SET_COLUMN_FILTERS,
   showClearFilters = false,
   showResetDefaultFilters = false,
   globalFilterFn,

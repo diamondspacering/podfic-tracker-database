@@ -30,7 +30,7 @@ export const useSectionsForPodfic = (podficId) => {
 };
 
 export const useDefaultSectionChaptersForPodfic = ({ podficId }) => {
-  const { data, error, isLoading } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR(
     `/db/chapters/${podficId}?section_type=${SectionType.DEFAULT}`,
     fetcher
   );
@@ -39,11 +39,12 @@ export const useDefaultSectionChaptersForPodfic = ({ podficId }) => {
     sections: (data ?? []) as (Section & Chapter)[],
     error,
     isLoading,
+    mutate,
   };
 };
 
 export const usePodficChaptersWithSubSections = ({ podficId }) => {
-  const { data, error, isLoading } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR(
     `/db/chapters/${podficId}?section_type=${SectionType.CHAPTERS_SPLIT}`,
     fetcher
   );
@@ -52,6 +53,7 @@ export const usePodficChaptersWithSubSections = ({ podficId }) => {
     chapters: (data ?? []) as Chapter[],
     error,
     isLoading,
+    mutate,
   };
 };
 
@@ -211,9 +213,9 @@ const recordingSessionFetcher = async (
   return data;
 };
 
-const filesFetcher = async (podficId, chapterId, onlyNonAAFiles = false) => {
+const filesFetcher = async (podficId, sectionId, onlyNonAAFiles = false) => {
   let response = null;
-  let baseString = `/db/files?podfic_id=${podficId}&chapter_id=${chapterId}`;
+  let baseString = `/db/files?podfic_id=${podficId}&section_id=${sectionId}`;
   if (onlyNonAAFiles) {
     baseString = `${baseString}&with_chapters=true&only_non_aa_files=true`;
   } else {
@@ -268,10 +270,10 @@ export const usePodficsFull = ({ missingAALinks = false }) => {
   };
 };
 
-export const useFiles = ({ podficId, chapterId, onlyNonAAFiles = false }) => {
+export const useFiles = ({ podficId, sectionId, onlyNonAAFiles = false }) => {
   const { data, error, isLoading } = useSWR(
-    ['/db/files', podficId, chapterId, onlyNonAAFiles],
-    () => filesFetcher(podficId, chapterId, onlyNonAAFiles)
+    ['/db/files', podficId, sectionId, onlyNonAAFiles],
+    () => filesFetcher(podficId, sectionId, onlyNonAAFiles)
   );
 
   const files = (data ?? []) as File[];

@@ -20,6 +20,7 @@ export async function GET(
 
   let podfic = null;
   if (withCoverArt && withAuthor) {
+    // TODO: this is returning some weird results (no podfic id????)
     const result = await client.query(
       `select *,cover_art.status as cover_art_status from podfic
         inner join work on podfic.work_id = work.work_id

@@ -8,7 +8,6 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const podficId = searchParams.get('podfic_id');
   const sectionId = searchParams.get('section_id');
-  const chapterId = searchParams.get('chapter_id');
   const withChapters = searchParams.get('with_chapters');
   const onlyNonAAFiles = searchParams.get('only_non_aa_files');
 

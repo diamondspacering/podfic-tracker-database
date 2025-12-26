@@ -20,6 +20,8 @@ export default function FileLinkForm({
   link,
   setLink,
   podficTitle,
+  sectionType,
+  section,
   sectionId,
   label,
 }) {
@@ -40,11 +42,15 @@ export default function FileLinkForm({
   useEffect(() => {
     if (link.host === 'audiofic archive') {
       const dateString = generateAADate(aaDate);
+      // TODO: make this work correctly
       const fileString = generateAALink({
         title: podficTitle,
         chapterInfo: chapter,
         date: dateString,
         label,
+        sectionType,
+        chaptered: false,
+        section,
       });
       setLink({ ...link, link: fileString });
     }

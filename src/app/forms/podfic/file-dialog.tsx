@@ -8,7 +8,12 @@ import {
 import FileForm from './file-form';
 import { useCallback, useEffect, useState } from 'react';
 import { createUpdateFile } from '@/app/lib/updaters';
-import { FileType, getDefaultFile, getDefaultLength } from '@/app/types';
+import {
+  FileType,
+  getDefaultFile,
+  getDefaultLength,
+  SectionType,
+} from '@/app/types';
 
 interface FileDialogProps {
   isOpen: boolean;
@@ -18,6 +23,7 @@ interface FileDialogProps {
   podficId?: number;
   podficTitle?: string;
   sectionId?: number;
+  sectionType?: SectionType;
   file?: File;
 }
 
@@ -29,14 +35,28 @@ export default function FileDialog({
   podficId,
   podficTitle,
   sectionId,
+  sectionType = SectionType.DEFAULT,
   file: fileProp,
 }: FileDialogProps) {
   const [file, setFile] = useState(fileProp ?? getDefaultFile(existingLength));
+  const [section, setSection] = useState({} as Section);
 
   useEffect(
     () => setFile(fileProp ?? getDefaultFile(existingLength)),
     [existingLength, fileProp]
   );
+
+  useEffect(() => {
+    const fetchSection = async () => {
+      const result = await fetch(`/db/sections/${sectionId}`);
+      const data = await result.json();
+      setSection(data as Section);
+    };
+
+    if (sectionId && !Object.keys(section).length) {
+      fetchSection();
+    }
+  }, [sectionId, section]);
 
   const submitFile = useCallback(async () => {
     // returns id, currently not being used
@@ -85,6 +105,8 @@ export default function FileDialog({
           setFile={setFile}
           podficTitle={podficTitle}
           sectionId={sectionId}
+          sectionType={sectionType}
+          section={section}
           existingLength={existingLength}
         />
       </DialogContent>
