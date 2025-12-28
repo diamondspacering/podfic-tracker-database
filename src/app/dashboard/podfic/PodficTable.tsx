@@ -35,6 +35,7 @@ import {
   dateFilter,
   formatTableDate,
   getIsPostedChaptered,
+  getPodficSectionId,
   useFixedColorScale,
 } from '@/app/lib/utils';
 import { usePersistentState } from '@/app/lib/utilsFrontend';
@@ -520,6 +521,7 @@ export default function PodficTable() {
         <AddMenu
           podficTitle={props.row.getValue('title')}
           podficId={props.row.getValue('podfic_id')}
+          sectionId={getPodficSectionId(props.row.original)}
           length={props.row.getValue('length')}
           options={['cover_art', 'file', 'resource', 'note', 'chapter']}
         />
@@ -546,15 +548,9 @@ export default function PodficTable() {
     columnHelper.display({
       id: 'generate-html',
       cell: (props) => {
-        const isPostedChaptered = getIsPostedChaptered(
-          props.row.original.section_type,
-          props.row.original.chaptered
-        );
         let url = `/dashboard/html?podfic_id=${props.row.id}`;
-        if (!isPostedChaptered) {
-          const sectionId = props.row.original.sections?.[0].section_id;
-          if (sectionId) url += `&section_id=${sectionId}`;
-        }
+        const sectionId = getPodficSectionId(props.row.original);
+        if (sectionId) url += `&section_id=${sectionId}`;
         return (
           <Link href={url}>
             <Button style={{ padding: '0px' }} variant='contained'>
@@ -615,13 +611,15 @@ export default function PodficTable() {
         const section = podfic.sections?.[0];
         console.log('updating section', section);
         if (section) {
-          await updateSectionMinified({
-            section_id: section.section_id,
-            length: podfic.length,
-            posted_date: podfic.posted_date,
-            ao3_link: podfic.ao3_link,
-            status: podfic.status,
-          });
+          await updateSectionMinified(
+            JSON.stringify({
+              section_id: section.section_id,
+              length: podfic.length,
+              posted_date: podfic.posted_date,
+              ao3_link: podfic.ao3_link,
+              status: podfic.status,
+            })
+          );
         }
       }
       await mutate((key) => Array.isArray(key) && key[0] === '/db/podfics');
@@ -828,8 +826,9 @@ export default function PodficTable() {
                 <FileTable
                   podficId={row.original.podfic_id}
                   podficTitle={row.getValue('title')}
+                  chaptered={row.original.chaptered}
                   onlyNonAAFiles={missingAALinks}
-                  sectionId={null}
+                  sectionId={getPodficSectionId(row.original)}
                   lengthColorScale={lengthColorScale}
                 />
               </td>

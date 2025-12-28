@@ -18,6 +18,7 @@
       - [ ] Select what resources to include
       - [ ] Reorder files
     - [ ] Only include chapter resources per chapter
+    - [ ] Be able to collapse resources - that collapsible element from podfic form?
     - [ ] Saving in-progress state for HTML save button
       - what does this mean
     - [ ] Select podfic/chapter if not already selected
@@ -26,6 +27,7 @@
     - [ ] Better reload from DB, also load template?
     - [ ] Show that thing has been copied - little toast or snackbar or whatever?
     - [ ] Also be able to save specific HTML, with specific label? Like for template or custom? Note or resource for podfic?
+    - [ ] Smartly add `up` class when there's multiple audio sources & cover art?
 - Parts
   - [ ] Easily visible submission instructions notes?
   - [ ] Make type selectable for parts table
@@ -80,6 +82,8 @@
 - [ ] Make filters update when data is updated (e.g., new author) - prob have more `null` support?
 - [x] Podfic deletion
 - [ ] Actually use giftee_id and designating a podficcer who something is gifted to
+- [ ] Figure out the errors on podfic table
+- [ ] Consider [WHAT WAS I GOING TO SAY?!]
 
 ## Routes
 

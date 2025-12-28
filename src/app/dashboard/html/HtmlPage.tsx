@@ -170,7 +170,7 @@ export default function HtmlPage() {
     setPodficLoading(true);
     if (podficId) {
       const response = await fetch(
-        `/db/podfics/${podficId}?with_cover_art=true&with_author=true&with_podficcers=true`
+        `/db/podfics/${podficId}?with_cover_art=true&with_author=true&with_podficcers=true&with_section_chapters=true`
       );
       const data = await response.json();
       setPodfic(data);

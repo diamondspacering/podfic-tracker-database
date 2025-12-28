@@ -75,7 +75,7 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
     // TODO: more refined search? some files don't need aa links
     const allFilesMissingAALinks = (
       await client.query(`
-      SELECT file.file_id,podfic_id,chapter_id,length,size,filetype,label,is_plain,string_agg(host, ',') from file
+      SELECT file.file_id,podfic_id,section_id,length,size,filetype,label,is_plain,string_agg(host, ',') from file
       LEFT JOIN file_link on file_link.file_id = file.file_id
       GROUP BY file.file_id
       HAVING string_agg(host, ',') NOT LIKE '%audiofic archive%'

@@ -202,3 +202,12 @@ export const getIsPostedChaptered = (
     sectionType === SectionType.CHAPTERS_SPLIT
   );
 };
+
+export const getPodficSectionId = (podfic: Podfic & Work) => {
+  const isPostedChaptered = getIsPostedChaptered(
+    podfic.section_type,
+    podfic.chaptered
+  );
+  if (isPostedChaptered || !podfic.sections?.length) return null;
+  else return podfic.sections[0]?.section_id;
+};

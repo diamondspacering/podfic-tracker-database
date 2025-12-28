@@ -15,6 +15,7 @@ export async function GET(
   const withAuthor = searchParams.get('with_author');
   const withPodficcers = searchParams.get('with_podficcers');
   const withTags = searchParams.get('with_tags');
+  const withSectionChapters = searchParams.get('with_section_chapters');
 
   const client = await getClient();
 
@@ -77,6 +78,16 @@ export async function GET(
   if (podfic) {
     podfic.chapters = chapterResult.rows;
     podfic.sections = sectionResult.rows;
+  }
+
+  if (withSectionChapters) {
+    for (const section of podfic.sections) {
+      const sectionChapterResult = await client.query(
+        `select * from chapter inner join chapter_section on chapter.chapter_id = chapter_section.chapter_id where section_id = $1 order by chapter_number asc limit 1`,
+        [section.section_id]
+      );
+      section.chapters = sectionChapterResult.rows;
+    }
   }
 
   return NextResponse.json(podfic ?? {});

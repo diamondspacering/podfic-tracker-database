@@ -61,18 +61,20 @@ export default function AddMenu({
         podfic_id={podficId}
         podficTitle={podficTitle}
       />
-      <FileDialog
-        isOpen={fileFormOpen}
-        onClose={() => setFileFormOpen(false)}
-        submitCallback={() => {
-          setFileFormOpen(false);
-          submitCallback?.();
-        }}
-        existingLength={length}
-        podficId={podficId}
-        podficTitle={podficTitle}
-        sectionId={sectionId}
-      />
+      {fileFormOpen && (
+        <FileDialog
+          isOpen={fileFormOpen}
+          onClose={() => setFileFormOpen(false)}
+          submitCallback={() => {
+            setFileFormOpen(false);
+            submitCallback?.();
+          }}
+          existingLength={length}
+          podficId={podficId}
+          podficTitle={podficTitle}
+          sectionId={sectionId}
+        />
+      )}
       <ResourceDialog
         isOpen={resourceFormOpen}
         onClose={() => setResourceFormOpen(false)}

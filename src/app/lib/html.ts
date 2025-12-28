@@ -1,5 +1,6 @@
 import { FileType, SectionType } from '../types';
 import { format2Digits, getLengthText } from './format';
+import { getIsPostedChaptered } from './utils';
 
 export const getFileHTML = (file: File) => {
   let htmlString = ``;
@@ -35,15 +36,18 @@ export const getEmbedCode = (link: string) => {
 export const getSectionName = ({
   section,
   sectionType,
+  chapter: chapterProp = null,
   includeChapterTitle = true,
   forAA = false,
 }: {
   section: Section;
   sectionType: SectionType;
+  chapter?: Chapter;
   includeChapterTitle?: boolean;
   forAA?: boolean;
 }) => {
-  const chapter = section.chapters?.[0];
+  const chapter = chapterProp ?? section.chapters?.[0];
+  console.log({ section, chapter });
   if (!chapter) {
     return section.title
       ? section.title
@@ -103,7 +107,7 @@ export const generateAALink = ({
     safeTitle = title.replaceAll(/\s/g, '_').replaceAll(/'/g, '');
   }
   console.log({ safeTitle });
-  const fullTitle = `https://podfic.audioficarchive.com/audfiles2/${date}_${safeTitle}${
+  const fullTitle = `https://podfic.audioficarchive.org/audfiles2/${date}_${safeTitle}${
     label === 'Without Music'
       ? '_(no_music)'
       : label === `Without Reader's Notes`
@@ -115,13 +119,13 @@ export const generateAALink = ({
 };
 
 // TODO: this needs to go more based off sections and section type
+// TODO: not including chapter names rn
 export const generateHTMLAudioficArchive = (
   podfic: Podfic & Work & CoverArt,
   files: (File & FileLink)[]
 ) => {
   let htmlString = ``;
-  const chaptered =
-    !podfic.chaptered || podfic.section_type === SectionType.MULTIPLE_TO_SINGLE;
+  const chaptered = getIsPostedChaptered(podfic.section_type, podfic.chaptered);
   if (podfic.section_type === SectionType.CHAPTERS_COMBINE) {
     console.error('Combined chapters are not supported yet!');
     return '';
@@ -209,8 +213,7 @@ export const generateHTMLAzdaema = (
   }
 
   htmlString += `<div class="content">`;
-  const chaptered =
-    podfic.chaptered && podfic.section_type !== SectionType.MULTIPLE_TO_SINGLE;
+  const chaptered = getIsPostedChaptered(podfic.section_type, podfic.chaptered);
   const chapter = section.chapters?.[0];
   if (!chaptered) {
     // TODO: specific code for posted unchaptered/multiple to single
@@ -325,16 +328,16 @@ export const generateHTMLAzdaema = (
 
   htmlString += `<h3>Credits</h3>`;
   htmlString += `<ul>`;
+  const sectionName = getSectionName({
+    section,
+    sectionType: podfic.section_type,
+  });
+  // sectionName = sectionName.charAt(0).toLowerCase() + sectionName.slice(1);
   htmlString += `<li><b>Text:</b> <a href="${
     chaptered ? section.text_link : podfic.link
   }">${
     chaptered
-      ? `${podfic.nickname ?? podfic.title} ${getSectionName({
-          section,
-          sectionType: podfic.section_type,
-        })
-          .charAt(0)
-          .toLowerCase()}`
+      ? `${podfic.nickname ?? podfic.title} ${sectionName}`
       : podfic.nickname ?? podfic.title
   }</a></li>`;
   htmlString += `<li><b>Author:</b> <a href="${podfic.ao3}">${podfic.username}</a></li>`;

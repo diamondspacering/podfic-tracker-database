@@ -22,6 +22,7 @@ interface FileDialogProps {
   existingLength?: Length;
   podficId?: number;
   podficTitle?: string;
+  chaptered?: boolean;
   sectionId?: number;
   sectionType?: SectionType;
   file?: File;
@@ -34,6 +35,7 @@ export default function FileDialog({
   existingLength,
   podficId,
   podficTitle,
+  chaptered,
   sectionId,
   sectionType = SectionType.DEFAULT,
   file: fileProp,
@@ -46,6 +48,7 @@ export default function FileDialog({
     [existingLength, fileProp]
   );
 
+  // TODO: loading state for this?
   useEffect(() => {
     const fetchSection = async () => {
       const result = await fetch(`/db/sections/${sectionId}`);
@@ -104,6 +107,7 @@ export default function FileDialog({
           file={file}
           setFile={setFile}
           podficTitle={podficTitle}
+          chaptered={chaptered}
           sectionId={sectionId}
           sectionType={sectionType}
           section={section}

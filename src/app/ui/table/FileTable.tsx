@@ -23,6 +23,7 @@ export default function FileTable({
   onlyNonAAFiles = false,
   sectionId,
   lengthColorScale = null,
+  chaptered = false,
 }) {
   const { files, isLoading } = useFiles({
     podficId,
@@ -181,18 +182,22 @@ export default function FileTable({
 
   return (
     <div>
-      <FileDialog
-        isOpen={fileDialogOpen}
-        onClose={() => setFileDialogOpen(false)}
-        submitCallback={async () => {
-          await mutate((key) => Array.isArray(key) && key[0] === '/db/files');
-          setFileDialogOpen(false);
-        }}
-        file={editingFile}
-        podficId={podficId}
-        podficTitle={podficTitle}
-        existingLength={editingFile?.length}
-      />
+      {fileDialogOpen && (
+        <FileDialog
+          isOpen={fileDialogOpen}
+          onClose={() => setFileDialogOpen(false)}
+          submitCallback={async () => {
+            await mutate((key) => Array.isArray(key) && key[0] === '/db/files');
+            setFileDialogOpen(false);
+          }}
+          file={editingFile}
+          podficId={podficId}
+          podficTitle={podficTitle}
+          chaptered={chaptered}
+          existingLength={editingFile?.length}
+          sectionId={editingFile?.section_id ?? null}
+        />
+      )}
       <Dialog
         open={deleteConfirmDialogOpen}
         onClose={() => setDeleteConfirmDialogOpen(false)}

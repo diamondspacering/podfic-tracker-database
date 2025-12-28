@@ -306,7 +306,10 @@ export const createUpdateWork = async (
       wordcount,
       chaptered,
       chapter_count,
-      rating
+      rating,
+      category,
+      relationship,
+      main_character
     ) VALUES (
       $1,
       $2,
@@ -317,7 +320,10 @@ export const createUpdateWork = async (
       $7,
       $8,
       $9,
-      $10
+      $10,
+      $11,
+      $12,
+      $13
     )
     RETURNING *
     `,
@@ -332,6 +338,8 @@ export const createUpdateWork = async (
         workData.chaptered,
         workData.chapter_count,
         workData.rating,
+        workData.category,
+        workData.relationship,
       ]
     );
   } else {
@@ -347,8 +355,11 @@ export const createUpdateWork = async (
       chaptered = $7,
       chapter_count = $8,
       rating = $9,
-      nickname = $10
-    WHERE work_id = $11
+      nickname = $10,
+      category = $11,
+      main_character = $12,
+      relationship = $13
+    WHERE work_id = $14
     RETURNING *`,
       [
         workData.title,
@@ -361,6 +372,9 @@ export const createUpdateWork = async (
         workData.chapter_count,
         workData.rating,
         workData.nickname,
+        workData.category,
+        workData.main_character,
+        workData.relationship,
         workData.work_id,
       ]
     );
@@ -413,8 +427,8 @@ export const updateSectionMinified = async (data: any) => {
     UPDATE section SET
       length = $1,
       posted_date = $2,
-      ao3_link: $3,
-      status: $4,
+      ao3_link = $3,
+      status = $4,
       updated_at = $5
     WHERE section_id = $6
     RETURNING *
@@ -1781,7 +1795,7 @@ export const deletePodfic = async (podficId: number, workId?: number) => {
   );
   const sections = sectionResult.rows;
   for (const section of sections) {
-    const sectionId = section.sectionId;
+    const sectionId = section.section_id;
     await client.query('DELETE FROM resource_section WHERE section_id = $1', [
       sectionId,
     ]);

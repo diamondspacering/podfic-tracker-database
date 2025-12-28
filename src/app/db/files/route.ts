@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     if (withChapters && withChapters === 'true') {
       if (onlyNonAAFiles && onlyNonAAFiles === 'true') {
         fileResult = await client.query(
-          `select file.file_id,podfic_id,chapter_id,length,size,filetype,label,is_plain from file
+          `select file.file_id,podfic_id,section_id,length,size,filetype,label,is_plain from file
           left join file_link on file_link.file_id = file.file_id
           where file.podfic_id = $1
           group by file.file_id

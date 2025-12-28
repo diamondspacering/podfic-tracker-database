@@ -21,6 +21,7 @@ interface FileFormProps {
   sectionType?: SectionType;
   sectionId?: number;
   section?: Section;
+  chaptered?: boolean;
   existingLength?: Length;
 }
 
@@ -31,6 +32,7 @@ export default function FileForm({
   sectionType,
   sectionId,
   section,
+  chaptered,
   existingLength,
 }: FileFormProps) {
   const length = useMemo(
@@ -117,6 +119,7 @@ export default function FileForm({
           sectionId={sectionId}
           sectionType={sectionType}
           section={section}
+          chaptered={chaptered}
           label={file.label}
         />
       ))}

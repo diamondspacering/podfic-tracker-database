@@ -23,21 +23,12 @@ export default function FileLinkForm({
   sectionType,
   section,
   sectionId,
+  chaptered,
   label,
 }) {
   const [aaDate, setAADate] = useState(formatDateString(new Date()));
   // TODO: hmmm section info w/ embedded chapter?
   const [chapter, setChapter] = useState({} as Chapter);
-
-  // useEffect(() => {
-  //   const fetchChapter = async () => {
-  //     const response = await fetch(`/db/chapters?chapter_id=${chapterId}`);
-  //     const data = await response.json();
-  //     setChapter(data);
-  //   };
-
-  //   if (chapterId) fetchChapter();
-  // });
 
   useEffect(() => {
     if (link.host === 'audiofic archive') {
@@ -49,7 +40,7 @@ export default function FileLinkForm({
         date: dateString,
         label,
         sectionType,
-        chaptered: false,
+        chaptered,
         section,
       });
       setLink({ ...link, link: fileString });
@@ -72,8 +63,11 @@ export default function FileLinkForm({
           let linkHost = link.host;
           hosts.forEach((host) => {
             if (
-              newLink.includes(host.toLowerCase()) ||
-              (host === 'audiofic archive' && newLink.includes('jinjurly')) ||
+              (newLink.includes(host.toLowerCase()) &&
+                !(host.toLowerCase() === 'archive.org') &&
+                newLink.includes('audioficarchive')) ||
+              (host === 'audiofic archive' &&
+                newLink.includes('audioficarchive')) ||
               (host === 'archive.org' && newLink.includes('archive'))
             ) {
               linkHost = host;

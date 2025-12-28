@@ -1,4 +1,4 @@
-- [ ] Migrate data
+- [x] Migrate data
   - [x] Create new tables
   - [x] Add fields to existing tables
   - [x] Create sections for existing podfics
