@@ -6,7 +6,7 @@ export async function GET(
   context: { params: { id: any } }
 ) {
   const id = context.params.id;
-  if (id === 'new') {
+  if (id === 'new' || id === 'null') {
     return NextResponse.json({});
   }
 
