@@ -483,9 +483,6 @@ alter table part
 alter table part
     drop column raw_length;
 
-alter table part
-    drop column status;
-
 alter table file
     drop column chapter_id;
 
