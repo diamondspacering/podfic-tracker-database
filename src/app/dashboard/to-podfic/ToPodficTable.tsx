@@ -127,12 +127,21 @@ export default function ToPodficTable() {
       },
       filterFn: arrayIncludesFilter,
     }),
-    columnHelper.accessor('permission_status', {
+    columnHelper.accessor('work_permission_status', {
       header: (props) => <HeaderCell text='Perm' {...props} />,
-      cell: TableCell,
+      cell: ({ getValue, row, ...rest }) => (
+        <TableCell
+          getValue={() =>
+            row.getValue('work_permission_status') ??
+            row.original.author_permission_status
+          }
+          row={row}
+          {...rest}
+        />
+      ),
       meta: {
         type: 'status',
-        statusType: 'permission',
+        statusType: 'combined_permission',
         filterType: FilterType.PERMISSION,
         columnName: 'Permission',
         immutable: true,

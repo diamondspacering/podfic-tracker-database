@@ -215,13 +215,34 @@ interface Work {
   main_character?: string;
   series?: string;
   username?: string;
-  permission_status?: PermissionStatus;
+  author_permission_status?: AuthorPermissionStatus;
+  work_permission_status?: PermissionAskStatus;
 }
 
 interface Series {
   series_id?: number;
   name?: string;
   series_link?: number;
+}
+
+enum AuthorPermissionStatus {
+  BP = 'BP',
+  PERMISSION = 'permission',
+  ASK_FIRST = 'ask first',
+  FRIENDLY = 'friendly',
+  UNKNOWN = 'unknown',
+  INACTIVE = 'inactive',
+  NO = 'no',
+}
+
+enum PermissionAskStatus {
+  TO_ASK = 'to ask',
+  TO_ASK_FIRST = 'to ask first',
+  ASKED = 'asked',
+  GHOSTED = 'ghosted',
+  YES = 'yes',
+  NO = 'no',
+  COLLAB = 'collab',
 }
 
 enum PermissionStatus {
@@ -232,6 +253,7 @@ enum PermissionStatus {
   GHOSTED = 'ghosted',
   ASK_FIRST = 'ask first',
   PERMISSION = 'permission',
+  UNKNOWN = 'unknown',
   NO = 'no',
   COLLAB = 'collab',
 }
@@ -241,21 +263,22 @@ interface Author {
   author_id?: number;
   username: string;
   ao3?: string;
-  permission_status?: PermissionStatus;
+  permission_status?: PermissionStatus & AuthorPermissionStatus;
   primary_social_media?: string;
   permission_ask?: string;
   asked_date?: string;
   permission_date?: string;
   resources?: Resource[];
   notes?: Note[];
+  permission_asks?: Permission[];
 }
 
-interface PermissionAsk {
-  permission_ask_id?: number;
+interface Permission {
+  permission_id?: number;
   asked_date?: string;
-  permission_date?: string;
-  status?: PermissionStatus;
-  link?: string;
+  response_date?: string;
+  permission_status?: PermissionAskStatus;
+  ask_link?: string;
   ask_medium?: string;
   work_id?: number;
   author_id?: number;

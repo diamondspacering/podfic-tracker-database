@@ -8,13 +8,10 @@ import {
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import NoteForm from './note-form';
+import { DialogProps } from '@/app/types';
 
-interface NoteDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  submitCallback?: (note: Note) => void;
+interface NoteDialogProps extends DialogProps<Note> {
   noteId?: number;
-  note?: Note;
   podfic_id?: number;
   section_id?: number;
   author_id?: number;
@@ -26,7 +23,7 @@ export default function NoteDialog({
   onClose,
   submitCallback,
   noteId = null,
-  note: noteProp,
+  item: noteProp,
   podfic_id = null,
   section_id = null,
   author_id = null,

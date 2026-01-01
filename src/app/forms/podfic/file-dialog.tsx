@@ -9,23 +9,20 @@ import FileForm from './file-form';
 import { useCallback, useEffect, useState } from 'react';
 import { createUpdateFile } from '@/app/lib/updaters';
 import {
+  DialogProps,
   FileType,
   getDefaultFile,
   getDefaultLength,
   SectionType,
 } from '@/app/types';
 
-interface FileDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  submitCallback: () => void;
+interface FileDialogProps extends DialogProps<File> {
   existingLength?: Length;
   podficId?: number;
   podficTitle?: string;
   chaptered?: boolean;
   sectionId?: number;
   sectionType?: SectionType;
-  file?: File;
 }
 
 export default function FileDialog({
@@ -38,7 +35,7 @@ export default function FileDialog({
   chaptered,
   sectionId,
   sectionType = SectionType.DEFAULT,
-  file: fileProp,
+  item: fileProp,
 }: FileDialogProps) {
   const [file, setFile] = useState(fileProp ?? getDefaultFile(existingLength));
   const [section, setSection] = useState({} as Section);

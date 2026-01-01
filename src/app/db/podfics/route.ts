@@ -10,8 +10,9 @@ export async function GET(request: NextRequest) {
   if (eventId) {
     const client = await getClient();
     const result = await client.query(
-      `select * from podfic
+      `select *,permission.permission_status as work_permission_status,author.permission_status as author_permission_status from podfic
         inner join work on podfic.work_id = work.work_id
+        left join permission on permission.work_id = podfic.work_id
         left join author on work.author_id = author.author_id
       where event_id = $1 order by added_date`,
       [eventId]

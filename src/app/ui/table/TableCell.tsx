@@ -4,9 +4,10 @@ import { getLengthText } from '@/app/lib/format';
 import tableStyles from './table.module.css';
 import { MenuItem, TextField } from '@mui/material';
 import {
+  AuthorPermissionStatus,
   getDefaultLength,
   PartStatus,
-  PermissionStatus,
+  PermissionAskStatus,
   PodficStatus,
 } from '@/app/types';
 import DurationPicker from '../DurationPicker';
@@ -15,6 +16,7 @@ import { sourceCodePro } from '@/app/fonts/fonts';
 import { getLengthValue } from '@/app/lib/lengthHelpers';
 import RatingBadge from '../RatingBadge';
 import ExternalLink from '../ExternalLink';
+import { allPermissionStatusValues } from '@/app/lib/defaultColumnFilters';
 
 type Option = {
   label: string;
@@ -96,8 +98,20 @@ const EditableCell = ({
           label='Status'
           {...extraFieldParams}
         >
-          {columnMeta?.statusType === 'permission'
-            ? Object.values(PermissionStatus).map((status) => (
+          {columnMeta?.statusType === 'author_permission'
+            ? Object.values(AuthorPermissionStatus).map((status) => (
+                <MenuItem key={status} value={status}>
+                  <StatusBadge status={status} />
+                </MenuItem>
+              ))
+            : columnMeta?.statusType === 'permission_ask'
+            ? Object.values(PermissionAskStatus).map((status) => (
+                <MenuItem key={status} value={status}>
+                  <StatusBadge status={status} />
+                </MenuItem>
+              ))
+            : columnMeta?.statusType === 'combined_permission'
+            ? allPermissionStatusValues.map((status) => (
                 <MenuItem key={status} value={status}>
                   <StatusBadge status={status} />
                 </MenuItem>

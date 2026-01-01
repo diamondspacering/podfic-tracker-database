@@ -206,12 +206,21 @@ export default function PodficTable() {
       },
       filterFn: arrayIncludesFilter,
     }),
-    columnHelper.accessor('permission_status', {
+    columnHelper.accessor('work_permission_status', {
       header: (props) => <HeaderCell text='Perm' {...props} />,
-      cell: TableCell,
+      cell: ({ getValue, row, ...rest }) => (
+        <TableCell
+          getValue={() =>
+            row.getValue('work_permission_status') ??
+            row.original.author_permission_status
+          }
+          row={row}
+          {...rest}
+        />
+      ),
       meta: {
         type: 'status',
-        statusType: 'permission',
+        statusType: 'combined_permission',
         filterType: FilterType.PERMISSION,
         columnName: 'Permission',
         immutable: true,
@@ -529,21 +538,24 @@ export default function PodficTable() {
     }),
     columnHelper.display({
       id: 'add-recording-session',
-      cell: (props) => (
-        <Link
-          href={`/forms/recording-session/new?podfic_id=${props.row.id}&return_url=${pathname}`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Button
-            variant='contained'
-            style={{
-              padding: '0px',
-            }}
-          >
-            <Mic sx={{ padding: '0px' }} />
-          </Button>
-        </Link>
-      ),
+      cell: (props) => {
+        let url = `/forms/recording-session/new?podfic_id=${props.row.id}`;
+        const sectionId = getPodficSectionId(props.row.original);
+        if (sectionId) url += `&section_id=${sectionId}`;
+        url += `&return_url=${pathname}`;
+        return (
+          <Link href={url} onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant='contained'
+              style={{
+                padding: '0px',
+              }}
+            >
+              <Mic sx={{ padding: '0px' }} />
+            </Button>
+          </Link>
+        );
+      },
     }),
     columnHelper.display({
       id: 'generate-html',

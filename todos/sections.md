@@ -37,14 +37,14 @@
   - [ ] Make sure all previous routes are fetching/asking for correct information structured correctly
   - [ ] Make sure all code is calling routes correctly and getting correct types/info
 - [ ] Tables
-  - [ ] Chapter tables
+  - [x] Chapter tables
     - check all variations, etc. chapter combined can wait till later I'm ignoring it
     - make everything as reusable as possible w/ columns, etc.
-  - [ ] Parts table
-  - [ ] Podfic table
+  - [x] Parts table
+  - [x] Podfic table
     - [x] make sure sections update properly, can update inline appropriately, etc.
   - [ ] Smaller resources/content tables
-- [ ] Test all types of podfic
+- [x] Test all types of podfic
 - [x] Figure out what's going on w/ section status
   - Lowkey maybe sections should have status but NOT chapters. Chapters should be. like. vestigial atp.
   - Like if you have chapters_split then you kinda want to be able to track where you're at in them!
@@ -54,3 +54,7 @@
 - [x] Chapter tables freezing
   - ok so podfic table is fine everythings just evil
   - yeah it was the classic reference value default value rerendering infinitely
+- [x] part form
+- [x] adding recording session to chapter doesn't seem to. work. does it not update properly...?
+- [ ] fix schedule
+- [ ] babe ur stats page,,,

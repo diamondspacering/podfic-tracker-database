@@ -14,13 +14,15 @@ export const fetchChapters = async (podficId) => {
 
 export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
   const client = await getClient();
+  // TODO: what if there's multiple work permissions,
   const result = await client.query(
-    `select *,fandom.name as fandom_name,event.name as event_name,event_parent.name as parent_name from podfic
+    `select *,fandom.name as fandom_name,event.name as event_name,event_parent.name as parent_name,permission.permission_status as work_permission_status,author.permission_status as author_permission_status from podfic
       inner join work on podfic.work_id = work.work_id
       left join author on work.author_id = author.author_id
       left join fandom on work.fandom_id = fandom.fandom_id
       left join event on podfic.event_id = event.event_id
       left join event_parent on event.parent_id = event_parent.event_parent_id
+      left join permission on permission.work_id = podfic.work_id
     order by added_date asc;`
   );
   const coverArtResult = await client.query(

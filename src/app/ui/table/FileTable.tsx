@@ -190,7 +190,7 @@ export default function FileTable({
             await mutate((key) => Array.isArray(key) && key[0] === '/db/files');
             setFileDialogOpen(false);
           }}
-          file={editingFile}
+          item={editingFile}
           podficId={podficId}
           podficTitle={podficTitle}
           chaptered={chaptered}

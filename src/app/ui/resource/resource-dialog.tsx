@@ -8,22 +8,19 @@ import {
 import { useCallback, useEffect, useState } from 'react';
 import ResourceForm from './resource-form';
 import { createUpdateResource } from '@/app/lib/updaters';
+import { DialogProps } from '@/app/types';
 
-interface ResourceDialogProps {
+interface ResourceDialogProps extends DialogProps<Resource> {
   resourceId?: number;
-  resource?: Resource;
   podfic_id?: number;
   section_id?: number;
   event_id?: number;
   author_id?: number;
-  isOpen: boolean;
-  onClose?: () => void;
-  submitCallback?: () => void;
 }
 
 export default function ResourceDialog({
   resourceId,
-  resource: resourceProp,
+  item: resourceProp,
   podfic_id,
   section_id,
   event_id,

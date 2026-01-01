@@ -75,9 +75,13 @@
 }
 
 .Finished,
-.Posted,
-.Unknown {
+.Posted {
   background-color: none;
+}
+
+.Unknown,
+.Inactive {
+  background-color: gray;
 }
 
 /* "picked" in podfic tracker spreadsheet */
@@ -102,7 +106,9 @@
   background-color: #f4cccc;
 }
 
-.Asked {
+.Asked,
+.Friendly,
+.AskFirst {
   background-color: #ffff00;
 }
 

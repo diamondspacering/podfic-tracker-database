@@ -155,6 +155,18 @@ export const useAuthors = () => {
   };
 };
 
+export const useWorks = () => {
+  const { data, error, isLoading } = useSWR('/db/works', fetcher);
+
+  const works = (data ?? []) as Work[];
+
+  return {
+    works,
+    error,
+    isLoading,
+  };
+};
+
 export const usePodficcers = () => {
   const { data, error, isLoading } = useSWR('/db/podficcers', fetcher);
 
@@ -355,6 +367,21 @@ export const usePart = (id: number) => {
 
   return {
     part,
+    error,
+    isLoading,
+  };
+};
+
+export const useSectionForPart = (partId: number) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/sections?part_id=${partId}`,
+    fetcher
+  );
+
+  const section = (data ?? {}) as Section;
+
+  return {
+    section,
     error,
     isLoading,
   };

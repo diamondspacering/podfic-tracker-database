@@ -29,6 +29,26 @@ export enum PartStatus {
   SUBMITTED = 'Submitted',
 }
 
+export enum AuthorPermissionStatus {
+  BP = 'BP',
+  PERMISSION = 'permission',
+  ASK_FIRST = 'ask first',
+  FRIENDLY = 'friendly',
+  UNKNOWN = 'unknown',
+  INACTIVE = 'inactive',
+  NO = 'no',
+}
+
+export enum PermissionAskStatus {
+  TO_ASK = 'to ask',
+  TO_ASK_FIRST = 'to ask first',
+  ASKED = 'asked',
+  GHOSTED = 'ghosted',
+  YES = 'yes',
+  NO = 'no',
+  COLLAB = 'collab',
+}
+
 export enum PermissionStatus {
   BP = 'BP',
   TO_ASK = 'to ask',
@@ -76,6 +96,8 @@ export const getEmptyLength = () => {
 export enum FilterType {
   STATUS = 'status',
   PERMISSION = 'permission',
+  AUTHOR_PERMISSION = 'author_permission',
+  PERMISSION_ASK = 'permission_ask',
   PART_STATUS = 'part_status',
   RATING = 'rating',
   TYPE = 'type',
@@ -115,4 +137,12 @@ export enum SectionType {
   MULTIPLE_TO_SINGLE = 'multiple-to-single',
   CHAPTERS_SPLIT = 'chapters-split',
   CHAPTERS_COMBINE = 'chapters-combine',
+}
+
+// TODO: consider podficId, sectionId, etc.?
+export interface DialogProps<T> {
+  isOpen: boolean;
+  onClose: () => void;
+  submitCallback?: ((item?: any) => void) | (() => Promise<void>);
+  item?: T;
 }

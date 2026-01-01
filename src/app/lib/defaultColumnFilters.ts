@@ -1,6 +1,8 @@
 import {
+  AuthorPermissionStatus,
   FilterType,
   PartStatus,
+  PermissionAskStatus,
   PermissionStatus,
   PodficStatus,
   PodficType,
@@ -11,6 +13,8 @@ import { Column, ColumnFilter, Table } from '@tanstack/react-table';
 const DEFAULT_DEFINED_FILTER_TYPES = [
   FilterType.STATUS,
   FilterType.PERMISSION,
+  FilterType.AUTHOR_PERMISSION,
+  FilterType.PERMISSION_ASK,
   FilterType.TYPE,
   FilterType.STRING,
   FilterType.OTHER,
@@ -20,7 +24,18 @@ export const defaultPodficStatusValues = Object.values(PodficStatus).filter(
   (status) => status !== PodficStatus.PLANNING
 );
 
-export const defaultPermissionStatusValues = Object.values(PermissionStatus);
+export const defaultAuthorPermissionStatusValues = Object.values(
+  AuthorPermissionStatus
+);
+export const defaultPermissionAskStatusValues =
+  Object.values(PermissionAskStatus);
+
+export const allPermissionStatusValues = Array.from(
+  new Set([
+    ...Object.values(AuthorPermissionStatus),
+    ...Object.values(PermissionAskStatus),
+  ])
+);
 
 export const defaultPodficTypeValues = Object.values(PodficType).filter(
   (type) => type !== PodficType.MULTIVOICE
@@ -36,7 +51,13 @@ export const getDefaultFilterForColumn = (
       value = defaultPodficStatusValues;
       break;
     case FilterType.PERMISSION:
-      value = defaultPermissionStatusValues;
+      value = allPermissionStatusValues;
+      break;
+    case FilterType.AUTHOR_PERMISSION:
+      value = defaultAuthorPermissionStatusValues;
+      break;
+    case FilterType.PERMISSION_ASK:
+      value = defaultPermissionAskStatusValues;
       break;
     case FilterType.TYPE:
       value = defaultPodficTypeValues;
@@ -61,7 +82,13 @@ export const getResetFilterForColumn = (column: Column<any, any>) => {
       value = Object.values(PodficStatus);
       break;
     case FilterType.PERMISSION:
-      value = Object.values(PermissionStatus);
+      value = allPermissionStatusValues;
+      break;
+    case FilterType.AUTHOR_PERMISSION:
+      value = Object.values(AuthorPermissionStatus);
+      break;
+    case FilterType.PERMISSION_ASK:
+      value = Object.values(PermissionAskStatus);
       break;
     case FilterType.TYPE:
       value = Object.values(PodficType);
@@ -138,19 +165,23 @@ export const resetAllColumnsToDefault = (table: Table<any>) => {
 // organize by filter type
 
 export const getFilterValues = (column: Column<any, any>) => {
-  const filterType = (column.columnDef.meta as any)?.filterType;
+  const filterType = (column.columnDef.meta as any)?.filterType as FilterType;
   switch (filterType) {
-    case 'status':
+    case FilterType.STATUS:
       return Object.values(PodficStatus);
-    case 'permission':
-      return Object.values(PermissionStatus);
-    case 'part_status':
+    case FilterType.PERMISSION:
+      return allPermissionStatusValues;
+    case FilterType.AUTHOR_PERMISSION:
+      return Object.values(AuthorPermissionStatus);
+    case FilterType.PERMISSION_ASK:
+      return Object.values(PermissionAskStatus);
+    case FilterType.PART_STATUS:
       return Object.values(PartStatus);
-    case 'rating':
+    case FilterType.RATING:
       return Object.values(Rating);
-    case 'type':
+    case FilterType.TYPE:
       return Object.values(PodficType);
-    case 'string':
+    case FilterType.STRING:
       return Array.from(column.getFacetedUniqueValues().keys()).sort();
     default:
       return [];

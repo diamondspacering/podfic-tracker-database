@@ -9,9 +9,11 @@ import FileDialog from '../forms/podfic/file-dialog';
 import ResourceDialog from './resource/resource-dialog';
 import NoteDialog from './note/note-dialog';
 import CoverArtDialog from './cover-art/cover-art-dialog';
+import PermissionAskDialog from './permission-ask/permission-ask-dialog';
 
 interface AddMenuProps {
   podficId?: number;
+  workId?: number;
   podficTitle?: string;
   sectionId?: number;
   chapterId?: number;
@@ -19,11 +21,20 @@ interface AddMenuProps {
   eventId?: number;
   length?: Length | null;
   submitCallback?: () => void;
-  options?: ('cover_art' | 'file' | 'resource' | 'note' | 'chapter')[];
+  // TODO: uh oh! needs section work probably
+  options?: (
+    | 'cover_art'
+    | 'file'
+    | 'resource'
+    | 'note'
+    | 'chapter'
+    | 'permission_ask'
+  )[];
 }
 
 export default function AddMenu({
   podficId,
+  workId,
   sectionId,
   chapterId,
   authorId,
@@ -47,6 +58,7 @@ export default function AddMenu({
   const [resourceFormOpen, setResourceFormOpen] = useState(false);
   const [coverArtFormOpen, setCoverArtFormOpen] = useState(false);
   const [noteFormOpen, setNoteFormOpen] = useState(false);
+  const [permissionAskFormOpen, setPermissionAskFormOpen] = useState(false);
 
   // TODO: add section ids to all of these
   return (
@@ -99,6 +111,18 @@ export default function AddMenu({
         author_id={authorId}
         event_id={eventId}
       />
+      {permissionAskFormOpen && (
+        <PermissionAskDialog
+          isOpen={permissionAskFormOpen}
+          onClose={() => setPermissionAskFormOpen(false)}
+          submitCallback={() => {
+            setPermissionAskFormOpen(false);
+            submitCallback?.();
+          }}
+          authorId={authorId}
+          workId={workId}
+        />
+      )}
       <div>
         <Button
           variant='contained'
@@ -172,6 +196,17 @@ export default function AddMenu({
               }}
             >
               Note
+            </MenuItem>
+          )}
+          {options?.includes('permission_ask') && (
+            <MenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                setPermissionAskFormOpen(true);
+                handleClose();
+              }}
+            >
+              Permission Ask
             </MenuItem>
           )}
         </Menu>

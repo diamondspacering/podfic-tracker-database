@@ -23,6 +23,12 @@ export async function GET() {
       [author.author_id]
     );
     author.notes = (noteResult.rows ?? []) as Note[];
+
+    const permissionResult = await client.query(
+      `select * from permission where author_id = $1`,
+      [author.author_id]
+    );
+    author.permission_asks = (permissionResult.rows ?? []) as Permission[];
   }
 
   return NextResponse.json(result.rows ?? []);

@@ -15,7 +15,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { updatePartMinified } from '@/app/lib/updaters';
+import { updatePartAndSectionMinified } from '@/app/lib/updaters';
 import { mutate } from 'swr';
 import { FilterType, PartStatus } from '@/app/types';
 import { HeaderCell } from '@/app/ui/table/HeaderCell';
@@ -39,7 +39,7 @@ export default function PartsTable() {
   const updatePart = async (part: PartWithContext) => {
     console.log('updating part');
     try {
-      await updatePartMinified(JSON.stringify(part));
+      await updatePartAndSectionMinified(JSON.stringify(part));
       await mutate('/db/parts');
       console.log('finished updating part');
     } catch (e) {

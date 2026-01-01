@@ -81,14 +81,16 @@ export default function AuthorTable() {
         type: 'link',
       },
     }),
+    // TODO: add filtering based on child permission statuses as well
+    // hmmmm cause we might want to filter authors based on like Currently Ghosting lol
+    // latest permission ask or smth??
     columnHelper.accessor('permission_status', {
       header: (props) => <HeaderCell text='Permission' {...props} />,
-      // header: 'Permission',
       cell: TableCell,
       meta: {
         type: 'status',
-        statusType: 'permission',
-        filterType: FilterType.PERMISSION,
+        statusType: 'author_permission',
+        filterType: FilterType.AUTHOR_PERMISSION,
         columName: 'Permission',
       },
       filterFn: arrayIncludesFilter,
@@ -133,7 +135,7 @@ export default function AuthorTable() {
       cell: (props) => (
         <AddMenu
           authorId={props.row.getValue('author_id')}
-          options={['resource', 'note']}
+          options={['resource', 'note', 'permission_ask']}
         />
       ),
     }),
@@ -193,6 +195,7 @@ export default function AuthorTable() {
             width={row.getAllCells().length}
             notes={row.original.notes ?? []}
             resources={row.original.resources ?? []}
+            permissionAsks={row.original.permission_asks ?? []}
             author_id={row.original.author_id}
             submitCallback={async () => {
               await mutate('/db/authors');

@@ -571,6 +571,7 @@ export default function RecordingSessionForm({
               month,
               podficId,
               chapterId,
+              sectionId,
               partId,
               length,
               mic,

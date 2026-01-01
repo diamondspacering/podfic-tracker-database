@@ -114,6 +114,7 @@ export const createUpdateSection = async (sectionData: Section) => {
     const result = await client.query(
       `INSERT INTO section (
         podfic_id,
+        part_id,
         number,
         title,
         wordcount,
@@ -129,11 +130,13 @@ export const createUpdateSection = async (sectionData: Section) => {
         $5,
         $6,
         $7,
-        $8
+        $8,
+        $9
       )
       RETURNING *`,
       [
         sectionData.podfic_id,
+        sectionData.part_id,
         sectionData.number,
         sectionData.title,
         sectionData.wordcount,
@@ -340,6 +343,7 @@ export const createUpdateWork = async (
         workData.rating,
         workData.category,
         workData.relationship,
+        workData.main_character,
       ]
     );
   } else {
@@ -1471,7 +1475,7 @@ export const createUpdateProject = async (projectData: Project) => {
     projectResult = result.rows[0];
   }
 
-  return projectResult;
+  // return projectResult;
 };
 
 export const saveSectionHTML = async (sectionId, htmlString) => {
@@ -1606,35 +1610,30 @@ export const createUpdatePartData = async (partData) => {
       partData.podfic_id = podfic.podfic_id;
     }
 
+    let partResult = null;
     if (!partData.part_id) {
-      await client.query(
-        `insert into part (podfic_id, chapter_id, doc, organizer, words, status, part, deadline, created_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *`,
+      partResult = await client.query(
+        `insert into part (podfic_id, chapter_id, organizer, status, part, created_at) values ($1, $2, $3, $4, $5, $6) returning *`,
         [
           partData.podfic_id,
           partData.chapter_id,
-          partData.doc,
           partData.organizer,
-          partData.words,
           partData.status,
           partData.part,
-          partData.deadline ? partData.deadline : null,
           new Date(),
         ]
       );
     } else {
       if (typeof partData.part_id !== 'number')
         partData.part_id = parseInt(partData.part_id);
-      await client.query(
+      partResult = await client.query(
         `update part set
           podfic_id = $1,
           chapter_id = $2,
-          doc = $3,
-          organizer = $4,
-          words = $5,
-          status = $6,
-          part = $7,
-          deadline = $8
-        where part_id = $9
+          organizer = $3,
+          status = $4,
+          part = $5,
+        where part_id = $6
         returning *
       `,
         [
@@ -1645,48 +1644,56 @@ export const createUpdatePartData = async (partData) => {
           partData.words,
           partData.status,
           partData.part,
-          partData.deadline ? partData.deadline : null,
           partData.part_id,
         ]
       );
     }
+    return partResult.rows[0].part_id;
   } catch (e) {
     throw new Error(e);
   }
 };
 
 // TODO: update for handling sections
-export const updatePartMinified = async (data: any) => {
-  const partData = JSON.parse(data);
-  // console.log({ partData });
+export const updatePartAndSectionMinified = async (dataString: any) => {
+  const data = JSON.parse(dataString);
+  console.log({ data });
 
-  if (partData.length) partData.length = getLengthUpdateString(partData.length);
+  if (data.length) data.length = getLengthUpdateString(data.length);
 
-  if (typeof partData.part_id !== 'number')
-    partData.part_id = parseInt(partData.part_id);
+  if (typeof data.part_id !== 'number') data.part_id = parseInt(data.part_id);
 
   const client = await getClient();
-  const updateString = `UPDATE part SET
-      doc = $1,
-      audio_link = $2,
-      part = $3,
-      words = $4,
-      type = $5,
-      length = $6,
-      status = $7
-    WHERE part_id = $8
+  const partUpdateString = `UPDATE part SET
+      audio_link = $1,
+      part = $2,
+      type = $3,
+      status = $4
+    WHERE part_id = $5
     RETURNING *`;
-  const parameterArray = [
-    partData.doc,
-    partData.audio_link ? partData.audio_link : null,
-    partData.part,
-    partData.words,
-    partData.type ? partData.type : null,
-    partData.length,
-    partData.status,
-    partData.part_id,
+  const partParameterArray = [
+    data.audio_link ? data.audio_link : null,
+    data.part,
+    data.type ? data.type : null,
+    data.status,
+    data.part_id,
   ];
-  await client.query(updateString, parameterArray);
+  await client.query(partUpdateString, partParameterArray);
+
+  const sectionUpdateString = `UPDATE section SET
+    text_link = $1,
+    wordcount = $2,
+    length = $3
+    WHERE section_id = $4
+    RETURNING *
+  `;
+  const sectionParameterArray = [
+    data.text_link,
+    data.wordcount,
+    data.length,
+    data.section_id,
+  ];
+  await client.query(sectionUpdateString, sectionParameterArray);
 };
 
 export const linkPodficcerToPodfic = async (
@@ -1813,4 +1820,55 @@ export const deletePodfic = async (podficId: number, workId?: number) => {
   }
   await client.query('DELETE FROM podfic WHERE podfic_id = $1', [podficId]);
   await client.query('DELETE FROM work WHERE work_id = $1', [workId]);
+};
+
+export const createUpdatePermissionAsk = async (permissionData: Permission) => {
+  let permissionResult = null;
+
+  const client = await getClient();
+  if (!permissionData.permission_id) {
+    const result = await client.query(
+      `INSERT INTO permission
+      (asked_date, response_date, permission_status, ask_link, ask_medium, work_id, author_id)
+      VALUES
+      ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING *`,
+      [
+        permissionData.asked_date,
+        permissionData.response_date,
+        permissionData.permission_status,
+        permissionData.ask_link,
+        permissionData.ask_medium,
+        permissionData.work_id,
+        permissionData.author_id,
+      ]
+    );
+    permissionResult = result.rows[0];
+  } else {
+    const result = await client.query(
+      `UPDATE permission SET
+      work_id = $1,
+      author_id = $2,
+      asked_date = $3,
+      response_date = $4,
+      permission_status = $5,
+      ask_link = $6,
+      ask_medium = $7
+    WHERE permission_id = $8
+    RETURNING *`,
+      [
+        permissionData.work_id,
+        permissionData.author_id,
+        permissionData.asked_date ? permissionData.asked_date : null,
+        permissionData.response_date ? permissionData.response_date : null,
+        permissionData.permission_status,
+        permissionData.ask_link,
+        permissionData.ask_medium,
+        permissionData.permission_id,
+      ]
+    );
+    permissionResult = result.rows[0];
+  }
+
+  // return permissionResult;
 };

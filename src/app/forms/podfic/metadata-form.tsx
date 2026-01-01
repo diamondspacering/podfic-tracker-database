@@ -24,7 +24,12 @@ import {
   createUpdateAuthorClient,
   createUpdateFandom,
 } from '@/app/lib/updaters';
-import { Category, PermissionStatus, Rating } from '@/app/types';
+import {
+  AuthorPermissionStatus,
+  Category,
+  PermissionStatus,
+  Rating,
+} from '@/app/types';
 import { LoadingButton } from '@mui/lab';
 import { socialMedia } from '@/app/lib/dataGeneral';
 import StatusBadge from '@/app/ui/StatusBadge';
@@ -325,7 +330,7 @@ export default function MetadataForm({
                   }))
                 }
               >
-                {Object.values(PermissionStatus).map((status) => (
+                {Object.values(AuthorPermissionStatus).map((status) => (
                   <MenuItem key={status} value={status}>
                     <StatusBadge status={status} />
                   </MenuItem>

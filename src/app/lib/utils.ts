@@ -11,9 +11,12 @@ import {
   PermissionStatus,
   PartStatus,
   SectionType,
+  AuthorPermissionStatus,
+  PermissionAskStatus,
 } from '../types';
 import ColorScale from 'color-scales';
 import { getLengthValue } from './lengthHelpers';
+import { allPermissionStatusValues } from './defaultColumnFilters';
 
 // TODO: still running into issues w/ this, try again
 // editingRowVal param?
@@ -55,7 +58,17 @@ export const filterActivated = (column, filterType: FilterType) => {
     );
   }
   if (filterType === FilterType.PERMISSION) {
-    return !Object.values(PermissionStatus).every((f) =>
+    return !allPermissionStatusValues.every((f) =>
+      (column.getFilterValue() ?? []).includes(f)
+    );
+  }
+  if (filterType === FilterType.AUTHOR_PERMISSION) {
+    return !Object.values(AuthorPermissionStatus).every((f) =>
+      (column.getFilterValue() ?? []).includes(f)
+    );
+  }
+  if (filterType === FilterType.PERMISSION_ASK) {
+    return !Object.values(PermissionAskStatus).every((f) =>
       (column.getFilterValue() ?? []).includes(f)
     );
   }
