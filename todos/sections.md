@@ -50,7 +50,7 @@
   - Like if you have chapters_split then you kinda want to be able to track where you're at in them!
     - but then top level chapters do you wanna know...no you don't. idiot.
   - then just a completesChapter flag in recording sessions that shows different text if it's chapter/section/part
-- [ ] Length color scale not working on chapter tables
+- [x] Length color scale not working on chapter tables
 - [x] Chapter tables freezing
   - ok so podfic table is fine everythings just evil
   - yeah it was the classic reference value default value rerendering infinitely
@@ -58,3 +58,4 @@
 - [x] adding recording session to chapter doesn't seem to. work. does it not update properly...?
 - [ ] fix schedule
 - [ ] babe ur stats page,,,
+- [ ] fix fixed color scale
