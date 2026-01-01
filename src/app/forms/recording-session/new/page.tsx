@@ -1,6 +1,11 @@
 import { Typography } from '@mui/material';
 import RecordingSessionForm from '../recording-session-form';
 import styles from '@/app/forms/forms.module.css';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'New Recording Session',
+};
 
 export default function Page({ searchParams }) {
   const podficId = searchParams.podfic_id

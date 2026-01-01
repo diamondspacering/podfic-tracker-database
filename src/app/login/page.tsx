@@ -8,6 +8,11 @@ import {
   signUp as signUpLoader,
   signIn as signInLoader,
 } from '../lib/authLoaders';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Login',
+};
 
 export default function Page({ searchParams }) {
   const returnUrl = searchParams.return_url;

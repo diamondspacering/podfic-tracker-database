@@ -10,6 +10,11 @@ import { LoadingButton } from '@mui/lab';
 import DurationPicker from '@/app/ui/DurationPicker';
 import { PodficType, SectionType } from '@/app/types';
 import { usePodficcer } from '@/app/lib/swrLoaders';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Edit Podfic',
+};
 
 export default function Page({
   params,

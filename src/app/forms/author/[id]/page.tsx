@@ -7,6 +7,11 @@ import styles from '@/app/forms/forms.module.css';
 import { Typography } from '@mui/material';
 import AuthorForm from '../author-form';
 import { LoadingButton } from '@mui/lab';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Edit Author',
+};
 
 export default function Page({ params }: { params: { id: any } }) {
   const [author, setAuthor] = useState({} as Author);
