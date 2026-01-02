@@ -70,6 +70,9 @@ export default function PermissionAskForm({
         sx={{ width: '200px' }}
         loading={worksLoading}
         options={filteredWorks}
+        value={filteredWorks.find(
+          (work) => work.work_id === permissionAsk.work_id
+        )}
         isOptionEqualToValue={(option, value) =>
           option.work_id === value.work_id
         }

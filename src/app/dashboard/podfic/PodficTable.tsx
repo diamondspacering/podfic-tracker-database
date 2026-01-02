@@ -208,14 +208,14 @@ export default function PodficTable() {
     }),
     columnHelper.accessor('work_permission_status', {
       header: (props) => <HeaderCell text='Perm' {...props} />,
-      cell: ({ getValue, row, ...rest }) => (
+      cell: ({ row, ...rest }) => (
         <TableCell
+          {...rest}
           getValue={() =>
             row.getValue('work_permission_status') ??
             row.original.author_permission_status
           }
           row={row}
-          {...rest}
         />
       ),
       meta: {
@@ -530,9 +530,17 @@ export default function PodficTable() {
         <AddMenu
           podficTitle={props.row.getValue('title')}
           podficId={props.row.getValue('podfic_id')}
+          workId={props.row.getValue('work_id')}
           sectionId={getPodficSectionId(props.row.original)}
           length={props.row.getValue('length')}
-          options={['cover_art', 'file', 'resource', 'note', 'chapter']}
+          options={[
+            'cover_art',
+            'file',
+            'resource',
+            'note',
+            'permission_ask',
+            'chapter',
+          ]}
         />
       ),
     }),
@@ -892,6 +900,7 @@ export default function PodficTable() {
               width={row.getVisibleCells().length}
               notes={row.original.notes ?? []}
               resources={row.original.resources ?? []}
+              permissionAsks={row.original.permission_asks ?? []}
               podfic_id={row.original.podfic_id}
             />
           </>
