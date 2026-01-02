@@ -107,6 +107,14 @@ export enum FilterType {
   OTHER = 'other',
 }
 
+export enum StatusType {
+  PERMISSION = 'permission',
+  AUTHOR_PERMISSION = 'author_permission',
+  PERMISSION_ASK = 'permission_ask',
+  PART = 'part',
+  DEFAULT = 'default',
+}
+
 export enum ScheduleEventType {
   PODFIC = 'Podfic',
   CHAPTER = 'Chapter',

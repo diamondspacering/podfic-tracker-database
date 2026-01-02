@@ -16,7 +16,7 @@ import {
   formatTableDate,
 } from '@/app/lib/utils';
 import { HeaderCell } from '@/app/ui/table/HeaderCell';
-import { FilterType } from '@/app/types';
+import { FilterType, StatusType } from '@/app/types';
 import CustomTable from '@/app/ui/table/CustomTable';
 
 export default function AuthorTable() {
@@ -81,15 +81,12 @@ export default function AuthorTable() {
         type: 'link',
       },
     }),
-    // TODO: add filtering based on child permission statuses as well
-    // hmmmm cause we might want to filter authors based on like Currently Ghosting lol
-    // latest permission ask or smth??
     columnHelper.accessor('permission_status', {
       header: (props) => <HeaderCell text='Permission' {...props} />,
       cell: TableCell,
       meta: {
         type: 'status',
-        statusType: 'author_permission',
+        statusType: StatusType.AUTHOR_PERMISSION,
         filterType: FilterType.AUTHOR_PERMISSION,
         columName: 'Permission',
       },

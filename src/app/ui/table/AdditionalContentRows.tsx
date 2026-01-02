@@ -16,9 +16,8 @@ import CustomTable from './CustomTable';
 import { createColumnHelper } from '@tanstack/react-table';
 import { TableCell } from './TableCell';
 import { socialMedia } from '@/app/lib/dataGeneral';
-import { FilterType } from '@/app/types';
-import { arrayIncludesFilter, formatTableDate } from '@/app/lib/utils';
-import { HeaderCell } from './HeaderCell';
+import { StatusType } from '@/app/types';
+import { formatTableDate } from '@/app/lib/utils';
 import { EditCell } from './EditCell';
 import { createUpdatePermissionAsk } from '@/app/lib/updaters';
 
@@ -158,7 +157,7 @@ export default function AdditionalContentRows({
         cell: TableCell,
         meta: {
           type: 'status',
-          statusType: 'permission_ask',
+          statusType: StatusType.PERMISSION_ASK,
         },
       }),
       columnHelper.display({

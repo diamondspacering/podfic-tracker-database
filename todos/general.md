@@ -3,6 +3,7 @@
 - [ ] Variable titles per page
 - [ ] Author table - include option for viewing works by that author? link to podfic table & set filter?
 - [ ] General chapter table for all chapters?
+- [ ] Custom meta type for tables
 - ChapterTable.tsx:
   - [ ] individual files and resources expanded per chapter
   - [ ] global color scale for wordcount?
@@ -82,8 +83,27 @@
 - [ ] Make filters update when data is updated (e.g., new author) - prob have more `null` support?
 - [x] Podfic deletion
 - [ ] Actually use giftee_id and designating a podficcer who something is gifted to
-- [ ] Figure out the errors on podfic table
-- [ ] Consider [WHAT WAS I GOING TO SAY?!]
+- [ ] Figure out the errors on custom tables
+- [x] Generic dialog props that get extended
+- [ ] Individual author permission
+  - [ ] Basic feature
+    - [x] Permission asks for authors
+    - [x] Backfill data correctly
+    - [x] Permission pulling for works/podfics
+    - [ ] make it not close dialog when revalidating every time
+    - [ ] Display it more compressed/less ugly
+      - preferably still with inline editing
+    - [x] Figure out pulling correct permission ask when grabbing for works - consider like an archived field or something?
+    - [x] Permission asks for works
+    - [ ] lighter grey for unknown/inactive
+    - [ ] filtering authors on child permission statuses as well? Like I may want to see authors with open permission asks/ones I still need to ask
+      - this may be complicated
+  - [ ] Consider doing the events method of combined headers? it's very sloppy but. useful.
+- [ ] To podfic table crashing when resetting filters bc of tags?
+- [x] statusType enum for tables
+- [x] Separate [id] and new pages for all forms (if only for page titles)
+- [ ] Use transactions or something so you stop getting extra elements created by processes failing halfway through
+  - transaction wrapper? is that a bad idea. Would require some restructuring
 
 ## Routes
 

@@ -7,11 +7,11 @@ import {
   PodficStatus,
   PodficType,
   SectionType,
+  StatusType,
 } from '@/app/types';
 import AddMenu from '@/app/ui/AddMenu';
 import { TableCell } from '@/app/ui/table/TableCell';
 import { ColumnFiltersState, createColumnHelper } from '@tanstack/react-table';
-import ColorScale from 'color-scales';
 import { useEffect, useMemo, useState } from 'react';
 import styles from '@/app/dashboard/dashboard.module.css';
 import tableStyles from '@/app/ui/table/table.module.css';
@@ -70,10 +70,8 @@ export default function PodficTable() {
     podficTitle: string;
   }>({ podficId: 0, workId: 0, podficTitle: '' });
 
-  // const lengthColorScale = new ColorScale(0, 3600, ['#ffffff', '#4285f4']);
   const lengthColorScale = useFixedColorScale(3600);
   const wordcountColorScale = useFixedColorScale(150000);
-  // const wordcountColorScale = new ColorScale(0, 150000, ['#ffffff', '#4285f4']);
 
   const columnHelper = createColumnHelper<Podfic & Work & Fandom & Event>();
   const [columnFilters, setColumnFilters] =
@@ -220,7 +218,7 @@ export default function PodficTable() {
       ),
       meta: {
         type: 'status',
-        statusType: 'combined_permission',
+        statusType: StatusType.PERMISSION,
         filterType: FilterType.PERMISSION,
         columnName: 'Permission',
         immutable: true,

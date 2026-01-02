@@ -9,6 +9,7 @@ import {
   PartStatus,
   PermissionAskStatus,
   PodficStatus,
+  StatusType,
 } from '@/app/types';
 import DurationPicker from '../DurationPicker';
 import DatePicker from '../DatePicker';
@@ -98,25 +99,25 @@ const EditableCell = ({
           label='Status'
           {...extraFieldParams}
         >
-          {columnMeta?.statusType === 'author_permission'
+          {columnMeta?.statusType === StatusType.AUTHOR_PERMISSION
             ? Object.values(AuthorPermissionStatus).map((status) => (
                 <MenuItem key={status} value={status}>
                   <StatusBadge status={status} />
                 </MenuItem>
               ))
-            : columnMeta?.statusType === 'permission_ask'
+            : columnMeta?.statusType === StatusType.PERMISSION_ASK
             ? Object.values(PermissionAskStatus).map((status) => (
                 <MenuItem key={status} value={status}>
                   <StatusBadge status={status} />
                 </MenuItem>
               ))
-            : columnMeta?.statusType === 'combined_permission'
+            : columnMeta?.statusType === StatusType.PERMISSION
             ? allPermissionStatusValues.map((status) => (
                 <MenuItem key={status} value={status}>
                   <StatusBadge status={status} />
                 </MenuItem>
               ))
-            : columnMeta?.statusType === 'part'
+            : columnMeta?.statusType === StatusType.PART
             ? Object.values(PartStatus).map((status) => (
                 <MenuItem key={status} value={status}>
                   <StatusBadge status={status} />

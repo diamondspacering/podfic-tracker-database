@@ -17,7 +17,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { updatePartAndSectionMinified } from '@/app/lib/updaters';
 import { mutate } from 'swr';
-import { FilterType, PartStatus } from '@/app/types';
+import { FilterType, PartStatus, StatusType } from '@/app/types';
 import { HeaderCell } from '@/app/ui/table/HeaderCell';
 import CustomTable from '@/app/ui/table/CustomTable';
 
@@ -161,7 +161,7 @@ export default function PartsTable() {
       cell: TableCell,
       meta: {
         type: 'status',
-        statusType: 'part',
+        statusType: StatusType.PART,
         filterType: FilterType.PART_STATUS,
         options: Object.values(PartStatus).map((status) => ({
           label: status,

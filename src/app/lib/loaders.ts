@@ -43,7 +43,7 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
     'select * from tag inner join tag_podfic on tag.tag_id = tag_podfic.tag_id'
   );
   const permissionResult = await client.query(
-    'select * from permission where work_id is not null'
+    'select * from permission where work_id is not null order by asked_date desc'
   );
 
   let podfics = result.rows;

@@ -15,7 +15,12 @@ import { Autocomplete, Chip, IconButton, Link, TextField } from '@mui/material';
 import { ColumnFiltersState, createColumnHelper } from '@tanstack/react-table';
 import { useCallback, useMemo, useState } from 'react';
 import tableStyles from '@/app/ui/table/table.module.css';
-import { FilterType, getDefaultLength, PodficStatus } from '@/app/types';
+import {
+  FilterType,
+  getDefaultLength,
+  PodficStatus,
+  StatusType,
+} from '@/app/types';
 import { HeaderCell } from '@/app/ui/table/HeaderCell';
 import { getLengthText } from '@/app/lib/format';
 import { addLengths } from '@/app/lib/lengthHelpers';
@@ -129,19 +134,19 @@ export default function ToPodficTable() {
     }),
     columnHelper.accessor('work_permission_status', {
       header: (props) => <HeaderCell text='Perm' {...props} />,
-      cell: ({ getValue, row, ...rest }) => (
+      cell: ({ row, ...rest }) => (
         <TableCell
+          {...rest}
           getValue={() =>
             row.getValue('work_permission_status') ??
             row.original.author_permission_status
           }
           row={row}
-          {...rest}
         />
       ),
       meta: {
         type: 'status',
-        statusType: 'combined_permission',
+        statusType: StatusType.PERMISSION,
         filterType: FilterType.PERMISSION,
         columnName: 'Permission',
         immutable: true,
