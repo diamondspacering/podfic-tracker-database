@@ -59,3 +59,5 @@
 - [ ] fix schedule
 - [ ] babe ur stats page,,,
 - [ ] fix fixed color scale
+
+How to handle posted year?
