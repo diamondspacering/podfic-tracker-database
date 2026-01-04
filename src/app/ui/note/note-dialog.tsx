@@ -8,15 +8,12 @@ import {
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import NoteForm from './note-form';
+import { DialogProps } from '@/app/types';
 
-interface NoteDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  submitCallback?: (note: Note) => void;
+interface NoteDialogProps extends DialogProps<Note> {
   noteId?: number;
-  note?: Note;
   podfic_id?: number;
-  chapter_id?: number;
+  section_id?: number;
   author_id?: number;
   event_id?: number;
 }
@@ -26,9 +23,9 @@ export default function NoteDialog({
   onClose,
   submitCallback,
   noteId = null,
-  note: noteProp,
+  item: noteProp,
   podfic_id = null,
-  chapter_id = null,
+  section_id = null,
   author_id = null,
   event_id = null,
 }: NoteDialogProps) {
@@ -42,7 +39,7 @@ export default function NoteDialog({
       const newNote = await createUpdateNote({
         ...note,
         podfic_id,
-        chapter_id,
+        section_id,
         author_id,
         event_id,
       });
@@ -51,7 +48,7 @@ export default function NoteDialog({
     } catch (e) {
       console.error('Error submitting note:', e);
     }
-  }, [author_id, chapter_id, event_id, note, podfic_id, submitCallback]);
+  }, [author_id, section_id, event_id, note, podfic_id, submitCallback]);
 
   return (
     <Dialog

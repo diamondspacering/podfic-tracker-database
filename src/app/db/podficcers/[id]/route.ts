@@ -1,4 +1,4 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
 ) {
   const id = context.params.id;
 
-  const client = await getClient();
+  const client = await getDBClient();
 
   const result = await client.query(
     `select * from podficcer where podficcer_id = $1`,

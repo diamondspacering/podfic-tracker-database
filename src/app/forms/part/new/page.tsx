@@ -1,6 +1,11 @@
 import styles from '@/app/forms/forms.module.css';
 import { Typography } from '@mui/material';
 import PartForm from '../PartForm';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'New Part',
+};
 
 export default function Page({ searchParams }) {
   return (

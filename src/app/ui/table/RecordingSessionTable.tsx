@@ -21,23 +21,24 @@ import { Delete, Edit, OpenInNew } from '@mui/icons-material';
 import { mutate } from 'swr';
 import { getLengthValue } from '@/app/lib/lengthHelpers';
 import CustomTable from './CustomTable';
+import { getDefaultColumnVisibility } from '@/app/lib/utils';
 
 interface RecordingSessionTableProps {
   podficId: number | string;
-  chapterId?: number | string;
+  sectionId?: number | string;
   full?: boolean;
   returnUrl: string;
 }
 
 export default function RecordingSessionTable({
   podficId,
-  chapterId,
+  sectionId,
   full,
   returnUrl,
 }: RecordingSessionTableProps) {
   const { recordingSessions, isLoading } = useRecordingSessions({
     podficId,
-    chapterId,
+    sectionId,
     full,
   });
 
@@ -95,8 +96,8 @@ export default function RecordingSessionTable({
         hidden: true,
       },
     }),
-    columnHelper.accessor('chapter_id', {
-      header: 'Chapter ID',
+    columnHelper.accessor('section_id', {
+      header: 'Section ID',
       cell: TableCell,
       meta: {
         type: 'number',
@@ -203,18 +204,8 @@ export default function RecordingSessionTable({
         isLoading={isLoading}
         data={recordingSessions}
         columns={columns}
-        columnVisibility={columns.reduce((acc, column) => {
-          if ((column.meta as any)?.hidden && (column as any)?.accessorKey) {
-            acc[(column as any).accessorKey as string] = false;
-          }
-          return acc;
-        }, {})}
-        columnFilters={[]}
-        setColumnFilters={() => {}}
+        columnVisibility={getDefaultColumnVisibility(columns)}
         rowKey='recording_id'
-        editingRowId={null}
-        setEditingRowId={() => {}}
-        updateItemInline={async () => {}}
       />
     </div>
   );

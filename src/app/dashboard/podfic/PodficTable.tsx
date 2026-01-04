@@ -6,18 +6,23 @@ import {
   getDefaultLength,
   PodficStatus,
   PodficType,
+  SectionType,
+  StatusType,
 } from '@/app/types';
 import AddMenu from '@/app/ui/AddMenu';
 import { TableCell } from '@/app/ui/table/TableCell';
 import { ColumnFiltersState, createColumnHelper } from '@tanstack/react-table';
-import ColorScale from 'color-scales';
 import { useEffect, useMemo, useState } from 'react';
 import styles from '@/app/dashboard/dashboard.module.css';
 import tableStyles from '@/app/ui/table/table.module.css';
-import { updatePodficMinified } from '@/app/lib/updaters';
+import {
+  updatePodficMinified,
+  updateSectionMinified,
+} from '@/app/lib/updaters';
 import Link from 'next/link';
 import { Button, Checkbox, FormControlLabel, IconButton } from '@mui/material';
 import {
+  Delete,
   KeyboardArrowDown,
   KeyboardArrowRight,
   Mic,
@@ -29,6 +34,9 @@ import {
   arrayIncludesFilter,
   dateFilter,
   formatTableDate,
+  getIsPostedChaptered,
+  getPodficSectionId,
+  useFixedColorScale,
 } from '@/app/lib/utils';
 import { usePersistentState } from '@/app/lib/utilsFrontend';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -41,6 +49,8 @@ import RecordingSessionTable from '@/app/ui/table/RecordingSessionTable';
 import { addLengths, getLengthValue } from '@/app/lib/lengthHelpers';
 import CustomTable from '@/app/ui/table/CustomTable';
 import ExternalLink from '@/app/ui/ExternalLink';
+import DeletePodficDialog from '@/app/ui/table/delete-podfic-dialog';
+import { RawWPMCell, WPMCell } from '@/app/ui/table/WPMCells';
 
 export default function PodficTable() {
   const searchParams = useSearchParams();
@@ -54,9 +64,15 @@ export default function PodficTable() {
   const [recordingSessionsExpanded, setRecordingSessionsExpanded] = useState<
     number[]
   >([]);
+  const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
+  const [selectedDeletionProps, setSelectedDeletionProps] = useState<{
+    podficId: number;
+    workId: number;
+    podficTitle: string;
+  }>({ podficId: 0, workId: 0, podficTitle: '' });
 
-  const lengthColorScale = new ColorScale(0, 3600, ['#ffffff', '#4285f4']);
-  const wordcountColorScale = new ColorScale(0, 150000, ['#ffffff', '#4285f4']);
+  const lengthColorScale = useFixedColorScale(3600);
+  const wordcountColorScale = useFixedColorScale(150000);
 
   const columnHelper = createColumnHelper<Podfic & Work & Fandom & Event>();
   const [columnFilters, setColumnFilters] =
@@ -96,7 +112,7 @@ export default function PodficTable() {
         type: 'number',
         immutable: true,
         hidden: true,
-        columName: 'Work ID',
+        columnName: 'Work ID',
       },
     }),
     columnHelper.display({
@@ -122,6 +138,22 @@ export default function PodficTable() {
         </IconButton>
       ),
       enableHiding: false,
+    }),
+    columnHelper.display({
+      id: 'log',
+      cell: (props) => (
+        <Button
+          variant='contained'
+          onClick={() => console.log(props.row.original)}
+          style={{ padding: '0px' }}
+        >
+          Log
+        </Button>
+      ),
+      meta: {
+        columnName: 'log',
+        hidden: true,
+      },
     }),
     columnHelper.display({
       id: 'number',
@@ -174,12 +206,21 @@ export default function PodficTable() {
       },
       filterFn: arrayIncludesFilter,
     }),
-    columnHelper.accessor('permission_status', {
+    columnHelper.accessor('work_permission_status', {
       header: (props) => <HeaderCell text='Perm' {...props} />,
-      cell: TableCell,
+      cell: ({ row, ...rest }) => (
+        <TableCell
+          {...rest}
+          getValue={() =>
+            row.getValue('work_permission_status') ??
+            row.original.author_permission_status
+          }
+          row={row}
+        />
+      ),
       meta: {
         type: 'status',
-        statusType: 'permission',
+        statusType: StatusType.PERMISSION,
         filterType: FilterType.PERMISSION,
         columnName: 'Permission',
         immutable: true,
@@ -280,21 +321,7 @@ export default function PodficTable() {
     columnHelper.display({
       id: 'wpm',
       header: 'WPM',
-      cell: (props) => {
-        let value = null;
-        if (
-          !!props.row.getValue('wordcount') &&
-          !!props.row.getValue('length')
-        ) {
-          value = Math.round(
-            parseInt(props.row.getValue('wordcount')) /
-              (props.row.getValue('plain_length')
-                ? getLengthValue(props.row.getValue('plain_length')) / 60
-                : getLengthValue(props.row.getValue('length')) / 60)
-          );
-        }
-        return <span>{value}</span>;
-      },
+      cell: WPMCell,
       footer: ({ table }) => {
         const filteredRows = table
           .getFilteredRowModel()
@@ -317,19 +344,7 @@ export default function PodficTable() {
     columnHelper.display({
       id: 'raw_wpm',
       header: 'Raw WPM',
-      cell: (props) => {
-        let value = null;
-        if (
-          !!props.row.getValue('wordcount') &&
-          !!props.row.getValue('raw_length')
-        ) {
-          value = Math.round(
-            parseInt(props.row.getValue('wordcount')) /
-              (getLengthValue(props.row.getValue('raw_length')) / 60)
-          );
-        }
-        return <span>{value}</span>;
-      },
+      cell: RawWPMCell,
       footer: ({ table }) => {
         const filteredRows = table
           .getFilteredRowModel()
@@ -419,7 +434,7 @@ export default function PodficTable() {
       },
     }),
     columnHelper.display({
-      id: 'chapters',
+      id: 'sections',
       header: 'Chapters',
       cell: (props) =>
         props.row.original.chaptered ? (
@@ -428,13 +443,17 @@ export default function PodficTable() {
             onClick={(e) => e.stopPropagation()}
           >
             {`${
-              props.row.original.chapters?.filter(
-                (c) =>
-                  c.status === PodficStatus.POSTED ||
-                  c.status === PodficStatus.FINISHED ||
-                  c.status === PodficStatus.POSTING
-              ).length ?? '0'
-            }/${props.row.original.chapter_count ?? '?'}`}
+              props.row.original.sections?.filter((s) => {
+                return (
+                  s.status === PodficStatus.POSTED ||
+                  s.status === PodficStatus.FINISHED ||
+                  s.status === PodficStatus.POSTING ||
+                  (props.row.original.section_type ===
+                    SectionType.MULTIPLE_TO_SINGLE &&
+                    s.number < 0)
+                );
+              }).length ?? '0'
+            }/${props.row.original.sections?.length ?? '?'}`}
             &nbsp;
             <IconButton
               style={{
@@ -484,37 +503,72 @@ export default function PodficTable() {
         <AddMenu
           podficTitle={props.row.getValue('title')}
           podficId={props.row.getValue('podfic_id')}
+          workId={props.row.getValue('work_id')}
+          sectionId={getPodficSectionId(props.row.original)}
           length={props.row.getValue('length')}
-          options={['cover_art', 'file', 'resource', 'note', 'chapter']}
+          options={[
+            'cover_art',
+            'file',
+            'resource',
+            'note',
+            'permission_ask',
+            'chapter',
+          ]}
         />
       ),
     }),
     columnHelper.display({
       id: 'add-recording-session',
-      cell: (props) => (
-        <Link
-          href={`/forms/recording-session/new?podfic_id=${props.row.id}&return_url=${pathname}`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Button
-            variant='contained'
-            style={{
-              padding: '0px',
-            }}
-          >
-            <Mic sx={{ padding: '0px' }} />
-          </Button>
-        </Link>
-      ),
+      cell: (props) => {
+        let url = `/forms/recording-session/new?podfic_id=${props.row.id}`;
+        const sectionId = getPodficSectionId(props.row.original);
+        if (sectionId) url += `&section_id=${sectionId}`;
+        url += `&return_url=${pathname}`;
+        return (
+          <Link href={url} onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant='contained'
+              style={{
+                padding: '0px',
+              }}
+            >
+              <Mic sx={{ padding: '0px' }} />
+            </Button>
+          </Link>
+        );
+      },
     }),
     columnHelper.display({
       id: 'generate-html',
+      cell: (props) => {
+        let url = `/dashboard/html?podfic_id=${props.row.id}`;
+        const sectionId = getPodficSectionId(props.row.original);
+        if (sectionId) url += `&section_id=${sectionId}`;
+        return (
+          <Link href={url}>
+            <Button style={{ padding: '0px' }} variant='contained'>
+              HTML
+            </Button>
+          </Link>
+        );
+      },
+    }),
+    columnHelper.display({
+      id: 'delete',
       cell: (props) => (
-        <Link href={`/dashboard/html?podfic_id=${props.row.id}`}>
-          <Button style={{ padding: '0px' }} variant='contained'>
-            HTML
-          </Button>
-        </Link>
+        <Button
+          onClick={() => {
+            setSelectedDeletionProps({
+              podficId: props.row.getValue('podfic_id'),
+              workId: props.row.getValue('work_id'),
+              podficTitle: props.row.getValue('title'),
+            });
+            setDeleteConfirmDialogOpen(true);
+          }}
+          style={{ padding: '0px' }}
+        >
+          <Delete />
+        </Button>
       ),
     }),
   ];
@@ -540,6 +594,25 @@ export default function PodficTable() {
           status: podfic.status,
         })
       );
+      const isPostedChaptered = getIsPostedChaptered(
+        podfic.section_type,
+        podfic.chaptered
+      );
+      if (!isPostedChaptered) {
+        const section = podfic.sections?.[0];
+        if (section) {
+          await updateSectionMinified(
+            JSON.stringify({
+              section_id: section.section_id,
+              wordcount: podfic.wordcount,
+              length: podfic.length,
+              posted_date: podfic.posted_date,
+              ao3_link: podfic.ao3_link,
+              status: podfic.status,
+            })
+          );
+        }
+      }
       await mutate((key) => Array.isArray(key) && key[0] === '/db/podfics');
     } catch (e) {
       console.error('Error updating podfic inline:', e);
@@ -548,6 +621,16 @@ export default function PodficTable() {
 
   return (
     <div>
+      <DeletePodficDialog
+        isOpen={deleteConfirmDialogOpen}
+        onClose={() => setDeleteConfirmDialogOpen(false)}
+        submitCallback={async () => {
+          await mutate((key) => Array.isArray(key) && key[0] === '/db/podfics');
+        }}
+        podficId={selectedDeletionProps.podficId}
+        workId={selectedDeletionProps.workId}
+        podficTitle={selectedDeletionProps.podficTitle}
+      />
       <CustomTable
         isLoading={isLoading}
         data={podfics}
@@ -734,8 +817,9 @@ export default function PodficTable() {
                 <FileTable
                   podficId={row.original.podfic_id}
                   podficTitle={row.getValue('title')}
+                  chaptered={row.original.chaptered}
                   onlyNonAAFiles={missingAALinks}
-                  chapterId={null}
+                  sectionId={getPodficSectionId(row.original)}
                   lengthColorScale={lengthColorScale}
                 />
               </td>
@@ -787,6 +871,7 @@ export default function PodficTable() {
               width={row.getVisibleCells().length}
               notes={row.original.notes ?? []}
               resources={row.original.resources ?? []}
+              permissionAsks={row.original.permission_asks ?? []}
               podfic_id={row.original.podfic_id}
             />
           </>

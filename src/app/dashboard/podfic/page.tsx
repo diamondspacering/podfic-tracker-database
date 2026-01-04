@@ -4,6 +4,11 @@ import { Button } from '@mui/material';
 import Link from 'next/link';
 import PodficTable from './PodficTable';
 import { Suspense } from 'react';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Podfics',
+};
 
 export default async function Page() {
   return (

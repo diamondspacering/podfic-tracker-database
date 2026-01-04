@@ -8,13 +8,10 @@ import {
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import CoverArtForm from './cover-art-form';
+import { DialogProps } from '@/app/types';
 
-interface CoverArtDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  submitCallback: (coverArtId: number) => void;
+interface CoverArtDialogProps extends DialogProps<CoverArt> {
   cover_art_id?: number | null;
-  coverArt?: CoverArt | null;
   podfic_id: number;
   podficTitle?: string;
 }

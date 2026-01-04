@@ -8,17 +8,21 @@ import {
 import FileForm from './file-form';
 import { useCallback, useEffect, useState } from 'react';
 import { createUpdateFile } from '@/app/lib/updaters';
-import { FileType, getDefaultFile, getDefaultLength } from '@/app/types';
+import {
+  DialogProps,
+  FileType,
+  getDefaultFile,
+  getDefaultLength,
+  SectionType,
+} from '@/app/types';
 
-interface FileDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  submitCallback: () => void;
+interface FileDialogProps extends DialogProps<File> {
   existingLength?: Length;
   podficId?: number;
   podficTitle?: string;
-  chapterId?: number;
-  file?: File;
+  chaptered?: boolean;
+  sectionId?: number;
+  sectionType?: SectionType;
 }
 
 export default function FileDialog({
@@ -28,22 +32,37 @@ export default function FileDialog({
   existingLength,
   podficId,
   podficTitle,
-  chapterId,
-  file: fileProp,
+  chaptered,
+  sectionId,
+  sectionType = SectionType.DEFAULT,
+  item: fileProp,
 }: FileDialogProps) {
   const [file, setFile] = useState(fileProp ?? getDefaultFile(existingLength));
+  const [section, setSection] = useState({} as Section);
 
   useEffect(
     () => setFile(fileProp ?? getDefaultFile(existingLength)),
     [existingLength, fileProp]
   );
 
+  useEffect(() => {
+    const fetchSection = async () => {
+      const result = await fetch(`/db/sections/${sectionId}`);
+      const data = await result.json();
+      setSection(data as Section);
+    };
+
+    if (sectionId && !Object.keys(section).length) {
+      fetchSection();
+    }
+  }, [sectionId, section]);
+
   const submitFile = useCallback(async () => {
     // returns id, currently not being used
     await createUpdateFile({
       file_id: file.file_id,
       podficId,
-      chapterId,
+      sectionId,
       length: file.length,
       label: file.label,
       size: file.size,
@@ -67,7 +86,7 @@ export default function FileDialog({
     file.is_plain,
     file.links,
     podficId,
-    chapterId,
+    sectionId,
     submitCallback,
     existingLength,
   ]);
@@ -84,7 +103,10 @@ export default function FileDialog({
           file={file}
           setFile={setFile}
           podficTitle={podficTitle}
-          chapterId={chapterId}
+          chaptered={chaptered}
+          sectionId={sectionId}
+          sectionType={sectionType}
+          section={section}
           existingLength={existingLength}
         />
       </DialogContent>

@@ -1,5 +1,7 @@
 import useSWR from 'swr';
 import { WorkMetadata } from '../forms/podfic/metadataHelpers';
+import { getDefaultLength, SectionType } from '../types';
+import { getLengthValue } from './lengthHelpers';
 export const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export const useChaptersForPodfic = (podficId) => {
@@ -12,6 +14,80 @@ export const useChaptersForPodfic = (podficId) => {
     chapters: (data ?? []) as Chapter[],
     error,
     isLoading,
+  };
+};
+
+export const useSectionsForPodfic = (podficId) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/sections/${podficId}`,
+    fetcher
+  );
+
+  return {
+    sections: (data ?? []) as Section[],
+    error,
+    isLoading,
+  };
+};
+
+export const useDefaultSectionChaptersForPodfic = ({ podficId }) => {
+  const { data, error, isLoading, mutate } = useSWR(
+    `/db/chapters/${podficId}?section_type=${SectionType.DEFAULT}`,
+    fetcher
+  );
+
+  return {
+    sections: (data ?? []) as (Section & Chapter)[],
+    error,
+    isLoading,
+    mutate,
+  };
+};
+
+export const usePodficChaptersWithSubSections = ({ podficId }) => {
+  const { data, error, isLoading, mutate } = useSWR(
+    `/db/chapters/${podficId}?section_type=${SectionType.CHAPTERS_SPLIT}`,
+    fetcher
+  );
+
+  return {
+    chapters: (data ?? []) as Chapter[],
+    error,
+    isLoading,
+    mutate,
+  };
+};
+
+export const useMaxSectionLengthValues = ({ podficId }) => {
+  const { data, error, isLoading, mutate } = useSWR(
+    `/db/max-section-length/${podficId}`,
+    fetcher
+  );
+
+  const lengthData = data ?? { length: null, rawLength: null };
+  const length = getLengthValue(lengthData.length);
+  const rawLength = getLengthValue(lengthData.rawLength);
+
+  return {
+    maxLength: Math.max(length, 1),
+    maxRawLength: Math.max(rawLength, 1),
+    error,
+    isLoading,
+    mutate,
+  };
+};
+
+export const useMaxSectionLength = ({ podficId }) => {
+  const { data, error, isLoading, mutate } = useSWR(
+    `/db/max-section-length/${podficId}`,
+    fetcher
+  );
+
+  return {
+    maxSectionLength: (data ?? getDefaultLength()) as Length,
+    error,
+    isLoading,
+    mutate,
   };
 };
 
@@ -79,6 +155,18 @@ export const useAuthors = () => {
   };
 };
 
+export const useWorks = () => {
+  const { data, error, isLoading } = useSWR('/db/works', fetcher);
+
+  const works = (data ?? []) as Work[];
+
+  return {
+    works,
+    error,
+    isLoading,
+  };
+};
+
 export const usePodficcers = () => {
   const { data, error, isLoading } = useSWR('/db/podficcers', fetcher);
 
@@ -117,13 +205,13 @@ export const useVoiceteamEvent = (id) => {
 
 const recordingSessionFetcher = async (
   podficId,
-  chapterId = null,
+  sectionId = null,
   full = false
 ) => {
   let response = null;
-  if (!!chapterId) {
+  if (!!sectionId) {
     response = await fetch(
-      `/db/recording_sessions?podfic_id=${podficId}&chapter_id=${chapterId}`
+      `/db/recording_sessions?podfic_id=${podficId}&section_id=${sectionId}`
     );
   } else if (!!full) {
     response = await fetch(
@@ -137,9 +225,9 @@ const recordingSessionFetcher = async (
   return data;
 };
 
-const filesFetcher = async (podficId, chapterId, onlyNonAAFiles = false) => {
+const filesFetcher = async (podficId, sectionId, onlyNonAAFiles = false) => {
   let response = null;
-  let baseString = `/db/files?podfic_id=${podficId}&chapter_id=${chapterId}`;
+  let baseString = `/db/files?podfic_id=${podficId}&section_id=${sectionId}`;
   if (onlyNonAAFiles) {
     baseString = `${baseString}&with_chapters=true&only_non_aa_files=true`;
   } else {
@@ -194,10 +282,10 @@ export const usePodficsFull = ({ missingAALinks = false }) => {
   };
 };
 
-export const useFiles = ({ podficId, chapterId, onlyNonAAFiles = false }) => {
+export const useFiles = ({ podficId, sectionId, onlyNonAAFiles = false }) => {
   const { data, error, isLoading } = useSWR(
-    ['/db/files', podficId, chapterId, onlyNonAAFiles],
-    () => filesFetcher(podficId, chapterId, onlyNonAAFiles)
+    ['/db/files', podficId, sectionId, onlyNonAAFiles],
+    () => filesFetcher(podficId, sectionId, onlyNonAAFiles)
   );
 
   const files = (data ?? []) as File[];
@@ -245,10 +333,10 @@ export const useScheduleEvents = ({
   };
 };
 
-export const useRecordingSessions = ({ podficId, chapterId, full }) => {
+export const useRecordingSessions = ({ podficId, sectionId, full }) => {
   const { data, error, isLoading } = useSWR(
-    ['/db/recording_sessions', podficId, chapterId, full],
-    () => recordingSessionFetcher(podficId, chapterId, full)
+    ['/db/recording_sessions', podficId, sectionId, full],
+    () => recordingSessionFetcher(podficId, sectionId, full)
   );
 
   const recordingSessions = (data ?? []) as RecordingSession[];
@@ -279,6 +367,21 @@ export const usePart = (id: number) => {
 
   return {
     part,
+    error,
+    isLoading,
+  };
+};
+
+export const useSectionForPart = (partId: number) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/sections?part_id=${partId}`,
+    fetcher
+  );
+
+  const section = (data ?? {}) as Section;
+
+  return {
+    section,
     error,
     isLoading,
   };

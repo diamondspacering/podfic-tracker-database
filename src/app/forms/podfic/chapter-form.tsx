@@ -20,14 +20,12 @@ export default function ChapterForm({
   chapter,
   setChapter,
   idCallback,
-  fullEdit,
 }: ChapterFormProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [chapterNumber, setChapterNumber] = useState(chapter.chapter_number);
   const [chapterTitle, setChapterTitle] = useState(chapter.chapter_title);
   const [link, setLink] = useState(chapter.link);
   const [wordcount, setWordcount] = useState(chapter.wordcount);
-  const [length, setLength] = useState(chapter.length ?? getDefaultLength());
 
   const [submitting, setSubmitting] = useState(false);
 
@@ -44,7 +42,6 @@ export default function ChapterForm({
       chapter_title: chapterTitle,
       link: link,
       wordcount: wordcount,
-      length: length,
     };
     try {
       if (chapter.podfic_id) {
@@ -74,7 +71,6 @@ export default function ChapterForm({
     chapterTitle,
     link,
     wordcount,
-    length,
     idCallback,
     setChapter,
   ]);
@@ -109,14 +105,6 @@ export default function ChapterForm({
             value={chapter.wordcount}
             onChange={(e) => setWordcount(parseInt(e.target.value))}
           />
-          {fullEdit && (
-            <>
-              <DurationPicker
-                value={length}
-                onChange={(val) => setLength(val)}
-              />
-            </>
-          )}
           <Button onClick={submitChapter}>
             {submitting ? <CircularProgress /> : <Check />}
           </Button>

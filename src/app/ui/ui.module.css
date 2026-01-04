@@ -1,3 +1,16 @@
+.detailsWrapper {
+  border: 1px solid gray;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.detailsWrapperHeader {
+  display: flex;
+  flex-direction: row;
+  cursor: pointer;
+  width: fit-content;
+}
+
 .roundBadge {
   border-radius: 50px;
   width: fit-content;
@@ -62,9 +75,13 @@
 }
 
 .Finished,
-.Posted,
-.Unknown {
+.Posted {
   background-color: none;
+}
+
+.Unknown,
+.Inactive {
+  background-color: gray;
 }
 
 /* "picked" in podfic tracker spreadsheet */
@@ -89,7 +106,9 @@
   background-color: #f4cccc;
 }
 
-.Asked {
+.Asked,
+.Friendly,
+.AskFirst {
   background-color: #ffff00;
 }
 

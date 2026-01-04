@@ -9,13 +9,14 @@ import {
 import { useCallback, useState } from 'react';
 import { mutate } from 'swr';
 import PodficcerForm from './podficcer-form';
+import { DialogProps } from '@/app/types';
 
 export default function PodficcerDialog({
   isOpen,
   onClose,
   submitCallback,
-  podficcer: podficcerProp = null,
-}) {
+  item: podficcerProp = null,
+}: DialogProps<Podficcer>) {
   const [podficcer, setPodficcer] = useState<Podficcer>(
     podficcerProp ?? ({} as Podficcer)
   );

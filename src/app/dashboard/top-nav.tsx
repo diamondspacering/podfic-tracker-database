@@ -31,7 +31,9 @@ export default function TopNav() {
               key={href}
               href={href}
               className={`${styles.navLink} ${
-                href === pathname && styles.selected
+                (href === pathname ||
+                  (pathname.startsWith(href) && href !== '/dashboard')) &&
+                styles.selected
               }`}
             >
               {text}

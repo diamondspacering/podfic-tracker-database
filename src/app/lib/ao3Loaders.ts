@@ -78,6 +78,7 @@ const fetchWork = async (workUrl: string) => {
     console.log('Work is locked, logging in...');
     fetcher = loginFetcher();
     result = await fetcher(workUrl);
+    console.log('Fetched work');
     text = await result.text();
   }
   return text;

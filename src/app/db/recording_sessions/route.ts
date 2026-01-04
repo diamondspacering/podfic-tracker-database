@@ -1,19 +1,19 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const podficId = searchParams.get('podfic_id');
-  const chapterId = searchParams.get('chapter_id');
+  const sectionId = searchParams.get('section_id');
   const full = searchParams.get('full');
 
-  const client = await getClient();
+  const client = await getDBClient();
 
   let result = null;
-  if (!!chapterId) {
+  if (!!sectionId) {
     result = await client.query(
-      `select * from recording_session where podfic_id = $1 and chapter_id = $2`,
-      [podficId, chapterId]
+      `select * from recording_session where podfic_id = $1 and section_id = $2`,
+      [podficId, sectionId]
     );
   } else if (full === 'true') {
     result = await client.query(

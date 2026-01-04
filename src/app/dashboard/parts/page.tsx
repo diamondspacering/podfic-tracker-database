@@ -3,6 +3,11 @@ import { Add } from '@mui/icons-material';
 import { Button } from '@mui/material';
 import Link from 'next/link';
 import PartsTable from './PartsTable';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Parts',
+};
 
 export default function Page() {
   return (

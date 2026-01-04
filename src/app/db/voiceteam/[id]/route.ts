@@ -1,4 +1,4 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { getLengthText } from '@/app/lib/format';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const id = context.params.id;
 
-  const client = await getClient();
+  const client = await getDBClient();
   const voiceteamResult = await client.query(
     `select * from voiceteam_event where event_id = $1`,
     [id]

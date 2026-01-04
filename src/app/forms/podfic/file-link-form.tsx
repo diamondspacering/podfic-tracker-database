@@ -20,30 +20,24 @@ export default function FileLinkForm({
   link,
   setLink,
   podficTitle,
-  chapterId,
+  sectionType,
+  section,
+  sectionId,
+  chaptered,
   label,
 }) {
   const [aaDate, setAADate] = useState(formatDateString(new Date()));
-  const [chapter, setChapter] = useState({} as Chapter);
-
-  useEffect(() => {
-    const fetchChapter = async () => {
-      const response = await fetch(`/db/chapters?chapter_id=${chapterId}`);
-      const data = await response.json();
-      setChapter(data);
-    };
-
-    if (chapterId) fetchChapter();
-  });
 
   useEffect(() => {
     if (link.host === 'audiofic archive') {
       const dateString = generateAADate(aaDate);
       const fileString = generateAALink({
         title: podficTitle,
-        chapterInfo: chapter,
         date: dateString,
         label,
+        sectionType,
+        chaptered,
+        section,
       });
       setLink({ ...link, link: fileString });
     }
@@ -65,8 +59,11 @@ export default function FileLinkForm({
           let linkHost = link.host;
           hosts.forEach((host) => {
             if (
-              newLink.includes(host.toLowerCase()) ||
-              (host === 'audiofic archive' && newLink.includes('jinjurly')) ||
+              (newLink.includes(host.toLowerCase()) &&
+                !(host.toLowerCase() === 'archive.org') &&
+                newLink.includes('audioficarchive')) ||
+              (host === 'audiofic archive' &&
+                newLink.includes('audioficarchive')) ||
               (host === 'archive.org' && newLink.includes('archive'))
             ) {
               linkHost = host;

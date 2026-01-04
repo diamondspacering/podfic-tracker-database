@@ -103,9 +103,18 @@ export default function EventPodficTable({ eventId }) {
         type: 'status',
       },
     }),
-    columnHelper.accessor('permission_status', {
+    columnHelper.accessor('work_permission_status', {
       header: 'Permission',
-      cell: TableCell,
+      cell: ({ getValue, row, ...rest }) => (
+        <TableCell
+          getValue={() =>
+            row.getValue('work_permission_status') ??
+            row.original.author_permission_status
+          }
+          row={row}
+          {...rest}
+        />
+      ),
       meta: {
         type: 'status',
       },

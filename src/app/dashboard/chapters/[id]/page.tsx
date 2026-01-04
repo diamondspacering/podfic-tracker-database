@@ -1,8 +1,21 @@
 import { fetchPodfic } from '@/app/lib/loaders';
 import ChapterTable from './ChapterTable';
+import { Metadata } from 'next';
 
-export default async function Page({ params }: { params: { id: any } }) {
-  const podfic = await fetchPodfic(params.id);
+export const metadata: Metadata = {
+  title: 'Podfic Chapters',
+};
 
-  return <ChapterTable podficId={params.id} podficTitle={podfic.title} />;
+export default async function Page({ params }) {
+  const loadedParams = await params;
+  const { id } = loadedParams;
+  const podfic = await fetchPodfic(id);
+
+  return (
+    <ChapterTable
+      podficId={params.id}
+      podficTitle={podfic.title}
+      sectionType={podfic.section_type}
+    />
+  );
 }

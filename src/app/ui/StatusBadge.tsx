@@ -1,9 +1,19 @@
 import { useMemo } from 'react';
 import styles from './ui.module.css';
-import { PartStatus, PermissionStatus, PodficStatus } from '../types';
+import {
+  AuthorPermissionStatus,
+  PartStatus,
+  PermissionAskStatus,
+  PodficStatus,
+} from '../types';
+import Link from 'next/link';
 
 interface StatusBadgeProps {
-  status: PodficStatus | PermissionStatus | PartStatus;
+  status:
+    | PodficStatus
+    | AuthorPermissionStatus
+    | PermissionAskStatus
+    | PartStatus;
   clickable?: boolean;
   onClick?: () => void;
   linkTo?: string;
@@ -43,24 +53,36 @@ export default function StatusBadge({
         return styles.Posting;
       case PodficStatus.POSTED:
         return styles.Posted;
-      case PermissionStatus.ASKED:
+      case PermissionAskStatus.ASKED:
         return styles.Asked;
-      case PermissionStatus.BP:
-        return styles.BP;
-      case PermissionStatus.PERMISSION:
+      case PermissionAskStatus.YES:
         return styles.Permission;
-      case PermissionStatus.COLLAB:
+      case PermissionAskStatus.COLLAB:
         return styles.Collab;
-      case PermissionStatus.GHOSTED:
+      case PermissionAskStatus.GHOSTED:
         return styles.Ghosted;
-      case PermissionStatus.NO:
-        return styles.No;
-      case PermissionStatus.TO_ASK:
+      case PermissionAskStatus.TO_ASK:
         return styles.ToAsk;
-      case PermissionStatus.ASK_FIRST:
-        return styles.AskFirst;
-      case PermissionStatus.TO_ASK_FIRST:
+      case PermissionAskStatus.TO_ASK_FIRST:
         return styles.ToAskFirst;
+      case PermissionAskStatus.NO:
+        return styles.No;
+      case AuthorPermissionStatus.BP:
+        return styles.BP;
+      case AuthorPermissionStatus.PERMISSION:
+        return styles.Permission;
+      case PartStatus.PICKED:
+        return styles.Picked;
+      case AuthorPermissionStatus.ASK_FIRST:
+        return styles.AskFirst;
+      case AuthorPermissionStatus.FRIENDLY:
+        return styles.Friendly;
+      case AuthorPermissionStatus.UNKNOWN:
+        return styles.Unknown;
+      case AuthorPermissionStatus.INACTIVE:
+        return styles.Inactive;
+      case PartStatus.EDITED:
+      case PartStatus.SUBMITTED:
       default:
         return styles.Default;
     }
@@ -73,11 +95,10 @@ export default function StatusBadge({
       } ${className}`}
       onClick={onClick}
     >
-      {/* TODO: built-in component since it's an internal link? */}
       {linkTo ? (
-        <a href={linkTo} className={styles.invisibleLink}>
+        <Link href={linkTo} className={styles.invisibleLink}>
           {status}
-        </a>
+        </Link>
       ) : (
         status
       )}

@@ -1,56 +1,73 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
+import { getSectionName } from '@/app/lib/html';
+import { getIsPostedChaptered } from '@/app/lib/utils';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const podficId = searchParams.get('podfic_id');
-  const chapterId = searchParams.get('chapter_id');
+  console.log({ searchParams });
+  const sectionId = searchParams.get('section_id');
+  console.log({ sectionId });
 
-  const client = await getClient();
+  const client = await getDBClient();
 
-  if (chapterId !== 'null') {
-    const chapter = (
+  const result = await client.query(
+    `select number,section.title as section_title,section_type,chaptered,chapter_count,work.wordcount as podfic_wordcount,is_multivoice,section.length,html_string from section
+      inner join podfic on section.podfic_id = podfic.podfic_id
+      inner join work on podfic.work_id = work.work_id
+    where section_id = $1
+    `,
+    [sectionId]
+  );
+  const section = result.rows[0];
+  console.log(result.rows);
+
+  const sectionType = section.section_type;
+
+  const estimatedLength = Math.round(
+    (typeof section.podfic_wordcount === 'string'
+      ? parseInt(section.podfic_wordcount)
+      : section.podfic_wordcount) /
+      130 /
+      60
+  );
+
+  const chaptered = getIsPostedChaptered(sectionType, section.chaptered);
+
+  let data: any = {
+    section_type: sectionType,
+    html_string: section.html_string,
+    length: section.length,
+    est_length: estimatedLength,
+    is_multivoice: section.is_multivoice,
+    number: section.number,
+    title: section.title,
+    chaptered,
+    chapter_count: section.chapter_count,
+  };
+
+  if (chaptered) {
+    const chapters = (
       await client.query(
-        `select chapter_number,chapter_title,length,html_string from chapter where chapter_id = $1 and podfic_id = $2`,
-        [chapterId, podficId]
+        `select chapter_number,chapter_title from chapter inner join chapter_section on chapter_section.chapter_id = chapter.chapter_id where section_id = $1`,
+        [sectionId]
       )
-    ).rows[0];
+    ).rows;
 
-    const podfic = (
-      await client.query(
-        `select wordcount,is_multivoice from podfic inner join work on podfic.work_id = work.work_id where podfic.podfic_id = $1`,
-        [podficId]
-      )
-    ).rows[0];
+    section.chapters = chapters;
 
-    const estimatedLength = Math.round(
-      (typeof podfic.wordcount === 'string'
-        ? parseInt(podfic.wordcount)
-        : podfic.wordcount) /
-        130 /
-        60
-    );
-
-    return NextResponse.json({
-      chapter_number: chapter.chapter_number,
-      chapter_title: chapter.chapter_title,
-      length: chapter.length,
-      est_length: estimatedLength,
-      html_string: chapter.html_string,
-      is_multivoice: podfic.is_multivoice,
-    });
-  } else {
-    const podfic = (
-      await client.query(
-        `select length,html_string,is_multivoice from podfic where podfic_id = $1`,
-        [podficId]
-      )
-    ).rows[0];
-
-    return NextResponse.json({
-      length: podfic.length,
-      html_string: podfic.html_string,
-      is_multivoice: podfic.is_multivoice,
-    });
+    data = {
+      ...data,
+      chapters,
+    };
   }
+
+  data = {
+    ...data,
+    title: getSectionName({ section, sectionType }),
+  };
+
+  console.log({ data });
+
+  return NextResponse.json(data);
 }

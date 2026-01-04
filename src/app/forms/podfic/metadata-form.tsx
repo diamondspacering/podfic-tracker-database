@@ -24,7 +24,12 @@ import {
   createUpdateAuthorClient,
   createUpdateFandom,
 } from '@/app/lib/updaters';
-import { Category, PermissionStatus, Rating } from '@/app/types';
+import {
+  AuthorPermissionStatus,
+  Category,
+  PermissionStatus,
+  Rating,
+} from '@/app/types';
 import { LoadingButton } from '@mui/lab';
 import { socialMedia } from '@/app/lib/dataGeneral';
 import StatusBadge from '@/app/ui/StatusBadge';
@@ -99,6 +104,18 @@ export default function MetadataForm({
   }, [selectedAuthorId, setMetadata]);
 
   useEffect(() => {
+    if (selectedRelationship) {
+      setMetadata((prev) => ({ ...prev, relationship: selectedRelationship }));
+    }
+  }, [selectedRelationship, setMetadata]);
+
+  useEffect(() => {
+    if (selectedCharacter) {
+      setMetadata((prev) => ({ ...prev, main_character: selectedCharacter }));
+    }
+  }, [selectedCharacter, setMetadata]);
+
+  useEffect(() => {
     const mappedFandoms = getMappedItems(
       metadata.fandomList,
       tagMappings.fandom_mapping
@@ -141,7 +158,11 @@ export default function MetadataForm({
         `/db/metadata/chapters?work_url=${encodeURIComponent(metadata.link)}`
       );
       const chapters = await chapterResult.json();
-      setMetadata((prev) => ({ ...prev, chapters }));
+      setMetadata((prev) => ({
+        ...prev,
+        chapters,
+        chapter_count: chapters.length,
+      }));
     } catch (e) {
       console.error(e);
     } finally {
@@ -215,6 +236,10 @@ export default function MetadataForm({
 
   return (
     <div className={`${styles.flexColumn} ${styles.mt1}`}>
+      <Button variant='contained' onClick={() => console.log(metadata)}>
+        Log metadata
+      </Button>
+
       {metadata.title !== null && (
         <RemovableItem
           removeCallback={() =>
@@ -305,7 +330,7 @@ export default function MetadataForm({
                   }))
                 }
               >
-                {Object.values(PermissionStatus).map((status) => (
+                {Object.values(AuthorPermissionStatus).map((status) => (
                   <MenuItem key={status} value={status}>
                     <StatusBadge status={status} />
                   </MenuItem>
