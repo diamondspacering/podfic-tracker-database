@@ -1,4 +1,4 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   const sectionId = searchParams.get('section_id');
   const full = searchParams.get('full');
 
-  const client = await getClient();
+  const client = await getDBClient();
 
   let result = null;
   if (!!sectionId) {

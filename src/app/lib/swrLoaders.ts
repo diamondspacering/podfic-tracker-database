@@ -1,6 +1,7 @@
 import useSWR from 'swr';
 import { WorkMetadata } from '../forms/podfic/metadataHelpers';
 import { getDefaultLength, SectionType } from '../types';
+import { getLengthValue } from './lengthHelpers';
 export const fetcher = (url) => fetch(url).then((res) => res.json());
 
 export const useChaptersForPodfic = (podficId) => {
@@ -57,8 +58,27 @@ export const usePodficChaptersWithSubSections = ({ podficId }) => {
   };
 };
 
+export const useMaxSectionLengthValues = ({ podficId }) => {
+  const { data, error, isLoading, mutate } = useSWR(
+    `/db/max-section-length/${podficId}`,
+    fetcher
+  );
+
+  const lengthData = data ?? { length: null, rawLength: null };
+  const length = getLengthValue(lengthData.length);
+  const rawLength = getLengthValue(lengthData.rawLength);
+
+  return {
+    maxLength: Math.max(length, 1),
+    maxRawLength: Math.max(rawLength, 1),
+    error,
+    isLoading,
+    mutate,
+  };
+};
+
 export const useMaxSectionLength = ({ podficId }) => {
-  const { data, error, isLoading } = useSWR(
+  const { data, error, isLoading, mutate } = useSWR(
     `/db/max-section-length/${podficId}`,
     fetcher
   );
@@ -67,27 +87,7 @@ export const useMaxSectionLength = ({ podficId }) => {
     maxSectionLength: (data ?? getDefaultLength()) as Length,
     error,
     isLoading,
-  };
-};
-
-export const useChaptersAndSectionsForPodfic = ({
-  podficId,
-  sectionType,
-}: {
-  podficId: number;
-  sectionType: SectionType;
-}) => {
-  // TODO: should the logic for which is nested in which be like. in the route or in here. I think it should be in the route tbh.
-  // oh noooo but it needs it for the data type,,,
-  const { data, error, isLoading } = useSWR(
-    ['/db/sections/', podficId, sectionType],
-    () => fetcher(`/db/sections/${podficId}?section_type=${sectionType}`)
-  );
-
-  return {
-    chaptersAndSections: (data ?? []) as (Section | Chapter)[],
-    error,
-    isLoading,
+    mutate,
   };
 };
 

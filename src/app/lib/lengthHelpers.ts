@@ -25,11 +25,11 @@ export const addLengthStringToLength = (
 // returns a Length as a numeric value in seconds
 export const getLengthValue = (length: Length | null) => {
   if (!length) return 0;
-  return (
+  const value =
     (length.hours ?? 0) * 3600 +
     (length.minutes ?? 0) * 60 +
-    (length.seconds ?? 0)
-  );
+    (length.seconds ?? 0);
+  return value;
 };
 
 // get a Length object from a numeric seconds value

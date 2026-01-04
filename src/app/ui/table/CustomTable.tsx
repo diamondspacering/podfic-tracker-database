@@ -55,7 +55,6 @@ export interface CustomTableProps<T> {
   rowClassName?: string;
 
   // editing
-  // TODO: make this optional
   editingRowId?: string | null;
   setEditingRowId?: Dispatch<SetStateAction<string | null>>;
   updateItemInline?: (item: T) => Promise<void>;
@@ -131,7 +130,7 @@ export default function CustomTable<T>({
     [isLoading, columns]
   );
 
-  useEffect(() => console.log({ data }), [data]);
+  // useEffect(() => console.log({ data }), [data]);
 
   const table = useReactTable<T>({
     data: tableData,

@@ -147,7 +147,6 @@ export enum SectionType {
   CHAPTERS_COMBINE = 'chapters-combine',
 }
 
-// TODO: consider podficId, sectionId, etc.?
 export interface DialogProps<T> {
   isOpen: boolean;
   onClose: () => void;

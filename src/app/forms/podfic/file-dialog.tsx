@@ -45,7 +45,6 @@ export default function FileDialog({
     [existingLength, fileProp]
   );
 
-  // TODO: loading state for this?
   useEffect(() => {
     const fetchSection = async () => {
       const result = await fetch(`/db/sections/${sectionId}`);

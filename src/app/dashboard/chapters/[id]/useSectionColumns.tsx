@@ -6,6 +6,7 @@ import {
 } from '@/app/lib/utils';
 import { FilterType, PodficStatus } from '@/app/types';
 import { TableCell } from '@/app/ui/table/TableCell';
+import { RawWPMCell, WPMCell } from '@/app/ui/table/WPMCells';
 import { createColumnHelper } from '@tanstack/react-table';
 import { useMemo } from 'react';
 
@@ -27,7 +28,6 @@ export default function useSectionColumns({
 }: UseSectionColumnsProps) {
   const columnHelper = createColumnHelper<Section>();
 
-  // TODO: color scale is fucked
   const rawColorScale = useLengthColorScale(sections, 'raw_length');
   const lengthColorScale = useLengthColorScale(sections, 'length');
   const wordcountColorScale = useColorScale(sections, 'wordcount');
@@ -105,6 +105,16 @@ export default function useSectionColumns({
           colorScale: rawColorScale,
           immutable: true,
         },
+      }),
+      columnHelper.display({
+        id: 'wpm',
+        header: 'WPM',
+        cell: WPMCell,
+      }),
+      columnHelper.display({
+        id: 'raw_wpm',
+        header: 'Raw WPM',
+        cell: RawWPMCell,
       }),
     ],
     [columnHelper, lengthColorScale, rawColorScale, wordcountColorScale]

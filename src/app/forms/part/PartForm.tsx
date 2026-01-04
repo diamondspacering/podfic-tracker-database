@@ -28,7 +28,6 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
   const router = useRouter();
   const { podfics, isLoading: podficsLoading } = usePodficsFull({});
   const { part, isLoading: partLoading } = usePart(part_id);
-  // TODO: support multiple sections per part
   const { section, isLoading: sectionLoading } = useSectionForPart(part_id);
   const { podficcers, isLoading: podficcersLoading } = usePodficcers();
 
@@ -55,7 +54,6 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
 
   useEffect(() => {
     if (!partLoading) {
-      // console.log('setting part & podfics');
       if (part.organizer) setOrganizerId(part.organizer);
       if (part.podfic_id) setPodficId(part.podfic_id);
       if (part.chapter_id) setChapterId(part.chapter_id);
@@ -220,7 +218,6 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
           />
         </div>
 
-        {/* TODO: section status */}
         <div className={styles.flexRow}>
           <StatusSelect
             type='part'

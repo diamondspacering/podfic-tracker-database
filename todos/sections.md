@@ -1,63 +1,69 @@
-- [x] Migrate data
-  - [x] Create new tables
-  - [x] Add fields to existing tables
-  - [x] Create sections for existing podfics
-    - [x] Regular podfics
-    - [x] Regular chaptered podfics
-    - [x] Chapters posted all in one
-      - NOTE: not all are properely marked as posted_unchaptered, manually check some & clean up data as needed
-        - create utility for deleting chapter sections?
-      - consider manually marking these first
-    - [x] Multivoices (one section for each part atm)
-  - [x] Functions
-    - don't need to explicitly remove triggers, just remove from the DDL anything that doesn't need to be created (so do a migration, remove triggers & functions, then regenerate DDL...?)
-      - so maybe do in migration
-    - [x] `update_all_raw_lengths_from_recording_sessions`
-    - [x] `update_podfic_length_from_sections` (and trigger) to replace:
-      - `update_length_from_parts`
-      - `update_podfic_length_from_chapters`
-      - check functionality of both!
-    - [x] `update_plain_length_from_file`
-      - make sure master plain length also updates from this - this should update sections
-    - [x] `update_raw_length_from_recording_session`
-    - [x] `update_recording_session_length`
-  - [x] Add section triggers
-  - [x] Make sure all dependent records are updated to be linked to appropriate sections
-    - mostly do this when creating sections? esp chapter sections? manually do some podfic ones?
-    - ok this isn't working correctly
-  - [x] Update & add functions as necessary for automatic DB updates
-  - [x] Data to check that it's updated correctly:
-    - Every resource in `resource_chapter` should have a resource in `resource_section`
-  - [x] [FINAL STEP] Delete unnecessary DB fields & make fields mandatory as necessary
-    - may need extra work to let it do that
-  - [x] [FINAL STEP] Delete unnecessary DB tables as well
-- [ ] Figure out how to handle podfic posting dates :sob:
-- [ ] Update routes & loaders
-  - [x] New section routes?
-  - [ ] Make sure all previous routes are fetching/asking for correct information structured correctly
-  - [ ] Make sure all code is calling routes correctly and getting correct types/info
-- [ ] Tables
-  - [x] Chapter tables
-    - check all variations, etc. chapter combined can wait till later I'm ignoring it
-    - make everything as reusable as possible w/ columns, etc.
-  - [x] Parts table
-  - [x] Podfic table
-    - [x] make sure sections update properly, can update inline appropriately, etc.
-  - [ ] Smaller resources/content tables
-- [x] Test all types of podfic
-- [x] Figure out what's going on w/ section status
-  - Lowkey maybe sections should have status but NOT chapters. Chapters should be. like. vestigial atp.
-  - Like if you have chapters_split then you kinda want to be able to track where you're at in them!
-    - but then top level chapters do you wanna know...no you don't. idiot.
-  - then just a completesChapter flag in recording sessions that shows different text if it's chapter/section/part
-- [x] Length color scale not working on chapter tables
-- [x] Chapter tables freezing
-  - ok so podfic table is fine everythings just evil
-  - yeah it was the classic reference value default value rerendering infinitely
-- [x] part form
-- [x] adding recording session to chapter doesn't seem to. work. does it not update properly...?
-- [ ] fix schedule
-- [ ] babe ur stats page,,,
-- [ ] fix fixed color scale
+# General
 
-How to handle posted year?
+- How to handle posted year?
+- [ ] Be consistent about providing only section id or both section and podfic id to pages (html, recording session)
+  - podfic id makes things a little faster; maybe less clean, but can't hurt since we have access to it anyways
+- [ ] Should there be a podfic id on resource_section? probably, should migrate that real quick
+- [ ] Update values on section in podfic table and then podfic is updated from it?
+
+# Creation general
+
+- [ ] Figure out how best to handle section numbering
+  - for chapters-split, may be best to number sections per chapter rather than on a global counter
+  - check where section numbers are being set (in posting form? when creating?) and look at it
+  - just make sure chapters-split is tracking number within chapter adequately - I think this would be best covered by per-chapter counts
+- [ ] Should you be able to manually set posted dates when creating sections?
+- [ ] Set section status when creating?
+
+# Recording sessions
+
+- [ ] Figure out some of the nastier/more confusing useeffects
+
+# Chapter asstd
+
+- [ ] vt_project_id should go on section
+- [ ] vt_project_id should be usable per section
+- [ ] Clean up Chapter type
+- [ ] Figure out what you're doing with the adding chapter functionality of AddMenu
+
+# Chapter table
+
+## Chapter table context
+
+- [ ] Consider using columns in chapter table context? and managing some expansion?
+- [ ] Column visibility?
+
+## Chapter with sub sections
+
+- [ ] Is there a way for the chapter row to be less...widely spaced. Maybe dummy columns at end to allow for width of children?
+
+# HTML
+
+- [ ] Support generating AA chapter links with sections
+- [ ] General podfic notes as well as section-specific notes?
+
+# Schedule Page
+
+- [ ] Fix it to work with sections
+- [ ] schedule_event should link to sections not chapters
+- [ ] Update (& expand?) DB triggers
+
+# Stats Page
+
+- [ ] Fix it to work with sections
+
+# Parts
+
+- [ ] Support setting section status in part form? prob not needed
+- [ ] [FUTURE] Support multiple sections per part
+- [ ] [IMPT] Correctly handle default part to be able to set length & post + section parts
+  - inline podfic updates should go onto default part without issue
+
+# Podfic Form/Creation
+
+- [ ] Directly handle section info in podfic form more
+
+# Asstd
+
+- [ ] Loading state for section in file dialog
+- [ ] File link form needs chapter info for

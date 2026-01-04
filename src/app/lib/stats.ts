@@ -2,14 +2,14 @@
 // this will probably need to be a client component at some point...
 
 import { getEmptyLength } from '../types';
-import { getClient } from './db-helpers';
+import { getDBClient } from './db-helpers';
 import { addLengths, getLengthValue } from './lengthHelpers';
 
 // TODO: revamp these a bit because there's something deeply wrong w/ your numbers
 // TODO: also revamp these to work with sections that'll be extremely fun
 
 export const getPodficCountByYear = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
   const dateResult = await client.query(
     `select date_part('year', posted_date) as year, count(posted_date) from podfic group by year;`
   );
@@ -30,7 +30,7 @@ export const getPodficCountByYear = async () => {
 // TODO: the way I'm recording length makes like single year podfic things....tricky? possibly?
 // hmm this specifically excludes chapters....interesting that might work
 export const fetchPodficSingleWorkLengthByYear = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(`
     select sum(length), date_part('year', posted_date) as year from podfic inner join work on podfic.work_id = work.work_id where status = 'Posted' and (chaptered is not true or posted_unchaptered is true) and podfic.type != 'multivoice' group by year;
   `);
@@ -41,7 +41,7 @@ export const fetchPodficSingleWorkLengthByYear = async () => {
 // TODO: this may need to be tweaked w/ the posted year or whatever? yeah so add posted in that year and posted year
 // what are we aiming for here?
 export const fetchPodficLengthByYear = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(`
     select sum(length), date_part('year', posted_date) as year from podfic where status = 'Posted' group by year
   `);
@@ -70,7 +70,7 @@ export const getPodficLengthByYear = async () => {
 };
 
 export const getPodficLength = async (year) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     `select sum(length) from podfic inner join work on podfic.work_id = work.work_id where status = 'Posted' and (date_part('year', posted_date) = $1 or posted_year = $1) and (chaptered is not true or posted_unchaptered is true)`,
     [year]
@@ -79,7 +79,7 @@ export const getPodficLength = async (year) => {
 };
 
 export const getChapterLengthByYear = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(`
     select sum(length), date_part('year', posted_date) as year from chapter where status = 'Posted' group by year;
   `);
@@ -88,7 +88,7 @@ export const getChapterLengthByYear = async () => {
 };
 
 export const getChapterLength = async (year) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     `select sum(length) from chapter where status = 'Posted' and date_part('year', posted_date) = $1`,
     [year]
@@ -126,7 +126,7 @@ export const getPodficAndChapterLengthByYear = async () => {
 };
 
 export const getLongestPodfic = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -154,7 +154,7 @@ export const getLongestPodfic = async (year = null) => {
 };
 
 export const getLongestSingleWorkPodfic = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -171,7 +171,7 @@ export const getLongestSingleWorkPodfic = async (year = null) => {
 };
 
 export const getLongestChapter = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -188,7 +188,7 @@ export const getLongestChapter = async (year = null) => {
 };
 
 export const getShortestPodfic = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -206,7 +206,7 @@ export const getShortestPodfic = async (year = null) => {
 };
 
 export const getShortestChapter = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -223,7 +223,7 @@ export const getShortestChapter = async (year = null) => {
 };
 
 export const getAvgPodficLength = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -241,7 +241,7 @@ export const getAvgPodficLength = async (year = null) => {
 };
 
 export const getAvgChapterLength = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -258,7 +258,7 @@ export const getAvgChapterLength = async (year = null) => {
 };
 
 export const getPostedWords = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -275,7 +275,7 @@ export const getPostedWords = async (year = null) => {
 };
 
 export const getAllPostedWords = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   const podficResult = await client.query(
     `select sum(wordcount) from podfic inner join work on podfic.work_id = work.work_id where podfic.status = 'Posted' and podfic.type != 'multivoice' and work.chaptered is not true`
@@ -289,7 +289,7 @@ export const getAllPostedWords = async () => {
 };
 
 export const getPostedPodficWords = async (year) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   const result = await client.query(
     `select sum(wordcount) from podfic inner join work on podfic.work_id = work.work_id where status = 'Posted' and (date_part('year', posted_date) = $1 or posted_year = $1) and (chaptered is not true or posted_unchaptered is true) and wordcount is not null`,
@@ -299,7 +299,7 @@ export const getPostedPodficWords = async (year) => {
 };
 
 export const getPostedChapterWords = async (year) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   const result = await client.query(
     `select sum(wordcount) from chapter where status = 'Posted' and date_part('year', posted_date) = $1 and wordcount is not null`,
@@ -309,7 +309,7 @@ export const getPostedChapterWords = async (year) => {
 };
 
 export const getAvgPostedWords = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -326,7 +326,7 @@ export const getAvgPostedWords = async (year = null) => {
 };
 
 export const getTotalPodficLength = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
   if (year) {
     const singleWorkLengthResult = await client.query(
       `
@@ -361,7 +361,7 @@ export const getTotalPodficLength = async (year = null) => {
 };
 
 export const getTotalRawLength = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -378,7 +378,7 @@ export const getTotalRawLength = async (year = null) => {
 };
 
 export const getRawWordcount = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const podficResult = await client.query(
@@ -438,7 +438,7 @@ export const getRawWordcount = async (year = null) => {
 };
 
 export const getTopFandomsLenOld = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -459,7 +459,7 @@ export const getTopFandomsLenOld = async (year = null) => {
 };
 
 export const getTopFandomsLen = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const podficResult = await client.query(
@@ -540,7 +540,7 @@ export const getTopFandomsLen = async (year = null) => {
 };
 
 export const getTopFandomsCount = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -561,7 +561,7 @@ export const getTopFandomsCount = async (year = null) => {
 };
 
 export const getTopAuthorsLen = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     return [];
@@ -575,7 +575,7 @@ export const getTopAuthorsLen = async (year = null) => {
 };
 
 export const getTopAuthorsCount = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     return [];
@@ -588,7 +588,7 @@ export const getTopAuthorsCount = async (year = null) => {
 };
 
 export const getWorksCount = async (year) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const worksResult = await client.query(
     `select count(*) from podfic inner join work on podfic.work_id = work.work_id where date_part('year', posted_date) = $1 and (chaptered is not true or posted_unchaptered is true)`,
     [year]
@@ -612,7 +612,7 @@ export const getWorksCount = async (year) => {
 };
 
 export const getRatingCount = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -633,7 +633,7 @@ export const getRatingCount = async (year = null) => {
 };
 
 export const getCategoryCount = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -654,7 +654,7 @@ export const getCategoryCount = async (year = null) => {
 };
 
 export const getTopEvents = async (year) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   const result = await client.query(
     `select event.name as event_name, event.year as year, count(*) from podfic inner join work on podfic.work_id = work.work_id inner join event on podfic.event_id = event.event_id where (date_part('year', posted_date) = $1 or posted_year = $1) group by event.name, event.year order by event_name`,
@@ -664,7 +664,7 @@ export const getTopEvents = async (year) => {
 };
 
 export const getWithCoverArt = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -681,7 +681,7 @@ export const getWithCoverArt = async (year = null) => {
 };
 
 export const getWithMusic = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -704,7 +704,7 @@ export const getWithMusic = async (year = null) => {
 };
 
 export const getMultivoice = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -721,7 +721,7 @@ export const getMultivoice = async (year = null) => {
 };
 
 export const getParts = async (year = null) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
@@ -738,7 +738,7 @@ export const getParts = async (year = null) => {
 };
 
 export const getSoloCount = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   const result = await client.query(
     `select count(*) from podfic where type != 'multivoice' and status = 'Posted'`

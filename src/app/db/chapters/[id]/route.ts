@@ -1,5 +1,4 @@
-import { getClient } from '@/app/lib/db-helpers';
-import { createUpdateChapter } from '@/app/lib/updaters';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { SectionType } from '@/app/types';
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
@@ -24,7 +23,7 @@ export async function GET(
   const podficId = context.params.id;
   const searchParams = request.nextUrl.searchParams;
   const sectionType = searchParams.get('section_type') as SectionType;
-  const client = await getClient();
+  const client = await getDBClient();
 
   let result = null;
   let chapters = [];
@@ -63,7 +62,7 @@ export async function GET(
         const sectionResult = await client.query(
           `select * from section
             inner join chapter_section on chapter_section.section_id = section.section_id
-          where chapter_section.chapter_id = $1 and section.podfic_id = $2`,
+          where chapter_section.chapter_id = $1 and section.podfic_id = $2 order by section.number asc`,
           [chapter.chapter_id, podficId]
         );
 
@@ -83,11 +82,4 @@ export async function GET(
     default:
       return NextResponse.json([]);
   }
-}
-
-export async function PUT(request) {
-  const data = await request.json();
-  const chapter = await createUpdateChapter(data);
-
-  return NextResponse.json(chapter);
 }

@@ -1,8 +1,8 @@
-import { getClient } from './db-helpers';
+import { getDBClient } from './db-helpers';
 import { PodficStatus } from '../types';
 
 export const fetchChapters = async (podficId) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     'select * from chapter where podfic_id = $1 order by chapter_number asc',
     [podficId]
@@ -13,8 +13,7 @@ export const fetchChapters = async (podficId) => {
 };
 
 export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
-  const client = await getClient();
-  // TODO: what if there's multiple work permissions,
+  const client = await getDBClient();
   const result = await client.query(
     `select *,fandom.name as fandom_name,event.name as event_name,event_parent.name as parent_name,author.permission_status as author_permission_status from podfic
       inner join work on podfic.work_id = work.work_id
@@ -83,7 +82,6 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
 
   if (onlyNonAAPodfics) {
     console.log('getting podfics');
-    // TODO: more refined search? some files don't need aa links
     const allFilesMissingAALinks = (
       await client.query(`
       SELECT file.file_id,podfic_id,section_id,length,size,filetype,label,is_plain,string_agg(host, ',') from file
@@ -103,7 +101,7 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
 };
 
 export const fetchPodficsWithChapters = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     'select *,name as fandom_name from podfic inner join work on podfic.work_id = work.work_id left join fandom on work.fandom_id = fandom.fandom_id order by added_date asc;'
   );
@@ -125,7 +123,7 @@ export const fetchPodficsWithChapters = async () => {
 };
 
 export const fetchPodficsWithWorksStringified = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     'select * from podfic inner join work on podfic.work_id = work.work_id order by title asc;'
   );
@@ -134,7 +132,7 @@ export const fetchPodficsWithWorksStringified = async () => {
 };
 
 export const fetchPodfic = async (podficId) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     `
     select * from podfic inner join work on podfic.work_id = work.work_id where podfic_id = $1;
@@ -146,13 +144,13 @@ export const fetchPodfic = async (podficId) => {
 };
 
 export const fetchAuthors = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query('select * from author');
   return result.rows as Author[];
 };
 
 export const fetchFandoms = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(`
     select fandom_id,fandom_category_id,fandom.name as fandom_name,category_id,fandom_category.name as category_name from fandom inner join fandom_category on fandom.category_id = fandom_category.fandom_category_id order by fandom_category.name,fandom.name asc;
   `);
@@ -161,7 +159,7 @@ export const fetchFandoms = async () => {
 };
 
 export const fetchFandomCategories = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(`
     select fandom_category_id,name as category_name from fandom_category order by name asc;
   `);
@@ -170,7 +168,7 @@ export const fetchFandomCategories = async () => {
 };
 
 export const fetchPodficChapters = async (podficId) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(`
     select * from chapter where podfic_id = ${podficId};
   `);
@@ -179,7 +177,7 @@ export const fetchPodficChapters = async (podficId) => {
 };
 
 export const fetchInProgressPodfics = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     `
       select * from podfic inner join work on podfic.work_id = work.work_id where status != $1 and status != $2 and status != $3 order by updated_at desc;
@@ -191,7 +189,7 @@ export const fetchInProgressPodfics = async () => {
 };
 
 export const fetchVoiceteams = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   const result = await client.query(
     `select * from event where name like '%Voiceteam%' or name like '%Mystery Box%'`
@@ -200,7 +198,7 @@ export const fetchVoiceteams = async () => {
 };
 
 export const fetchRecordedToday = async () => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   // TODO: refine this it'll grab yesterday's
   const result = await client.query(`

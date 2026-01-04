@@ -11,11 +11,8 @@ import {
 
 // ok so if default or multiple-to-single just show chapters
 // single-to-multiple not applicable
-// if chapters-split then show sections under chapter headers?
-// if chapters-combine then show chapters included in sections under section headers
-// maybe have a bolded thing, possibly w/ combined stats, and then chapters/sections under each? with stats? this. maay be difficult to put together w/ the current table methods. haha.
-// and then whichever is the section needs the HTML but the chapter doesn't
-// but whatever is nested needs the recording button
+// if chapters-split then show sections under chapter headers
+// if chapters-combine then show chapters included in sections under section headers - has not been implemented yet
 export default function ChapterTable({
   podficId,
   podficTitle,
@@ -32,22 +29,6 @@ export default function ChapterTable({
     tableComponent = <ChapterOnlyTable />;
   else if (sectionType === SectionType.CHAPTERS_SPLIT)
     tableComponent = <ChapterWithSubSectionsTable />;
-
-  // const updateChapter = async (chapter: Chapter) => {
-  //   try {
-  //     await fetch(`/db/chapters/${chapter.chapter_id}`, {
-  //       method: 'PUT',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify(chapter),
-  //     });
-  //     await mutate(`/db/chapters/${podficId}`);
-  //     setEditingRowId(null);
-  //   } catch (e) {
-  //     console.error('Error updating chapter:', e);
-  //   }
-  // };
 
   return (
     <div

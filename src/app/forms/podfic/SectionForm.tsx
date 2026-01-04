@@ -1,12 +1,11 @@
 import { SectionType } from '@/app/types';
 import { TextField, Typography } from '@mui/material';
-import { Dispatch, SetStateAction, useMemo } from 'react';
+import { useMemo } from 'react';
 import styles from '@/app/forms/forms.module.css';
 
 interface SectionFormProps {
   sectionType: SectionType;
   section: Partial<Section>;
-  // I forgor
   setSection: (section: Partial<Section>) => void;
   chapters?: any[];
 }
@@ -60,7 +59,6 @@ export default function SectionForm({
         </div>
       );
     case SectionType.CHAPTERS_SPLIT:
-      // section things under chapter headers - should this be combined with chapter forms or not?
       return (
         <div className={styles.flexRow} style={{ width: 'fit-content' }}>
           {baseSectionInfo}

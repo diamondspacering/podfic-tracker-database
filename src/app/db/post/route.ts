@@ -1,7 +1,6 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { getSectionName } from '@/app/lib/html';
 import { getIsPostedChaptered } from '@/app/lib/utils';
-import { SectionType } from '@/app/types';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -10,9 +9,8 @@ export async function GET(request: NextRequest) {
   const sectionId = searchParams.get('section_id');
   console.log({ sectionId });
 
-  const client = await getClient();
+  const client = await getDBClient();
 
-  // TODO: oh no does it work right w/ sections
   const result = await client.query(
     `select number,section.title as section_title,section_type,chaptered,chapter_count,work.wordcount as podfic_wordcount,is_multivoice,section.length,html_string from section
       inner join podfic on section.podfic_id = podfic.podfic_id
@@ -49,7 +47,6 @@ export async function GET(request: NextRequest) {
   };
 
   if (chaptered) {
-    console.log({ chaptered });
     const chapters = (
       await client.query(
         `select chapter_number,chapter_title from chapter inner join chapter_section on chapter_section.chapter_id = chapter.chapter_id where section_id = $1`,

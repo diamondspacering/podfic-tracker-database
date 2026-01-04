@@ -17,7 +17,13 @@ import { Add, Close } from '@mui/icons-material';
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import FandomForm from './fandom-form';
 import AuthorForm from './author-form-inline';
-import { PodficStatus, PodficType, Rating, SectionType } from '@/app/types';
+import {
+  Category,
+  PodficStatus,
+  PodficType,
+  Rating,
+  SectionType,
+} from '@/app/types';
 import { formatDateString, formatDateTimeString } from '@/app/lib/format';
 import StatusSelect from '@/app/ui/StatusSelect';
 import DatePicker from '@/app/ui/DatePicker';
@@ -565,13 +571,11 @@ export default function PodficForm({
                   setPodfic((prev) => ({ ...prev, category: e.target.value }))
                 }
               >
-                {['Gen', 'F/F', 'F/M', 'M/M', 'Other', 'Multi'].map(
-                  (category) => (
-                    <MenuItem key={category} value={category}>
-                      {category}
-                    </MenuItem>
-                  )
-                )}
+                {Object.values(Category).map((category) => (
+                  <MenuItem key={category} value={category}>
+                    {category}
+                  </MenuItem>
+                ))}
               </TextField>
             </div>
           </div>
@@ -977,7 +981,6 @@ export default function PodficForm({
                 label='Posted Date'
                 value={podfic.posted_date ?? ''}
                 onChange={(val) => {
-                  console.log({ val });
                   setPodfic((prev) => ({ ...prev, posted_date: val }));
                 }}
               />
@@ -1056,8 +1059,7 @@ export default function PodficForm({
                 />
               </RadioGroup>
               {/* if single-to-multiple: add section and indicate name (default part 1, etc) & wordcount */}
-              {/* SHIT but multiple-to-single we're still recording by chapter....nvm that might not be an option lmao. just have that be posted_unchaptered...? or record into that but still indicate what chapter........? this feature sucks */}
-              {/* ok so multiple-to-single section 0 is the one with all chapters and posted_unchaptered is still a flag. this is terrible I hate this fucking feature what the hell */}
+              {/* if multiple-to-single: sections are created automatically for chapters */}
               {/* chapters-split: make sections for each chapter */}
               {/* chapters-combine: add section & indicate what chapters are in it. possibly allow overlap of 1...? */}
               {!!podfic.section_type &&
@@ -1100,8 +1102,6 @@ export default function PodficForm({
                               startIcon={<Add />}
                               onClick={() =>
                                 setSectionInfo((prev) => {
-                                  // ok so append to end of that
-                                  // hmmm perhaps we should do it. differently. no i dont care.
                                   // insert section at end of this chapter's sections
                                   const chapNumber = chapter.chapter_number;
                                   const newSection = {

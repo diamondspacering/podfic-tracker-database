@@ -1,13 +1,12 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const min_date = searchParams.get('min_date');
   const max_date = searchParams.get('max_date');
-  const client = await getClient();
+  const client = await getDBClient();
 
-  // TODO: section changes?
   let queryString = `
    select schedule_event_id,schedule_event.podfic_id,schedule_event.chapter_id,schedule_event.part_id,schedule_event.round_id,
        start,"end",allday,schedule_event.type,

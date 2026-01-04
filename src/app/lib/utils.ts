@@ -204,7 +204,6 @@ export const getDefaultColumnVisibility = (columns: any[]) => {
   }, {});
 };
 
-// TODO: single to multiple???
 export const getIsPostedChaptered = (
   sectionType: SectionType,
   chaptered: boolean
@@ -212,7 +211,8 @@ export const getIsPostedChaptered = (
   return (
     (sectionType === SectionType.DEFAULT && chaptered) ||
     sectionType === SectionType.CHAPTERS_COMBINE ||
-    sectionType === SectionType.CHAPTERS_SPLIT
+    sectionType === SectionType.CHAPTERS_SPLIT ||
+    sectionType === SectionType.SINGLE_TO_MULTIPLE
   );
 };
 

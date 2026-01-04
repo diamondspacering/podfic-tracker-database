@@ -30,7 +30,6 @@ export default function DeletePodficDialog({
       <DialogContent>Title: {podficTitle}</DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        {/* TODO: loading/disabled state */}
         <Button
           variant='contained'
           style={{ backgroundColor: 'red' }}

@@ -12,7 +12,7 @@ import { Mic } from '@mui/icons-material';
 import { Button } from '@mui/material';
 import { TableCell } from '@/app/ui/table/TableCell';
 import { getDefaultColumnVisibility } from '@/app/lib/utils';
-import { createUpdateSection } from '@/app/lib/updaters';
+import { updateSectionMinified } from '@/app/lib/updaters';
 
 interface SectionOnlyTableProps {
   sections: Section[];
@@ -44,8 +44,6 @@ export default function SectionOnlyTable({
   });
   const columnHelper = createColumnHelper<Section>();
 
-  // TODO: add the other boys
-  // ^ what did I mean by that
   const columns = [
     columnHelper.display({
       id: 'expand',
@@ -134,8 +132,7 @@ export default function SectionOnlyTable({
       showColumnVisibility={false}
       columnVisibility={getDefaultColumnVisibility(columns)}
       updateItemInline={async (section) => {
-        console.log(section);
-        await createUpdateSection(section);
+        await updateSectionMinified(JSON.stringify(section));
         await submitCallback();
       }}
       getExpandedContent={(row) =>

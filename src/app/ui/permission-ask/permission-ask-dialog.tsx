@@ -37,7 +37,6 @@ export default function PermissionAskDialog({
   );
 
   const submitPermissionAsk = useCallback(async () => {
-    console.log({ permissionAsk });
     try {
       await createUpdatePermissionAsk(permissionAsk);
       submitCallback?.();

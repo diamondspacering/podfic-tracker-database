@@ -72,8 +72,7 @@ export default function StatusBadge({
       case AuthorPermissionStatus.PERMISSION:
         return styles.Permission;
       case PartStatus.PICKED:
-      case PartStatus.EDITED:
-      case PartStatus.SUBMITTED:
+        return styles.Picked;
       case AuthorPermissionStatus.ASK_FIRST:
         return styles.AskFirst;
       case AuthorPermissionStatus.FRIENDLY:
@@ -82,6 +81,8 @@ export default function StatusBadge({
         return styles.Unknown;
       case AuthorPermissionStatus.INACTIVE:
         return styles.Inactive;
+      case PartStatus.EDITED:
+      case PartStatus.SUBMITTED:
       default:
         return styles.Default;
     }

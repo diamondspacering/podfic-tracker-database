@@ -1,4 +1,4 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { unstable_noStore as noStore } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const parentsOnly = searchParams.get('parents_only');
   const childrenFirst = searchParams.get('children_first');
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (childrenFirst !== 'true') {
     const eventParentResult = await client.query(`
     select * from event_parent order by name asc;

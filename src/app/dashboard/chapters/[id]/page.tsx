@@ -6,8 +6,10 @@ export const metadata: Metadata = {
   title: 'Podfic Chapters',
 };
 
-export default async function Page({ params }: { params: { id: any } }) {
-  const podfic = await fetchPodfic(params.id);
+export default async function Page({ params }) {
+  const loadedParams = await params;
+  const { id } = loadedParams;
+  const podfic = await fetchPodfic(id);
 
   return (
     <ChapterTable

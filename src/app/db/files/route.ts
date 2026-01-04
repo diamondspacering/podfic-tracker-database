@@ -1,10 +1,10 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { unstable_noStore as noStore } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   noStore();
-  const client = await getClient();
+  const client = await getDBClient();
   const searchParams = request.nextUrl.searchParams;
   const podficId = searchParams.get('podfic_id');
   const sectionId = searchParams.get('section_id');
@@ -35,7 +35,6 @@ export async function GET(request: NextRequest) {
           [podficId]
         );
     } else {
-      // TODO: oh no we need a better way to indicate what's a summary/general podfic file vs a section/chapter file
       fileResult = await client.query(`
         select * from file where file.podfic_id = ${podficId} and file.section_id is null
       `);

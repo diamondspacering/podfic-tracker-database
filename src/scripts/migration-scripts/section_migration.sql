@@ -3,29 +3,28 @@
 -- create and alter tables
 create table section
 (
-    section_id      serial  not null
+    section_id   serial
         constraint section_pk
             primary key,
-    podfic_id       integer not null
+    podfic_id    integer not null
         constraint section_podfic_podfic_id_fk
-            references podfic,
-    part_id         integer
+            references public.podfic,
+    part_id      integer
         constraint section_part_part_id_fk
-            references part,
-    number          integer,
-    title           varchar(200),
-    status          varchar(20),
-    length          interval,
-    raw_length      interval,
-    plain_length    interval,
-    wordcount       integer,
-    text_link       text,
-    -- status          varchar(20),
-    ao3_link        text,
-    posted_date     date,
-    html_string     text,
-    deadline        timestamptz,
-    updated_at      timestamptz
+            references public.part,
+    number       integer,
+    title        varchar(200),
+    status       varchar(20),
+    length       interval,
+    raw_length   interval,
+    plain_length interval,
+    wordcount    integer,
+    text_link    text,
+    ao3_link     text,
+    posted_date  date,
+    html_string  text,
+    deadline     timestamp with time zone,
+    updated_at   timestamp with time zone
 );
 
 create table chapter_section
@@ -44,12 +43,15 @@ create table resource_section
 (
     resource_id integer not null
         constraint resource_section_resource_resource_id_fk
-            references resource,
+            references public.resource,
     section_id  integer not null
         constraint resource_section_section_section_id_fk
-            references section,
+            references public.section,
+    podfic_id   integer not null
+        constraint resource_section_podfic_podfic_id_fk
+            references public.podfic,
     constraint resource_section_pk
-        primary key (resource_id, section_id)
+        primary key (resource_id, section_id, podfic_id)
 );
 
 create type public.sectiontype as enum ('default', 'single-to-multiple', 'multiple-to-single', 'chapters-split', 'chapters-combine');
@@ -125,7 +127,7 @@ CREATE OR REPLACE FUNCTION update_plain_length_from_file() RETURNS trigger
 AS
 $$
 BEGIN
-    RAISE NOTICE 'updating plain length from file(%)(%)(%)', new.chapter_id, new.podfic_id, new.length;
+    RAISE NOTICE 'updating plain length from file(%)(%)(%)', new.section_id, new.podfic_id, new.length;
     IF new.is_plain is not true THEN
         RETURN null;
     END IF;
@@ -138,6 +140,18 @@ END;
 $$;
 
 ALTER FUNCTION update_plain_length_from_file() OWNER TO "podfic-tracker-db_owner";
+
+create trigger insert_file_update_plain_length
+    after insert
+    on public.file
+    for each row
+execute procedure public.update_plain_length_from_file();
+
+create trigger update_file_update_plain_length
+    after update
+    on public.file
+    for each row
+execute procedure public.update_plain_length_from_file();
 
 CREATE OR REPLACE FUNCTION update_raw_length_from_recording_session() RETURNS trigger
     LANGUAGE plpgsql
@@ -163,6 +177,12 @@ END;
 $$;
 
 ALTER FUNCTION update_raw_length_from_recording_session() OWNER TO "podfic-tracker-db_owner";
+
+create trigger update_raw_length
+    after insert
+    on public.recording_session
+    for each row
+execute procedure public.update_raw_length_from_recording_session();
 
 CREATE OR REPLACE FUNCTION update_recording_session_length() RETURNS trigger
     LANGUAGE plpgsql
@@ -206,26 +226,13 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION update_plain_length_from_file() RETURNS trigger
-    LANGUAGE plpgsql
-AS
-$$
-BEGIN
-    RAISE NOTICE 'updating plain length from file(%)(%)(%)', new.section_id, new.podfic_id, new.length;
-    IF new.is_plain is not true THEN
-        RETURN null;
-    END IF;
-    IF new.section_id is not null THEN
-        RAISE NOTICE 'inserting into section';
-        UPDATE section set plain_length = new.length WHERE section_id = new.section_id;
-    END IF;
-    RETURN null;
-END;
-$$;
-
-ALTER FUNCTION update_plain_length_from_file() OWNER TO "podfic-tracker-db_owner";
-
 ALTER FUNCTION update_recording_session_length() OWNER TO "podfic-tracker-db_owner";
+
+create trigger update_update_raw_length
+    after update
+    on public.recording_session
+    for each row
+execute procedure public.update_recording_session_length();
 
 CREATE FUNCTION update_podfic_length_from_sections() RETURNS trigger
     LANGUAGE plpgsql
@@ -246,7 +253,6 @@ BEGIN
     END IF;
 
     -- if length has changed/it just got posted, meaning that the length should go into the podfic
-    -- TODO: sections don't have statuses rn.
     IF new.length != old.length or old.length is null or (new.status != old.status and new.status = 'Posted') THEN
         RAISE NOTICE 'updating podfic length';
         SELECT SUM(length) into sum_length from section WHERE podfic_id = new.podfic_id and section.status = 'Posted';
@@ -278,8 +284,14 @@ $$;
 
 ALTER FUNCTION update_podfic_length_from_sections() OWNER TO "podfic-tracker-db_owner";
 
+create trigger update_podfic_length
+    after update
+    on public.section
+    for each row
+execute procedure public.update_podfic_length_from_sections();
+
 CREATE FUNCTION update_dependent_resources(podficid integer, chapterid integer, partid integer, sectionid integer) RETURNS void
-    LANGUAGE plpgsql
+    language plpgsql
 AS
 $$
 BEGIN
@@ -289,7 +301,7 @@ BEGIN
         UPDATE recording_session SET section_id = sectionid WHERE part_id = partid AND podfic_id = podficid;
     ELSEIF chapterid is not null THEN
         UPDATE recording_session SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
-        INSERT INTO resource_section (resource_id, section_id) SELECT resource_id, sectionid FROM resource_chapter WHERE chapter_id = chapterid ON CONFLICT DO NOTHING;
+        INSERT INTO resource_section (resource_id, section_id, podfic_id) SELECT resource_id, sectionid, podficid FROM resource_chapter WHERE chapter_id = chapterid ON CONFLICT DO NOTHING;
         UPDATE file SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
         UPDATE note SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
     ELSE
@@ -298,7 +310,7 @@ BEGIN
         UPDATE file SET section_id = sectionid WHERE podfic_id = podficid AND chapter_id is null;
     END IF;
 
-    INSERT INTO resource_section (resource_id, section_id) SELECT resource_id, sectionid FROM resource_podfic WHERE podfic_id = podficid ON CONFLICT DO NOTHING;
+    INSERT INTO resource_section (resource_id, section_id, podfic_id) SELECT resource_id, sectionid, podficid FROM resource_podfic WHERE podfic_id = podficid ON CONFLICT DO NOTHING;
 END;
 $$;
 

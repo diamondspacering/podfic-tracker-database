@@ -98,12 +98,11 @@ interface Podfic {
 
 interface Section {
   section_id?: number;
-  podfic_id: number;
+  podfic_id?: number;
   // part-to-section is one-to-many
   // technically.
   part_id?: number;
   // the sequence
-  // TODO: needs a better way of tracking per chapter for chapters-split
   number?: number;
   title?: string;
 
@@ -217,6 +216,7 @@ interface Work {
   username?: string;
   author_permission_status?: AuthorPermissionStatus;
   work_permission_status?: PermissionAskStatus;
+  permission_asks?: Permission[];
 }
 
 interface Series {
@@ -368,7 +368,6 @@ enum ScheduleEventType {
   ROUND = 'Round',
 }
 
-// TODO: this should probably link to sections not chapters, esp since deadlines were removed from chapters
 interface ScheduleEvent {
   scheduled_event_id?: number;
   podfic_id?: number;

@@ -21,7 +21,6 @@ interface AddMenuProps {
   eventId?: number;
   length?: Length | null;
   submitCallback?: () => void;
-  // TODO: uh oh! needs section work probably
   options?: (
     | 'cover_art'
     | 'file'
@@ -60,7 +59,6 @@ export default function AddMenu({
   const [noteFormOpen, setNoteFormOpen] = useState(false);
   const [permissionAskFormOpen, setPermissionAskFormOpen] = useState(false);
 
-  // TODO: add section ids to all of these
   return (
     <>
       <CoverArtDialog

@@ -37,9 +37,7 @@ export default function PermissionAskForm({
       </Button>
       <Autocomplete
         size='small'
-        // TODO: filter authors as well? or set manually?
         options={authors}
-        // TODO: render authors w/ color of status? or display somewhere? pull their links?
         sx={{
           width: '200px',
         }}

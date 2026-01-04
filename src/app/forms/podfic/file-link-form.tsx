@@ -27,16 +27,12 @@ export default function FileLinkForm({
   label,
 }) {
   const [aaDate, setAADate] = useState(formatDateString(new Date()));
-  // TODO: hmmm section info w/ embedded chapter?
-  const [chapter, setChapter] = useState({} as Chapter);
 
   useEffect(() => {
     if (link.host === 'audiofic archive') {
       const dateString = generateAADate(aaDate);
-      // TODO: make this work correctly
       const fileString = generateAALink({
         title: podficTitle,
-        chapterInfo: chapter,
         date: dateString,
         label,
         sectionType,

@@ -21,12 +21,14 @@
     - [ ] filtering authors on child permission statuses as well? Like I may want to see authors with open permission asks/ones I still need to ask
       - this may be complicated
     - [ ] Filter authors based on provided work id as well as works based on authors/set author manually
+    - [ ] In permission ask form, render authors w/ color of status? or display that somewhere? pull their links?
   - [ ] Consider doing the events method of combined headers? it's very sloppy but. useful.
 - [ ] To podfic table crashing when resetting filters bc of tags?
 - [x] statusType enum for tables
 - [x] Separate [id] and new pages for all forms (if only for page titles)
 - [ ] Use transactions or something so you stop getting extra elements created by processes failing halfway through
   - transaction wrapper? is that a bad idea. Would require some restructuring
+- [ ] const in `dataGeneral` for ratings & categories
 
 ## Tables
 
@@ -41,6 +43,7 @@
 - [ ] global color scale for wordcount?
 - [x] column show/hide like podfic table
 - [x] chapter columns defined in separate file
+- [ ] Show section recording sessions
 
 ### Parts
 
@@ -62,6 +65,9 @@
 - [ ] Filtering on dates
 - [ ] Filtering on chaptered/chapter numbers
 - [ ] Allow editing event and type inline
+- [ ] Add podficcer function on cover art dialog like is in part form
+- [ ] More refined missing AA links search? Not all files need an AA link
+- [ ] Loading/in progress state for podfic deletion dialog
 
 ### To podfic
 
@@ -160,6 +166,7 @@
 
 ## Forms
 
+- author form create new author with the more information & automatic things like in the metadata form
 - author/id page: swr, use loading state
 - author-form.tsx fix statusselect types
 - partform - be able to create a new podfic from here? and not show its part selection...?; pull deadline from event in podfic?

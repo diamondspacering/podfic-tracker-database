@@ -1,5 +1,8 @@
 import useChapterColumns from './useChapterColumns';
-import { usePodficChaptersWithSubSections } from '@/app/lib/swrLoaders';
+import {
+  useMaxSectionLengthValues,
+  usePodficChaptersWithSubSections,
+} from '@/app/lib/swrLoaders';
 import { useContext, useState } from 'react';
 import {
   getDefaultColumnVisibility,
@@ -10,6 +13,7 @@ import { EditCell } from '@/app/ui/table/EditCell';
 import CustomTable from '@/app/ui/table/CustomTable';
 import SectionOnlyTable from './SectionOnlyTable';
 import { ChapterTableContext } from './ChapterTableContext';
+import { createUpdateChapterClient } from '@/app/lib/updaters';
 
 export default function ChapterWithSubSectionsTable() {
   const { podficId, getDefaultTableProps } = useContext(ChapterTableContext);
@@ -25,14 +29,10 @@ export default function ChapterWithSubSectionsTable() {
 
   const chapterColumnHelper = createColumnHelper<Chapter>();
 
-  // TODO: hmmm you can't do that chapters don't got length any more. a fixed max? alternately getting the max len from a select?
-  // const lengthColorScale = useLengthColorScale(chapters, 'length');
-  // TODO: fix this
-  // const { maxSectionLength } = useMaxSectionLength({ podficId });
-  // const lengthColorScale = useFixedColorScale(
-  //   getLengthValue(maxSectionLength) ? getLengthValue(maxSectionLength) : 1
-  // );
-  const lengthColorScale = useFixedColorScale(1);
+  const { maxLength, mutate: sectionLengthMutate } = useMaxSectionLengthValues({
+    podficId,
+  });
+  const lengthColorScale = useFixedColorScale(maxLength);
 
   const chapterColumns = [
     ...mainColumns,
@@ -54,8 +54,7 @@ export default function ChapterWithSubSectionsTable() {
       columnVisibility={columnVisibility}
       setColumnVisibility={setColumnVisibility}
       updateItemInline={async (chapter) => {
-        console.log(chapter);
-        // await updateChapter
+        await createUpdateChapterClient(chapter);
       }}
       rowsAlwaysExpanded={true}
       getExpandedContent={(row) => (
@@ -69,8 +68,8 @@ export default function ChapterWithSubSectionsTable() {
               sections={row.original.sections ?? []}
               isLoading={isLoading}
               submitCallback={async () => {
-                console.log('submit callback');
                 await mutate();
+                await sectionLengthMutate();
               }}
               lengthColorScale={lengthColorScale}
             />

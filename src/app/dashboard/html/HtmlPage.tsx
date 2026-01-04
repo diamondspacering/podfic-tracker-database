@@ -37,11 +37,7 @@ import { html } from '@codemirror/lang-html';
 import { okaidia } from '@uiw/codemirror-theme-okaidia';
 import beautify from 'js-beautify';
 import GeneratedLinksDialog from './GeneratedLinksDialog';
-import {
-  createUpdateFileLink,
-  savePodficHTML,
-  saveSectionHTML,
-} from '@/app/lib/updaters';
+import { createUpdateFileLink, saveSectionHTML } from '@/app/lib/updaters';
 import { usePodficcer } from '@/app/lib/swrLoaders';
 import ExternalLink from '@/app/ui/ExternalLink';
 import { SectionType } from '@/app/types';
@@ -82,23 +78,6 @@ export default function HtmlPage() {
       chapterLoading ||
       filesLoading ||
       resourcesLoading,
-    [
-      chapterLoading,
-      filesLoading,
-      podficLoading,
-      resourcesLoading,
-      sectionLoading,
-    ]
-  );
-  useEffect(
-    () =>
-      console.log({
-        podficLoading,
-        sectionLoading,
-        chapterLoading,
-        filesLoading,
-        resourcesLoading,
-      }),
     [
       chapterLoading,
       filesLoading,
@@ -359,8 +338,7 @@ export default function HtmlPage() {
       setGeneratedHTML(beautify.html(generated));
     } else if (selectedTemplate === 'bluedreaming') {
       console.log('bluedreaming');
-      // TODO: detect chaptered better
-      if (Object.keys(chapter).length !== 0) {
+      if (isPostedChaptered) {
         const generated = generateHTMLBluedreamingChapter(
           podfic,
           section,
@@ -378,11 +356,6 @@ export default function HtmlPage() {
   }, [selectedTemplate, files, resources, podfic, chapter, filteredResources]);
 
   const saveHTML = useCallback(async () => {
-    // if (Object.keys(chapter).length !== 0) {
-    //   await saveChapterHTML(chapter.chapter_id, generatedHTML);
-    // } else {
-    //   await savePodficHTML(podfic.podfic_id, generatedHTML);
-    // }
     await saveSectionHTML(sectionId, generatedHTML);
     console.log('saved html');
   }, [sectionId, generatedHTML]);
@@ -437,7 +410,6 @@ export default function HtmlPage() {
         {getLengthValue(podfic.length) !== getLengthValue(section.length) && (
           <p>Section length: {getLengthText(section.length)}</p>
         )}
-        {/* TODO: do we need any general podfic notes? */}
         {section.notes?.map((note, i) => (
           <p key={i}>
             <b>{`${note.label}: `}</b>

@@ -14,7 +14,6 @@ import { IconButton } from '@mui/material';
 import { CellContext, Row } from '@tanstack/react-table';
 import ColorScale from 'color-scales';
 
-// html cell? add related cell?
 interface ChapterTableContextType {
   getDefaultTableProps: (columns: any[]) => Partial<CustomTableProps<any>>;
   filesExpanded: boolean;
@@ -22,7 +21,6 @@ interface ChapterTableContextType {
   expandCellComponent: (props: CellContext<any, any>) => ReactNode;
   editingRowId: string | null;
   setEditingRowId: Dispatch<SetStateAction<string | null>>;
-  // include chapter id?
   getExpandedContentCellComponent: (
     lengthColorScale: ColorScale,
     row: Row<any>
@@ -31,8 +29,6 @@ interface ChapterTableContextType {
   podficTitle: string;
 }
 
-// consider using columns?
-// oh noooo the expansion def depends on if there's nested guys. so yeah manage that manually
 export const ChapterTableContext = createContext<ChapterTableContextType>({
   getDefaultTableProps: () => {
     return {};
@@ -58,21 +54,17 @@ export const useChapterTableContext = ({
   const [filesExpanded, setFilesExpanded] = useState(false);
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
 
-  // hmm can't do the column visibility thing cause would need to define it inside here which doesn't work
-  // unless we create the context after the columns, so farther down. not sure abt that one
-  const getDefaultTableProps = useCallback(
-    (columns: any[]): Partial<CustomTableProps<any>> => {
-      return {
-        // columns,
-        showColumnVisibility: true,
-        editingRowId,
-        setEditingRowId,
-        showRowCount: true,
-        rowCanExpand: true,
-      };
-    },
-    [editingRowId]
-  );
+  const getDefaultTableProps = useCallback((): Partial<
+    CustomTableProps<any>
+  > => {
+    return {
+      showColumnVisibility: true,
+      editingRowId,
+      setEditingRowId,
+      showRowCount: true,
+      rowCanExpand: true,
+    };
+  }, [editingRowId]);
 
   const expandCellComponent = (props: CellContext<any, any>) => {
     return (
@@ -97,7 +89,6 @@ export const useChapterTableContext = ({
     lengthColorScale: ColorScale,
     row: Row<any>
   ) => {
-    console.log('getting expanded content');
     return (
       <>
         <tr key='files-expand'>

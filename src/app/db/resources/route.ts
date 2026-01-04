@@ -1,16 +1,15 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { unstable_noStore as noStore } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   noStore();
-  const client = await getClient();
+  const client = await getDBClient();
   const searchParams = request.nextUrl.searchParams;
   const resourceType = searchParams.get('resource_type');
   const podficId = searchParams.get('podfic_id');
   // const isFull = searchParams.get('full');
   // console.log({ isFull });
-  // const chapterId = searchParams.get('chapter_id');
   const sectionId = searchParams.get('section_id');
   // TODO: author
   const eventId = searchParams.get('event_id');

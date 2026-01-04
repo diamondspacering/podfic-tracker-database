@@ -827,8 +827,11 @@ create table public.resource_section
     section_id  integer not null
         constraint resource_section_section_section_id_fk
             references public.section,
+    podfic_id   integer not null
+        constraint resource_section_podfic_podfic_id_fk
+            references public.podfic,
     constraint resource_section_pk
-        primary key (resource_id, section_id)
+        primary key (resource_id, section_id, podfic_id)
 );
 
 alter table public.resource_section
@@ -1144,7 +1147,7 @@ BEGIN
         UPDATE recording_session SET section_id = sectionid WHERE part_id = partid AND podfic_id = podficid;
     ELSEIF chapterid is not null THEN
         UPDATE recording_session SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
-        INSERT INTO resource_section (resource_id, section_id) SELECT resource_id, sectionid FROM resource_chapter WHERE chapter_id = chapterid ON CONFLICT DO NOTHING;
+        INSERT INTO resource_section (resource_id, section_id, podfic_id) SELECT resource_id, sectionid, podficid FROM resource_chapter WHERE chapter_id = chapterid ON CONFLICT DO NOTHING;
         UPDATE file SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
         UPDATE note SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
     ELSE
@@ -1153,7 +1156,7 @@ BEGIN
         UPDATE file SET section_id = sectionid WHERE podfic_id = podficid AND chapter_id is null;
     END IF;
 
-    INSERT INTO resource_section (resource_id, section_id) SELECT resource_id, sectionid FROM resource_podfic WHERE podfic_id = podficid ON CONFLICT DO NOTHING;
+    INSERT INTO resource_section (resource_id, section_id, podfic_id) SELECT resource_id, sectionid, podficid FROM resource_podfic WHERE podfic_id = podficid ON CONFLICT DO NOTHING;
 END;
 $$;
 

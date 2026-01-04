@@ -1,4 +1,4 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const partId = searchParams.get('part_id');
 
   let sections = null;
-  const client = await getClient();
+  const client = await getDBClient();
   if (partId && partId !== 'null') {
     const result = await client.query(
       `select * from section where part_id = $1 limit 1`,

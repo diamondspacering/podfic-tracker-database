@@ -66,7 +66,6 @@ export default function RecordingSessionForm({
     type: PodficType.PODFIC,
   } as Podfic & Work);
   const [recordingId] = useState<number | null>(recording_id);
-  // how to handle parts with sections. hnnngh. do multivoices just go for default sections??? or are parts sections...? I hate my life
   const [partId, setPartId] = useState<number | null>(part_id);
   const [selectedPodficParts, setSelectedPodficParts] = useState<Part[]>([]);
 
@@ -132,10 +131,6 @@ export default function RecordingSessionForm({
     if (sectionId && selectedSection.podfic_id && !podficId) {
       const podficIdFromSection = selectedSection.podfic_id;
       setPodficId(podficIdFromSection);
-      // setSelectedPodfic(
-      //   podficList.find((podfic) => podfic.podfic_id === podficIdFromSection) ??
-      //     ({ type: PodficType.PODFIC } as Podfic & Work)
-      // );
     }
   }, [podficId, sectionId, selectedSection.podfic_id]);
 
@@ -208,7 +203,7 @@ export default function RecordingSessionForm({
     }
   }, [recordingId, fetchRecording]);
 
-  // ok this runs too much
+  // TODO: figure out why this runs too much
   useEffect(() => {
     console.log('selected sections useeffect running');
     if (selectedPodficSections && !!chapterId) {
@@ -218,6 +213,7 @@ export default function RecordingSessionForm({
         ) ?? []
       );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapterId]);
 
   useEffect(() => {
@@ -493,8 +489,9 @@ export default function RecordingSessionForm({
                 },
               }}
               options={selectedPodficSections}
-              // TODO: get section title or something
-              getOptionLabel={(option) => option.title ?? ''}
+              getOptionLabel={(option) =>
+                option.title ?? `Part ${option.number}`
+              }
               value={selectedSection}
               onChange={(_, newValue) => {
                 setSectionId(newValue.section_id);
@@ -578,7 +575,7 @@ export default function RecordingSessionForm({
               device,
               location,
               completesPodfic,
-              completesChapter: completesSection,
+              completesSection,
               podfic: newPodfic,
             });
             if (returnUrl?.includes('chapter_id') && !!podficId) {

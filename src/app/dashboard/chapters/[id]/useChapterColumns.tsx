@@ -51,21 +51,6 @@ export default function useChapterColumns({ longChapterNumber = false }) {
           type: 'text',
         },
       }),
-      // columnHelper.accessor('link', {
-      //   header: 'Link',
-      //   cell: TableCell,
-      //   meta: {
-      //     type: 'link',
-      //   },
-      // }),
-      // no wordcount - it's a combined one
-      // no length or raw length
-      // TODO: is status applicable or only on sections?
-      // columnHelper.display({
-      //   id: 'edit',
-      //   cell: EditCell,
-      // }),
-      // TODO: should there be an add related that adds to all sections....?
     ],
     [columnHelper, longChapterNumber]
   );

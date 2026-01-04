@@ -6,6 +6,6 @@ const pool = new Pool({
     : process.env.CONNECTION_STRING,
 });
 
-export const getClient = async () => {
+export const getDBClient = async () => {
   return pool;
 };

@@ -50,6 +50,7 @@ import { addLengths, getLengthValue } from '@/app/lib/lengthHelpers';
 import CustomTable from '@/app/ui/table/CustomTable';
 import ExternalLink from '@/app/ui/ExternalLink';
 import DeletePodficDialog from '@/app/ui/table/delete-podfic-dialog';
+import { RawWPMCell, WPMCell } from '@/app/ui/table/WPMCells';
 
 export default function PodficTable() {
   const searchParams = useSearchParams();
@@ -144,6 +145,7 @@ export default function PodficTable() {
         <Button
           variant='contained'
           onClick={() => console.log(props.row.original)}
+          style={{ padding: '0px' }}
         >
           Log
         </Button>
@@ -319,21 +321,7 @@ export default function PodficTable() {
     columnHelper.display({
       id: 'wpm',
       header: 'WPM',
-      cell: (props) => {
-        let value = null;
-        if (
-          !!props.row.getValue('wordcount') &&
-          !!props.row.getValue('length')
-        ) {
-          value = Math.round(
-            parseInt(props.row.getValue('wordcount')) /
-              (props.row.getValue('plain_length')
-                ? getLengthValue(props.row.getValue('plain_length')) / 60
-                : getLengthValue(props.row.getValue('length')) / 60)
-          );
-        }
-        return <span>{value}</span>;
-      },
+      cell: WPMCell,
       footer: ({ table }) => {
         const filteredRows = table
           .getFilteredRowModel()
@@ -356,19 +344,7 @@ export default function PodficTable() {
     columnHelper.display({
       id: 'raw_wpm',
       header: 'Raw WPM',
-      cell: (props) => {
-        let value = null;
-        if (
-          !!props.row.getValue('wordcount') &&
-          !!props.row.getValue('raw_length')
-        ) {
-          value = Math.round(
-            parseInt(props.row.getValue('wordcount')) /
-              (getLengthValue(props.row.getValue('raw_length')) / 60)
-          );
-        }
-        return <span>{value}</span>;
-      },
+      cell: RawWPMCell,
       footer: ({ table }) => {
         const filteredRows = table
           .getFilteredRowModel()
@@ -457,7 +433,6 @@ export default function PodficTable() {
         columnName: 'AO3 Link',
       },
     }),
-    // TODO: should this be labeled as chapters or sections....?
     columnHelper.display({
       id: 'sections',
       header: 'Chapters',
@@ -623,15 +598,13 @@ export default function PodficTable() {
         podfic.section_type,
         podfic.chaptered
       );
-      // TODO: hmmm ideally the section would be updated and the podfic would be updated from it
-      // but we're not doing that rn
       if (!isPostedChaptered) {
         const section = podfic.sections?.[0];
-        console.log('updating section', section);
         if (section) {
           await updateSectionMinified(
             JSON.stringify({
               section_id: section.section_id,
+              wordcount: podfic.wordcount,
               length: podfic.length,
               posted_date: podfic.posted_date,
               ao3_link: podfic.ao3_link,

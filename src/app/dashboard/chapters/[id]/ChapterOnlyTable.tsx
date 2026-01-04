@@ -1,6 +1,6 @@
 import { useDefaultSectionChaptersForPodfic } from '@/app/lib/swrLoaders';
 import useChapterColumns from './useChapterColumns';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import useSectionColumns from './useSectionColumns';
 import { createColumnHelper } from '@tanstack/react-table';
 import { Button } from '@mui/material';
@@ -15,6 +15,10 @@ import {
   useLengthColorScale,
 } from '@/app/lib/utils';
 import { ChapterTableContext } from './ChapterTableContext';
+import {
+  createUpdateChapterClient,
+  updateSectionMinified,
+} from '@/app/lib/updaters';
 
 export default function ChapterOnlyTable() {
   const {
@@ -44,7 +48,6 @@ export default function ChapterOnlyTable() {
       ...postingColumns,
     ])
   );
-  useEffect(() => console.log({ columnVisibility }), [columnVisibility]);
 
   const lengthColorScale = useLengthColorScale(sections, 'length');
 
@@ -139,9 +142,9 @@ export default function ChapterOnlyTable() {
       columnVisibility={columnVisibility}
       setColumnVisibility={setColumnVisibility}
       updateItemInline={async (section) => {
-        console.log(section);
-        // await mutate();
-        // await updateChapterSection(section);
+        await createUpdateChapterClient(section);
+        await updateSectionMinified(JSON.stringify(section));
+        await mutate();
       }}
       getExpandedContent={(row) =>
         getExpandedContentCellComponent(lengthColorScale, row)

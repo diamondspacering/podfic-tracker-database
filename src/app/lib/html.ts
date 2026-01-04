@@ -32,7 +32,7 @@ export const getEmbedCode = (link: string) => {
 };
 
 // TODO: chapter_combine support
-// TODO: this also doesn't do exactly what I want it to lmao
+// change as needed
 export const getSectionName = ({
   section,
   sectionType,
@@ -61,9 +61,8 @@ export const getSectionName = ({
         ? `${forAA ? ' -' : ':'} ${chapter.chapter_title}`
         : ''
     }`;
-    // TODO: redo these as needed based on how you actually name stuff lmao
+    // as usual, redo these as needed based on how you actually name stuff
     if (sectionType === SectionType.CHAPTERS_SPLIT) {
-      // TODO: find a way of numbering what part *of that chapter* it is not just what number overall
       return section.title
         ? `${section.title} - ${chapterName}`
         : `${chapterName} - Part ${section.number}`;
@@ -80,7 +79,6 @@ export const generateAALink = ({
   sectionType,
   chaptered,
   section,
-  chapterInfo = {} as any,
   date,
   filetype = 'mp3',
   label = '',

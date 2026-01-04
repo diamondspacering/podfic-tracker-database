@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 
 export async function GET(
   request: NextRequest,
@@ -17,11 +17,10 @@ export async function GET(
   const withTags = searchParams.get('with_tags');
   const withSectionChapters = searchParams.get('with_section_chapters');
 
-  const client = await getClient();
+  const client = await getDBClient();
 
   let podfic = null;
   if (withCoverArt && withAuthor) {
-    // TODO: this is returning some weird results (no podfic id????)
     const result = await client.query(
       `select *,cover_art.status as cover_art_status from podfic
         inner join work on podfic.work_id = work.work_id
@@ -68,7 +67,6 @@ export async function GET(
     podfic.tags = tagResult.rows ?? [];
   }
 
-  // TODO: does this need sections,
   const chapterResult = await client.query(
     `select * from chapter where chapter.podfic_id = ${id} order by chapter_number asc`
   );

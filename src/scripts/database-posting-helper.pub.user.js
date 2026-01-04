@@ -158,13 +158,6 @@ const APP_URL = '';
   }
 
   async function fillNewWorkForm(dbData) {
-    // const {
-    //   chapter_title: chapterTitle,
-    //   length,
-    //   est_length,
-    //   html_string,
-    //   is_multivoice,
-    // } = dbData;
     const {
       chapters,
       length,
