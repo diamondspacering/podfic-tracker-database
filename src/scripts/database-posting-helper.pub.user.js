@@ -36,11 +36,12 @@ const APP_URL = '';
 
   const url = new URL(window.location.href);
   const search_params = new URLSearchParams(url.search);
+  const section_id = search_params.get('section_id');
   const podfic_id = search_params.get('podfic_id');
   const chapter_id = search_params.get('chapter_id');
   const work_link = search_params.get('work_link');
 
-  console.log({ podfic_id, chapter_id, work_link });
+  console.log({ podfic_id, section_id, chapter_id, work_link });
 
   async function getOriginalWorkMetadata() {
     let itemsObj = {};
@@ -118,7 +119,7 @@ const APP_URL = '';
   async function fetchDatabaseData() {
     console.log('fetching from db');
     const data = await fetch(
-      `http://${APP_URL}/db/post?podfic_id=${podfic_id}&chapter_id=${chapter_id}`
+      `http://${APP_URL}/db/post?section_id=${section_id}&podfic_id=${podfic_id}&chapter_id=${chapter_id}`
     );
 
     const parsedData = await data.json();
@@ -136,8 +137,12 @@ const APP_URL = '';
     element.dispatchEvent(new KeyboardEvent('keydown', { key: ',' }));
   }
 
-  function fillSharedPostingFormElements(html_string) {
-    $(`select[id$="author_attributes_ids"] option:contains(${is_multivoice ? MULTIVOICE_PSEUD : DEFAULT_PSEUD})`).prop('selected', true);
+  function fillSharedPostingFormElements(html_string, is_multivoice) {
+    $(
+      `select[id$="author_attributes_ids"] option:contains(${
+        is_multivoice ? MULTIVOICE_PSEUD : DEFAULT_PSEUD
+      })`
+    ).prop('selected', true);
 
     $('.mce-editor').val(html_string);
 
@@ -154,11 +159,13 @@ const APP_URL = '';
 
   async function fillNewWorkForm(dbData) {
     const {
-      chapter_title: chapterTitle,
+      chapters,
       length,
       est_length,
       html_string,
       is_multivoice,
+      section_type,
+      chaptered,
     } = dbData;
 
     const metadata = await getOriginalWorkMetadata();
@@ -228,10 +235,11 @@ const APP_URL = '';
     }
     lengthTag = `Podfic Length: ${lengthTag}`;
     freeforms.push(lengthTag);
+    // TODO: more specific hours/minutes/etc.
     if (est_length) {
       freeforms.push(`estimated finished length about ${est_length} hours`);
     }
-    if (is_multivoice) {
+    if (!!is_multivoice) {
       freeforms.push('Multivoice and Collaborative Podfic');
     }
     // TODO: options for other tags?
@@ -254,8 +262,8 @@ const APP_URL = '';
     if (chapterCount !== '1') {
       $('#chapters-options-show').click();
       $('#work_wip_length').val(chapterCount);
-      if (chapterTitle) {
-        $('#work_chapter_attributes_title').val(chapterTitle);
+      if (chapters?.length && chapters[0].chapter_title) {
+        $('#work_chapter_attributes_title').val(chapters[0].chapter_title);
       }
     }
 
@@ -263,11 +271,13 @@ const APP_URL = '';
 
     // OOOHHHH pull config options from db as well??? like name, workskin, etc.?
 
-    $(`select#work_work_skin_id option:contains('${DEFAULT_WORKSKIN_NAME}')`).prop('selected', true)
+    $(
+      `select#work_work_skin_id option:contains('${DEFAULT_WORKSKIN_NAME}')`
+    ).prop('selected', true);
 
     $('dd.permissions.comments input[value="enable_all"]').click();
 
-    fillSharedPostingFormElements(html_string);
+    fillSharedPostingFormElements(html_string, is_multivoice);
   }
 
   async function prefillPostingForm() {
@@ -275,11 +285,9 @@ const APP_URL = '';
 
     const dbData = await fetchDatabaseData();
 
-    const { chapter_number: chapterNumber } = dbData;
+    console.log({ dbData });
 
     if (
-      chapterNumber &&
-      chapterNumber !== '1' &&
       window.location.href.match(
         /https:\/\/archiveofourown\.org\/works\/\d+\/chapters\/new/
       )

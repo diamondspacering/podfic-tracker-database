@@ -3,6 +3,11 @@ import { Add } from '@mui/icons-material';
 import { Button } from '@mui/material';
 import Link from 'next/link';
 import ToPodficTable from './ToPodficTable';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'To Podfic',
+};
 
 export default async function Page() {
   return (

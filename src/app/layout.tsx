@@ -4,7 +4,10 @@ import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
 import { roboto } from './fonts/fonts';
 
 export const metadata: Metadata = {
-  title: 'Podfic Tracker Database',
+  title: {
+    template: 'Podfic Tracker Database - %s',
+    default: 'Podfic Tracker Database',
+  },
   description: 'Podfic tracking database webapp',
 };
 

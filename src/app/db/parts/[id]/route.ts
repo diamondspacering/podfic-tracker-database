@@ -1,4 +1,4 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
@@ -11,7 +11,7 @@ export async function GET(
     return NextResponse.json({});
   }
 
-  const client = await getClient();
+  const client = await getDBClient();
 
   const result = await client.query(
     `select * from part left join podficcer on podficcer.podficcer_id = part.organizer where part_id = $1`,

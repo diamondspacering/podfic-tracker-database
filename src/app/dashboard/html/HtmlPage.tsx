@@ -37,35 +37,62 @@ import { html } from '@codemirror/lang-html';
 import { okaidia } from '@uiw/codemirror-theme-okaidia';
 import beautify from 'js-beautify';
 import GeneratedLinksDialog from './GeneratedLinksDialog';
-import {
-  createUpdateFileLink,
-  saveChapterHTML,
-  savePodficHTML,
-} from '@/app/lib/updaters';
+import { createUpdateFileLink, saveSectionHTML } from '@/app/lib/updaters';
 import { usePodficcer } from '@/app/lib/swrLoaders';
 import ExternalLink from '@/app/ui/ExternalLink';
+import { SectionType } from '@/app/types';
+import { getLengthValue } from '@/app/lib/lengthHelpers';
+import { getIsPostedChaptered } from '@/app/lib/utils';
 
 export default function HtmlPage() {
   const searchParams = useSearchParams();
 
   const [podficId, setPodficId] = useState<number | null>(null);
+  const [sectionId, setSectionId] = useState<number | null>(null);
   const [chapterId, setChapterId] = useState<number | null>(null);
 
   // --Data--
   const [podfic, setPodfic] = useState<PodficFull>({} as PodficFull);
+  const [section, setSection] = useState<Section>({} as Section);
+  const [sectionType, setSectionType] = useState<SectionType | null>(null);
   const [chapter, setChapter] = useState<Chapter>({} as Chapter);
   const [files, setFiles] = useState<File[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const isPostedChaptered = useMemo(
+    () => getIsPostedChaptered(sectionType, podfic.chaptered),
+    [podfic.chaptered, sectionType]
+  );
+
+  // -- Loading State --
+  const [podficLoading, setPodficLoading] = useState(true);
+  const [sectionLoading, setSectionLoading] = useState(true);
+  const [chapterLoading, setChapterLoading] = useState(true);
+  const [filesLoading, setFilesLoading] = useState(true);
+  const [resourcesLoading, setResourcesLoading] = useState(true);
+  const isLoading = useMemo(
+    () =>
+      podficLoading ||
+      sectionLoading ||
+      chapterLoading ||
+      filesLoading ||
+      resourcesLoading,
+    [
+      chapterLoading,
+      filesLoading,
+      podficLoading,
+      resourcesLoading,
+      sectionLoading,
+    ]
+  );
 
   // -- HTML Generation --
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [generatedHTML, setGeneratedHTML] = useState('');
   const editorRef = useRef<ReactCodeMirrorRef | null>(null);
 
-  // -- Config --
+  // -- AA HTML Generation --
   const [generateChapterLinks, setGenerateChapterLinks] = useState(false);
   const [generatedLinks, setGeneratedLinks] = useState<any[]>([]);
   const [generatedFilesDialogOpen, setGeneratedFilesDialogOpen] =
@@ -81,10 +108,11 @@ export default function HtmlPage() {
 
   const postingURL = useMemo(() => {
     const searchParams = new URLSearchParams();
+    searchParams.set('section_id', sectionId ? sectionId.toString() : 'null');
     searchParams.set('podfic_id', podficId ? podficId.toString() : 'null');
     searchParams.set('chapter_id', chapterId ? chapterId.toString() : 'null');
 
-    if (!!Object.keys(chapter).length && chapter.chapter_number > 1) {
+    if (isPostedChaptered && !!podfic.ao3_link) {
       const url = new URL(
         `${
           podfic.ao3_link.slice(-1) === '/'
@@ -96,12 +124,18 @@ export default function HtmlPage() {
       return url.toString();
     } else {
       const url = new URL('https://archiveofourown.org/works/new');
-
       searchParams.set('work_link', podfic.link);
       url.search = searchParams.toString();
       return url.toString();
     }
-  }, [podficId, chapterId, chapter, podfic.ao3_link, podfic.link]);
+  }, [
+    sectionId,
+    podficId,
+    chapterId,
+    isPostedChaptered,
+    podfic.ao3_link,
+    podfic.link,
+  ]);
 
   useEffect(() => console.log({ podfic }), [podfic]);
   useEffect(() => console.log({ files }), [files]);
@@ -109,91 +143,123 @@ export default function HtmlPage() {
 
   useEffect(() => setFilteredResources(resources), [resources]);
 
-  const fetchPodfic = useCallback(
-    async (podficId) => {
+  useEffect(() => setSectionType(podfic.section_type), [podfic.section_type]);
+
+  const fetchPodfic = useCallback(async (podficId) => {
+    setPodficLoading(true);
+    if (podficId) {
       const response = await fetch(
-        `/db/podfics/${podficId}?with_cover_art=true&with_author=true&with_podficcers=true`
+        `/db/podfics/${podficId}?with_cover_art=true&with_author=true&with_podficcers=true&with_section_chapters=true`
       );
       const data = await response.json();
       setPodfic(data);
-      if (data.html_string) {
-        console.log('setting generated html from podfic html');
-        setGeneratedHTML(podfic.html_string);
-      }
-    },
-    [podfic.html_string]
-  );
+      setPodficLoading(false);
+      return data;
+    }
+    setPodficLoading(false);
+  }, []);
 
-  const fetchChapter = useCallback(
-    async (chapterId) => {
-      // different endpoint than for all chapters in the podfic!
+  const fetchChapter = useCallback(async (chapterId) => {
+    setChapterLoading(true);
+    // different endpoint than for all chapters in the podfic!
+    if (chapterId) {
       const response = await fetch(`/db/chapters?chapter_id=${chapterId}`);
       const data = await response.json();
       setChapter(data);
+    }
+    setChapterLoading(false);
+  }, []);
+
+  const fetchSection = useCallback(async (sectionId) => {
+    setSectionLoading(true);
+    if (sectionId) {
+      const response = await fetch(`/db/sections/${sectionId}`);
+      const data = await response.json();
+      setSection(data);
       if (data.html_string) {
-        console.log('setting generated html from chapter html');
-        setGeneratedHTML(chapter.html_string);
+        console.log('setting generated html from section');
+        setGeneratedHTML(data.html_string);
       }
-    },
-    [chapter.html_string]
-  );
 
-  const fetchFiles = useCallback(async (podficId, chapterId) => {
-    console.log('fetchfiles running');
-    let response = null;
-    if (!chapterId)
-      response = await fetch(
-        `/db/files?podfic_id=${podficId}&with_chapters=true`
-      );
-    else
-      response = await fetch(
-        `/db/files?podfic_id=${podficId}&chapter_id=${chapterId}`
-      );
-    const data = await response.json();
-    setFiles(data);
+      if (data.podfic_id) {
+        setPodficId(data.podfic_id);
+      }
+
+      if (data.chapters?.length) {
+        setChapterId(data.chapters[0].chapter_id);
+      }
+    }
+    setSectionLoading(false);
   }, []);
 
-  const fetchResources = useCallback(async (podficId, chapterId) => {
-    console.log('fetchresources running');
-    let response = null;
-    if (!chapterId)
-      response = await fetch(
-        `/db/resources?podfic_id=${podficId}&with_chapters=true`
-      );
-    else
-      response = await fetch(
-        `/db/resources?podfic_id=${podficId}&chapter_id=${chapterId}`
-      );
-    const data = await response.json();
-    setResources(data);
+  const fetchFiles = useCallback(async (podficId, sectionId) => {
+    setFilesLoading(true);
+    if (podficId) {
+      console.log('fetchfiles running');
+      let response = null;
+      if (!sectionId) {
+        response = await fetch(
+          `/db/files?podfic_id=${podficId}&with_chapters=true`
+        );
+      } else {
+        response = await fetch(
+          `/db/files?podfic_id=${podficId}&section_id=${sectionId}`
+        );
+      }
+      const data = await response.json();
+      setFiles(data);
+    }
+    setFilesLoading(false);
   }, []);
+
+  const fetchResources = useCallback(async (podficId, sectionId) => {
+    setResourcesLoading(true);
+    if (podficId) {
+      console.log('fetchresources running');
+      let response = null;
+      if (!sectionId)
+        response = await fetch(
+          `/db/resources?podfic_id=${podficId}&with_chapters=true`
+        );
+      else
+        response = await fetch(
+          `/db/resources?podfic_id=${podficId}&section_id=${sectionId}`
+        );
+      const data = await response.json();
+      setResources(data);
+    }
+    setResourcesLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchPodfic(podficId);
+  }, [fetchPodfic, podficId]);
+
+  useEffect(() => {
+    fetchChapter(chapterId);
+  }, [chapterId, fetchChapter]);
+
+  useEffect(() => {
+    fetchSection(sectionId);
+  }, [fetchSection, sectionId]);
+
+  useEffect(() => {
+    fetchFiles(podficId, sectionId);
+    fetchResources(podficId, sectionId);
+  }, [fetchFiles, fetchResources, podficId, sectionId]);
 
   const updateData = useCallback(async () => {
-    setIsLoading(true);
     const params = new URLSearchParams(searchParams);
     const podficId = parseInt(params.get('podfic_id'));
+    const sectionId = parseInt(params.get('section_id'));
     const chapterId = parseInt(params.get('chapter_id'));
-    console.log({ podficId, chapterId });
-
-    if (isNaN(podficId)) setPodfic({} as PodficFull);
-    else await fetchPodfic(podficId);
-    if (isNaN(chapterId)) setChapter({} as Chapter);
-    else await fetchChapter(chapterId);
-
-    await fetchFiles(
-      isNaN(podficId) ? null : podficId,
-      isNaN(chapterId) ? null : chapterId
-    );
-    await fetchResources(
-      isNaN(podficId) ? null : podficId,
-      isNaN(chapterId) ? null : chapterId
-    );
 
     setPodficId(isNaN(podficId) ? null : podficId);
+
     setChapterId(isNaN(chapterId) ? null : chapterId);
 
-    setIsLoading(false);
-  }, [searchParams, fetchPodfic, fetchChapter, fetchFiles, fetchResources]);
+    setSectionId(isNaN(sectionId) ? null : sectionId);
+  }, [searchParams]);
 
   useEffect(() => {
     updateData();
@@ -211,6 +277,8 @@ export default function HtmlPage() {
   }, [fetchFiles, generatedLinks, podfic.podfic_id]);
 
   // link generation
+  // TODO: update this to work correctly with section updates
+  /*
   useEffect(() => {
     if (generateChapterLinks && !generatedLinks.length) {
       // change this as needed based on podfic
@@ -243,6 +311,7 @@ export default function HtmlPage() {
       setGeneratedFilesDialogOpen(true);
     }
   }, [generateChapterLinks, generatedLinks, podfic, files, aaDate]);
+  */
 
   // html generation
   useEffect(() => {
@@ -260,19 +329,19 @@ export default function HtmlPage() {
     } else if (selectedTemplate === 'Azdaema') {
       const generated = generateHTMLAzdaema(
         podfic,
+        section,
         files,
         filteredResources,
         defaultPodficcer,
-        Object.keys(chapter).length ? chapter : undefined,
         coverArtist?.profile
       );
       setGeneratedHTML(beautify.html(generated));
     } else if (selectedTemplate === 'bluedreaming') {
       console.log('bluedreaming');
-      if (Object.keys(chapter).length !== 0) {
+      if (isPostedChaptered) {
         const generated = generateHTMLBluedreamingChapter(
           podfic,
-          chapter,
+          section,
           files,
           resources
         );
@@ -287,13 +356,9 @@ export default function HtmlPage() {
   }, [selectedTemplate, files, resources, podfic, chapter, filteredResources]);
 
   const saveHTML = useCallback(async () => {
-    if (Object.keys(chapter).length !== 0) {
-      await saveChapterHTML(chapter.chapter_id, generatedHTML);
-    } else {
-      await savePodficHTML(podfic.podfic_id, generatedHTML);
-    }
+    await saveSectionHTML(sectionId, generatedHTML);
     console.log('saved html');
-  }, [podfic, chapter, generatedHTML]);
+  }, [sectionId, generatedHTML]);
 
   return isLoading ? (
     <CircularProgress />
@@ -342,16 +407,16 @@ export default function HtmlPage() {
         <p>{`Author: ${podfic.username}`}</p>
         <p>{`Rating: ${podfic.rating}, category: ${podfic.category}, relationship: ${podfic.relationship}`}</p>
         <p>Length: {getLengthText(podfic.length)}</p>
-        {!!Object.keys(chapter).length && (
-          <p>Chapter length: {getLengthText(chapter.length)}</p>
+        {getLengthValue(podfic.length) !== getLengthValue(section.length) && (
+          <p>Section length: {getLengthText(section.length)}</p>
         )}
-        {podfic.notes?.map((note, i) => (
+        {section.notes?.map((note, i) => (
           <p key={i}>
             <b>{`${note.label}: `}</b>
             {note.value}
           </p>
         ))}
-        {Object.keys(chapter)?.length > 0 &&
+        {isPostedChaptered &&
           resources?.map((resource, i) => (
             <p key={i}>
               <span>
@@ -425,7 +490,7 @@ export default function HtmlPage() {
       {selectedTemplate === 'Audiofic Archive' && !!podfic.chaptered && (
         <>
           <FormControlLabel
-            label='Generate links for chapters based on single date?'
+            label='Generate links for chapters/sections based on single date?'
             control={
               <Checkbox
                 checked={generateChapterLinks}

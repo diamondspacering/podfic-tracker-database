@@ -9,20 +9,32 @@ import FileDialog from '../forms/podfic/file-dialog';
 import ResourceDialog from './resource/resource-dialog';
 import NoteDialog from './note/note-dialog';
 import CoverArtDialog from './cover-art/cover-art-dialog';
+import PermissionAskDialog from './permission-ask/permission-ask-dialog';
 
 interface AddMenuProps {
   podficId?: number;
+  workId?: number;
   podficTitle?: string;
+  sectionId?: number;
   chapterId?: number;
   authorId?: number;
   eventId?: number;
   length?: Length | null;
   submitCallback?: () => void;
-  options?: ('cover_art' | 'file' | 'resource' | 'note' | 'chapter')[];
+  options?: (
+    | 'cover_art'
+    | 'file'
+    | 'resource'
+    | 'note'
+    | 'chapter'
+    | 'permission_ask'
+  )[];
 }
 
 export default function AddMenu({
   podficId,
+  workId,
+  sectionId,
   chapterId,
   authorId,
   eventId,
@@ -45,6 +57,7 @@ export default function AddMenu({
   const [resourceFormOpen, setResourceFormOpen] = useState(false);
   const [coverArtFormOpen, setCoverArtFormOpen] = useState(false);
   const [noteFormOpen, setNoteFormOpen] = useState(false);
+  const [permissionAskFormOpen, setPermissionAskFormOpen] = useState(false);
 
   return (
     <>
@@ -58,18 +71,20 @@ export default function AddMenu({
         podfic_id={podficId}
         podficTitle={podficTitle}
       />
-      <FileDialog
-        isOpen={fileFormOpen}
-        onClose={() => setFileFormOpen(false)}
-        submitCallback={() => {
-          setFileFormOpen(false);
-          submitCallback?.();
-        }}
-        existingLength={length}
-        podficId={podficId}
-        podficTitle={podficTitle}
-        chapterId={chapterId}
-      />
+      {fileFormOpen && (
+        <FileDialog
+          isOpen={fileFormOpen}
+          onClose={() => setFileFormOpen(false)}
+          submitCallback={() => {
+            setFileFormOpen(false);
+            submitCallback?.();
+          }}
+          existingLength={length}
+          podficId={podficId}
+          podficTitle={podficTitle}
+          sectionId={sectionId}
+        />
+      )}
       <ResourceDialog
         isOpen={resourceFormOpen}
         onClose={() => setResourceFormOpen(false)}
@@ -78,7 +93,7 @@ export default function AddMenu({
           submitCallback?.();
         }}
         podfic_id={podficId}
-        chapter_id={chapterId}
+        section_id={sectionId}
         author_id={authorId}
         event_id={eventId}
       />
@@ -90,10 +105,22 @@ export default function AddMenu({
           submitCallback?.();
         }}
         podfic_id={podficId}
-        chapter_id={chapterId}
+        section_id={chapterId}
         author_id={authorId}
         event_id={eventId}
       />
+      {permissionAskFormOpen && (
+        <PermissionAskDialog
+          isOpen={permissionAskFormOpen}
+          onClose={() => setPermissionAskFormOpen(false)}
+          submitCallback={() => {
+            setPermissionAskFormOpen(false);
+            submitCallback?.();
+          }}
+          authorId={authorId}
+          workId={workId}
+        />
+      )}
       <div>
         <Button
           variant='contained'
@@ -167,6 +194,17 @@ export default function AddMenu({
               }}
             >
               Note
+            </MenuItem>
+          )}
+          {options?.includes('permission_ask') && (
+            <MenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                setPermissionAskFormOpen(true);
+                handleClose();
+              }}
+            >
+              Permission Ask
             </MenuItem>
           )}
         </Menu>

@@ -1,5 +1,5 @@
 import { createColumnHelper } from '@tanstack/react-table';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { TableCell } from './TableCell';
 import tableStyles from '@/app/ui/table/table.module.css';
 import {
@@ -21,12 +21,13 @@ export default function FileTable({
   podficId,
   podficTitle,
   onlyNonAAFiles = false,
-  chapterId,
-  lengthColorScale,
+  sectionId,
+  lengthColorScale = null,
+  chaptered = false,
 }) {
   const { files, isLoading } = useFiles({
     podficId,
-    chapterId,
+    sectionId,
     onlyNonAAFiles,
   });
 
@@ -57,14 +58,6 @@ export default function FileTable({
     }),
     columnHelper.accessor('podfic_id', {
       header: 'Podfic ID',
-      cell: TableCell,
-      meta: {
-        type: 'number',
-        immutable: true,
-      },
-    }),
-    columnHelper.accessor('chapter_id', {
-      header: 'ID',
       cell: TableCell,
       meta: {
         type: 'number',
@@ -189,19 +182,22 @@ export default function FileTable({
 
   return (
     <div>
-      <FileDialog
-        isOpen={fileDialogOpen}
-        onClose={() => setFileDialogOpen(false)}
-        submitCallback={async () => {
-          await mutate((key) => Array.isArray(key) && key[0] === '/db/files');
-          setFileDialogOpen(false);
-        }}
-        file={editingFile}
-        podficId={podficId}
-        podficTitle={podficTitle}
-        chapterId={chapterId}
-        existingLength={editingFile?.length}
-      />
+      {fileDialogOpen && (
+        <FileDialog
+          isOpen={fileDialogOpen}
+          onClose={() => setFileDialogOpen(false)}
+          submitCallback={async () => {
+            await mutate((key) => Array.isArray(key) && key[0] === '/db/files');
+            setFileDialogOpen(false);
+          }}
+          item={editingFile}
+          podficId={podficId}
+          podficTitle={podficTitle}
+          chaptered={chaptered}
+          existingLength={editingFile?.length}
+          sectionId={editingFile?.section_id ?? null}
+        />
+      )}
       <Dialog
         open={deleteConfirmDialogOpen}
         onClose={() => setDeleteConfirmDialogOpen(false)}

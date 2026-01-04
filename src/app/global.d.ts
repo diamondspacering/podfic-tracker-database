@@ -44,8 +44,7 @@ type PodficFull = Podfic & Work & Author & CoverArt;
 interface RecordingSession {
   recording_id?: number;
   podfic_id?: number;
-  chapter_id?: number;
-  part_id?: number;
+  section_id?: number;
   length: Length;
   date?: string;
   year?: string;
@@ -53,6 +52,14 @@ interface RecordingSession {
   mic?: string;
   device?: string;
   location?: string;
+}
+
+enum SectionType {
+  DEFAULT = 'default',
+  SINGLE_TO_MULTIPLE = 'single-to-multiple',
+  MULTIPLE_TO_SINGLE = 'multiple-to-single',
+  CHAPTERS_SPLIT = 'chapters-split',
+  CHAPTERS_COMBINE = 'chapters-combine',
 }
 
 interface Podfic {
@@ -64,6 +71,7 @@ interface Podfic {
   raw_length?: any;
   plain_length?: any;
   event_id?: number;
+  // this is for the whole podfic not a specific section
   ao3_link?: string;
   posted_date?: string;
   posted_year?: number;
@@ -73,11 +81,12 @@ interface Podfic {
   deadline?: string;
   added_date?: any;
   updated_at?: any;
-  html_string: string;
-  posted_unchaptered?: boolean;
   series_id?: number;
   vt_project_id?: any;
   is_multivoice: boolean;
+  section_type: SectionType;
+
+  sections?: Section[];
   chapters?: Chapter[];
   parts?: Part[];
   coverArt?: CoverArt;
@@ -87,6 +96,43 @@ interface Podfic {
   tags?: Tag[];
 }
 
+interface Section {
+  section_id?: number;
+  podfic_id?: number;
+  // part-to-section is one-to-many
+  // technically.
+  part_id?: number;
+  // the sequence
+  number?: number;
+  title?: string;
+
+  length?: any;
+  raw_length?: any;
+  plain_length?: any;
+  wordcount?: number;
+  status?: PodficStatus;
+  // this could be AO3 or it could be a custom doc
+  text_link?: string;
+
+  ao3_link?: string;
+  posted_date?: string;
+  html_string?: string;
+
+  deadline?: string;
+  updated_at?: any;
+
+  recording_sessions?: RecordingSession[];
+  files?: File[];
+  notes?: Note[];
+  resources?: Resource[];
+  chapters?: Chapter[];
+}
+
+interface Chapter_Section {
+  chapter_id?: number;
+  section_id?: number;
+}
+
 interface Chapter {
   chapter_id?: number;
   podfic_id?: number;
@@ -94,40 +140,32 @@ interface Chapter {
   chapter_number?: number;
   chapter_title?: string;
   wordcount?: number;
-  length?: any;
-  raw_length?: any;
-  plain_length?: any;
-  status?: PodficStatus;
-  ao3_link?: string;
-  posted_date?: string;
-  deadline?: string;
   updated_at?: any;
   vt_project_id?: number;
-  html_string?: string;
-  recording_sessions?: RecordingSession[];
-  files?: File[];
   notes?: Note[];
-  resources?: Resource[];
+  sections?: Section[];
 }
 
 interface Part {
   part_id?: number;
   podfic_id?: number;
   chapter_id?: number;
-  doc?: string;
   audio_link?: string;
   organizer?: number;
-  words?: number;
   type?: PodficType;
   status?: PartStatus;
-  length?: Length;
-  raw_length?: Length;
   part?: string;
   deadline?: string;
   created_at?: any;
 }
 
-type PartWithContext = Part & Podfic & Work & Chapter & Podficcer & Event;
+type PartWithContext = Part &
+  Section &
+  Podfic &
+  Work &
+  Chapter &
+  Podficcer &
+  Event;
 
 interface Podficcer {
   podficcer_id?: number;
@@ -176,13 +214,35 @@ interface Work {
   main_character?: string;
   series?: string;
   username?: string;
-  permission_status?: PermissionStatus;
+  author_permission_status?: AuthorPermissionStatus;
+  work_permission_status?: PermissionAskStatus;
+  permission_asks?: Permission[];
 }
 
 interface Series {
   series_id?: number;
   name?: string;
   series_link?: number;
+}
+
+enum AuthorPermissionStatus {
+  BP = 'BP',
+  PERMISSION = 'permission',
+  ASK_FIRST = 'ask first',
+  FRIENDLY = 'friendly',
+  UNKNOWN = 'unknown',
+  INACTIVE = 'inactive',
+  NO = 'no',
+}
+
+enum PermissionAskStatus {
+  TO_ASK = 'to ask',
+  TO_ASK_FIRST = 'to ask first',
+  ASKED = 'asked',
+  GHOSTED = 'ghosted',
+  YES = 'yes',
+  NO = 'no',
+  COLLAB = 'collab',
 }
 
 enum PermissionStatus {
@@ -193,6 +253,7 @@ enum PermissionStatus {
   GHOSTED = 'ghosted',
   ASK_FIRST = 'ask first',
   PERMISSION = 'permission',
+  UNKNOWN = 'unknown',
   NO = 'no',
   COLLAB = 'collab',
 }
@@ -202,13 +263,25 @@ interface Author {
   author_id?: number;
   username: string;
   ao3?: string;
-  permission_status?: PermissionStatus;
+  permission_status?: PermissionStatus & AuthorPermissionStatus;
   primary_social_media?: string;
   permission_ask?: string;
   asked_date?: string;
   permission_date?: string;
   resources?: Resource[];
   notes?: Note[];
+  permission_asks?: Permission[];
+}
+
+interface Permission {
+  permission_id?: number;
+  asked_date?: string;
+  response_date?: string;
+  permission_status?: PermissionAskStatus;
+  ask_link?: string;
+  ask_medium?: string;
+  work_id?: number;
+  author_id?: number;
 }
 
 interface Fandom {
@@ -233,8 +306,9 @@ enum FileType {
 
 interface File {
   file_id?: number;
+  // duplicated but handy
   podfic_id?: number;
-  chapter_id?: number;
+  section_id?: number;
   length: any;
   size?: number;
   filetype?: FileType;
@@ -263,7 +337,7 @@ interface Resource {
 interface Note {
   note_id?: number;
   podfic_id?: number;
-  chapter_id?: number;
+  section_id?: number;
   author_id?: number;
   event_id?: number;
   label?: string;

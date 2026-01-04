@@ -16,7 +16,7 @@ import {
   formatTableDate,
 } from '@/app/lib/utils';
 import { HeaderCell } from '@/app/ui/table/HeaderCell';
-import { FilterType } from '@/app/types';
+import { FilterType, StatusType } from '@/app/types';
 import CustomTable from '@/app/ui/table/CustomTable';
 
 export default function AuthorTable() {
@@ -83,12 +83,11 @@ export default function AuthorTable() {
     }),
     columnHelper.accessor('permission_status', {
       header: (props) => <HeaderCell text='Permission' {...props} />,
-      // header: 'Permission',
       cell: TableCell,
       meta: {
         type: 'status',
-        statusType: 'permission',
-        filterType: FilterType.PERMISSION,
+        statusType: StatusType.AUTHOR_PERMISSION,
+        filterType: FilterType.AUTHOR_PERMISSION,
         columName: 'Permission',
       },
       filterFn: arrayIncludesFilter,
@@ -133,7 +132,7 @@ export default function AuthorTable() {
       cell: (props) => (
         <AddMenu
           authorId={props.row.getValue('author_id')}
-          options={['resource', 'note']}
+          options={['resource', 'note', 'permission_ask']}
         />
       ),
     }),
@@ -193,6 +192,7 @@ export default function AuthorTable() {
             width={row.getAllCells().length}
             notes={row.original.notes ?? []}
             resources={row.original.resources ?? []}
+            permissionAsks={row.original.permission_asks ?? []}
             author_id={row.original.author_id}
             submitCallback={async () => {
               await mutate('/db/authors');

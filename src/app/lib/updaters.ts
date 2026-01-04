@@ -1,8 +1,8 @@
 'use server';
 
 import { getLengthUpdateString } from './format';
-import { getClient } from './db-helpers';
-import { PARTIAL_STATUSES, PodficStatus } from '../types';
+import { getDBClient } from './db-helpers';
+import { PARTIAL_STATUSES, PodficStatus, SectionType } from '../types';
 
 // TODO: clean this up
 export const updateRecordingData = async (data: any) => {
@@ -22,15 +22,14 @@ export const updateRecordingData = async (data: any) => {
       data.podficId = (await createUpdatePodfic(data.podfic)).podfic_id;
     }
 
-    const client = await getClient();
+    const client = await getDBClient();
     await client.query(
       `
-      insert into recording_session (podfic_id, chapter_id, part_id, date, year, month, length, mic, device, location) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning *;
+      insert into recording_session (podfic_id, section_id, date, year, month, length, mic, device, location) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *;
     `,
       [
         data.podficId,
-        data.chapterId ? data.chapterId : null,
-        data.partId ? data.partId : null,
+        data.sectionId ? data.sectionId : null,
         data.date ? data.date : null,
         data.year ? data.year : null,
         data.month ? data.month : null,
@@ -41,36 +40,147 @@ export const updateRecordingData = async (data: any) => {
       ]
     );
 
-    if (data.podficId && data.completesPodfic) {
+    if (data.podficId) {
       const statusResult = await client.query(
         `select status from podfic where podfic_id = $1`,
         [data.podficId]
       );
       const status = statusResult.rows[0].status as PodficStatus;
-      if (PARTIAL_STATUSES.includes(status) || !status) {
+      if (
+        data.completesPodfic &&
+        (PARTIAL_STATUSES.includes(status) || !status)
+      ) {
         await client.query(
           `update podfic set status = $1 where podfic_id = $2`,
           [PodficStatus.RECORDED, data.podficId]
         );
+      } else if (
+        !data.completesPodfic &&
+        (status === PodficStatus.PLANNING || !status)
+      ) {
+        await client.query(
+          `update podfic set status = $1 where podfic_id = $2`,
+          [PodficStatus.RECORDING, data.podficId]
+        );
       }
     }
 
-    if (data.chapterId && data.completesChapter) {
-      const chapterResult = await client.query(
-        `select status from chapter where chapter_id = $1`,
-        [data.chapterId]
+    if (data.sectionId) {
+      const sectionResult = await client.query(
+        `select status from section where section_id = $1`,
+        [data.sectionId]
       );
-      const status = chapterResult.rows[0].status as PodficStatus;
-      if (PARTIAL_STATUSES.includes(status) || !status) {
+      const status = sectionResult.rows[0].status as PodficStatus;
+      if (
+        (data.completesSection && PARTIAL_STATUSES.includes(status)) ||
+        !status
+      ) {
         await client.query(
-          `update chapter set status = $1 where chapter_id = $2`,
-          [PodficStatus.RECORDED, data.chapterId]
+          `update section set status = $1 where section_id = $2`,
+          [PodficStatus.RECORDED, data.sectionId]
+        );
+      }
+
+      if (
+        !data.completesSection &&
+        (status === PodficStatus.PLANNING || !status)
+      ) {
+        await client.query(
+          `update section set status = $1 where section_id = $2`,
+          [PodficStatus.RECORDING, data.sectionId]
         );
       }
     }
   } catch (e) {
     console.error('Error updating recording data', e);
   }
+};
+
+export const createUpdateSection = async (sectionData: Section) => {
+  if (sectionData.length) {
+    sectionData.length = getLengthUpdateString(sectionData.length);
+  }
+
+  if (!sectionData.section_id && !sectionData.status) {
+    sectionData.status = PodficStatus.PLANNING;
+  }
+
+  // TODO: automatic section status updates here as well?
+
+  const client = await getDBClient();
+  if (!sectionData.section_id) {
+    const result = await client.query(
+      `INSERT INTO section (
+        podfic_id,
+        part_id,
+        number,
+        title,
+        wordcount,
+        status,
+        text_link,
+        deadline,
+        updated_at
+      ) VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        $9
+      )
+      RETURNING *`,
+      [
+        sectionData.podfic_id,
+        sectionData.part_id,
+        sectionData.number,
+        sectionData.title,
+        sectionData.wordcount,
+        sectionData.status,
+        sectionData.text_link,
+        sectionData.deadline,
+        new Date(),
+      ]
+    );
+    return result.rows[0].section_id;
+  } else {
+    const result = await client.query(
+      `UPDATE section SET
+        number = $1,
+        title = $2,
+        wordcount = $3,
+        status = $4,
+        text_link = $5,
+        deadline = $6,
+        length = $7,
+        ao3_link = $8,
+        posted_date = $9,
+        updated_at = $10
+      WHERE section_id = $11
+      RETURNING *
+      `,
+      [
+        sectionData.number,
+        sectionData.title,
+        sectionData.wordcount,
+        sectionData.status,
+        sectionData.text_link,
+        sectionData.deadline ? sectionData.deadline : null,
+        sectionData.length,
+        sectionData.ao3_link,
+        sectionData.posted_date ? sectionData.posted_date : null,
+        new Date(),
+        sectionData.section_id,
+      ]
+    );
+    return result.rows[0].section_id;
+  }
+};
+
+export const createUpdateSectionClient = async (sectionData: Section) => {
+  await createUpdateSection(sectionData);
 };
 
 export const createUpdateChapter = async (chapterData: Chapter) => {
@@ -80,89 +190,34 @@ export const createUpdateChapter = async (chapterData: Chapter) => {
     return;
   }
 
-  if (chapterData.length)
-    chapterData.length = getLengthUpdateString(chapterData.length);
-  let prevChapterStatus = null;
-  if (
-    !!chapterData.posted_date &&
-    chapterData.status !== PodficStatus.POSTED &&
-    chapterData.status !== PodficStatus.FINISHED
-  ) {
-    prevChapterStatus = chapterData.status;
-    chapterData.status = PodficStatus.POSTED;
-  }
-
-  const client = await getClient();
-  // TODO: possibly handle things not updating from here?
+  const client = await getDBClient();
   if (!chapterData.chapter_id) {
     const result = await client.query(
-      `
-      INSERT INTO chapter (
+      `INSERT INTO chapter (
         podfic_id,
         link,
         chapter_number,
         chapter_title,
-        wordcount,
-        length,
-        status,
-        ao3_link,
-        posted_date,
-        deadline
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-       RETURNING chapter_id
-      `,
+        wordcount
+      ) VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
       [
         chapterData.podfic_id,
         chapterData.link,
         chapterData.chapter_number,
         chapterData.chapter_title,
         chapterData.wordcount,
-        chapterData.length,
-        chapterData.status,
-        chapterData.ao3_link,
-        chapterData.posted_date ? chapterData.posted_date : null,
-        chapterData.deadline ? chapterData.deadline : null,
       ]
     );
-    // console.log(result);
     return result.rows[0];
   } else {
-    if (!prevChapterStatus) {
-      prevChapterStatus = (
-        await client.query(`SELECT status FROM chapter WHERE chapter_id = $1`, [
-          chapterData.chapter_id,
-        ])
-      ).rows[0].status;
-    }
-
-    // if updating to posted do that separately from length bc I think that's what's breaking the auto updates?
-    if (
-      chapterData.status === PodficStatus.POSTED &&
-      prevChapterStatus !== PodficStatus.POSTED &&
-      !!chapterData.posted_date
-    ) {
-      await client.query(
-        `
-        UPDATE chapter SET
-        posted_date = $1
-        WHERE chapter_id = $2
-      `,
-        [chapterData.posted_date, chapterData.chapter_id]
-      );
-    }
-
     const result = await client.query(
       `UPDATE chapter SET
       link = $1,
       chapter_number = $2,
       chapter_title = $3,
-      wordcount = $4,
-      length = $5,
-      status = $6,
-      ao3_link = $7,
-      posted_date = $8,
-      deadline = $9
-    WHERE chapter_id = $10
+      wordcount = $4
+    WHERE chapter_id = $5
     RETURNING *
     `,
       [
@@ -170,11 +225,6 @@ export const createUpdateChapter = async (chapterData: Chapter) => {
         chapterData.chapter_number,
         chapterData.chapter_title,
         chapterData.wordcount,
-        chapterData.length,
-        chapterData.status,
-        chapterData.ao3_link,
-        chapterData.posted_date ? chapterData.posted_date : null,
-        chapterData.deadline ? chapterData.deadline : null,
         chapterData.chapter_id,
       ]
     );
@@ -183,7 +233,7 @@ export const createUpdateChapter = async (chapterData: Chapter) => {
 };
 
 export const setChapterPosted = async (chapterId: number) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     `UPDATE chapter SET status = $1 WHERE chapter_id = $2 RETURNING *`,
     [PodficStatus.POSTED, chapterId]
@@ -204,7 +254,7 @@ export const createUpdateWork = async (
 
   let workResult = null;
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (!workData.work_id) {
     // console.log('creating new work');
     workResult = await client.query(
@@ -218,7 +268,10 @@ export const createUpdateWork = async (
       wordcount,
       chaptered,
       chapter_count,
-      rating
+      rating,
+      category,
+      relationship,
+      main_character
     ) VALUES (
       $1,
       $2,
@@ -229,7 +282,10 @@ export const createUpdateWork = async (
       $7,
       $8,
       $9,
-      $10
+      $10,
+      $11,
+      $12,
+      $13
     )
     RETURNING *
     `,
@@ -244,6 +300,9 @@ export const createUpdateWork = async (
         workData.chaptered,
         workData.chapter_count,
         workData.rating,
+        workData.category,
+        workData.relationship,
+        workData.main_character,
       ]
     );
   } else {
@@ -259,8 +318,11 @@ export const createUpdateWork = async (
       chaptered = $7,
       chapter_count = $8,
       rating = $9,
-      nickname = $10
-    WHERE work_id = $11
+      nickname = $10,
+      category = $11,
+      main_character = $12,
+      relationship = $13
+    WHERE work_id = $14
     RETURNING *`,
       [
         workData.title,
@@ -273,6 +335,9 @@ export const createUpdateWork = async (
         workData.chapter_count,
         workData.rating,
         workData.nickname,
+        workData.category,
+        workData.main_character,
+        workData.relationship,
         workData.work_id,
       ]
     );
@@ -288,7 +353,7 @@ export const updatePodficMinified = async (data: any) => {
   if (podficData.length)
     podficData.length = getLengthUpdateString(podficData.length);
 
-  const client = await getClient();
+  const client = await getDBClient();
   await client.query(
     `UPDATE podfic SET
       length = $1,
@@ -312,6 +377,60 @@ export const updatePodficMinified = async (data: any) => {
   // return result.rows[0];
 };
 
+export const updateSectionMinified = async (data: any) => {
+  const sectionData = JSON.parse(data);
+
+  if (sectionData.length) {
+    sectionData.length = getLengthUpdateString(sectionData.length);
+  }
+
+  const client = await getDBClient();
+
+  if (
+    !!sectionData.posted_date &&
+    sectionData.status !== PodficStatus.POSTED &&
+    sectionData.status !== PodficStatus.FINISHED
+  ) {
+    // NOTE: uncomment and complete updating posted date separately from status if there are issues w/ automatic length updates
+    // let prevSectionStatus = sectionData.status;
+    sectionData.status = PodficStatus.POSTED;
+
+    // if (!prevSectionStatus) {
+    //   prevSectionStatus = (await client.query(
+    //     `SELECT status FROM section WHERE section_id = $1`,
+    //     [sectionData.section_id]
+    //   )).rows[0].status;
+    // }
+
+    // if (prevSectionStatus !== PodficStatus.POSTED && prevSectionStatus !== PodficStatus.FINISHED) {
+    //   await client.query(`UPDATE section SET `)
+    // }
+  }
+
+  await client.query(
+    `
+    UPDATE section SET
+      length = $1,
+      posted_date = $2,
+      ao3_link = $3,
+      status = $4,
+      wordcount = $5,
+      updated_at = $6
+    WHERE section_id = $7
+    RETURNING *
+  `,
+    [
+      sectionData.length,
+      sectionData.posted_date,
+      sectionData.ao3_link,
+      sectionData.status,
+      sectionData.wordcount,
+      new Date(),
+      sectionData.section_id,
+    ]
+  );
+};
+
 export const createUpdatePodfic = async (
   podficData: Podfic & Work
 ): Promise<null | Podfic> => {
@@ -327,14 +446,14 @@ export const createUpdatePodfic = async (
 
   // console.log({ podficcers: podficData.podficcers });
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (!podficData.podfic_id) {
     if (podficData.work_id) {
       // console.log('linking new podfic to existing work');
       await createUpdateWork(podficData);
 
       podficResult = await client.query(
-        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, posted_date, exclude_stats, type, giftee_id, deadline, added_date, posted_year, vt_project_id, series_id, posted_unchaptered, is_multivoice, updated_at) VALUES (
+        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, section_type, posted_date, posted_year, updated_at) VALUES (
         $1,
         $2,
         $3,
@@ -363,26 +482,28 @@ export const createUpdatePodfic = async (
           podficData.length,
           podficData.event_id,
           podficData.ao3_link,
-          podficData.posted_date ? podficData.posted_date : null,
           podficData.exclude_stats,
           podficData.type ?? 'podfic',
           podficData.giftee_id,
           podficData.deadline,
           podficData.added_date,
-          podficData.posted_year,
           podficData.vt_project_id,
           podficData.series_id,
-          podficData.posted_unchaptered,
           podficData.is_multivoice,
+          podficData.section_type,
+          podficData.posted_date ? podficData.posted_date : null,
+          podficData.posted_year,
           new Date(),
         ]
       );
+      const podfic_id = podficResult.rows[0].podfic_id;
+      podficData.podfic_id = podfic_id;
     } else {
       // console.log('creating new podfic and work');
       const work_id = (await createUpdateWork(podficData)).work_id;
 
       podficResult = await client.query(
-        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, posted_date, exclude_stats, type, giftee_id, deadline, added_date, posted_year, vt_project_id, series_id, posted_unchaptered, is_multivoice, updated_at) VALUES (
+        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, section_type, posted_date, posted_year, updated_at) VALUES (
         $1,
         $2,
         $3,
@@ -411,29 +532,135 @@ export const createUpdatePodfic = async (
           podficData.length,
           podficData.event_id,
           podficData.ao3_link,
-          podficData.posted_date ? podficData.posted_date : null,
           podficData.exclude_stats,
           podficData.type ?? 'podfic',
           podficData.giftee_id,
           podficData.deadline,
           podficData.added_date,
-          podficData.posted_year,
           podficData.vt_project_id,
           podficData.series_id,
-          podficData.posted_unchaptered,
           podficData.is_multivoice,
+          podficData.section_type,
+          podficData.posted_date ? podficData.posted_date : null,
+          podficData.posted_year,
           new Date(),
         ]
       );
       const podfic_id = podficResult.rows[0].podfic_id;
       podficData.podfic_id = podfic_id;
+    }
 
-      if (podficData.chapters?.length)
+    console.log('section type:', podficData.section_type);
+    switch (podficData.section_type) {
+      // if splitting non-chaptered into multiple sections, create those
+      case SectionType.SINGLE_TO_MULTIPLE:
+        for (const section of podficData.sections) {
+          const section_id = await createUpdateSection({
+            ...section,
+            podfic_id: podficData.podfic_id,
+          });
+          section.section_id = section_id;
+        }
+        break;
+      // if combining multiple chapters into one
+      // create negative-numbered sections for all of the chapters to track progress in them
+      // and a section number 1 for actual posting
+      case SectionType.MULTIPLE_TO_SINGLE:
         for (const chapter of podficData.chapters) {
+          const section_id = await createUpdateSection({
+            number: -chapter.chapter_number,
+            wordcount: chapter.wordcount,
+            podfic_id: podficData.podfic_id,
+          });
           const chapter_id = (
-            await createUpdateChapter({ ...chapter, podfic_id: podfic_id })
+            await createUpdateChapter({
+              ...chapter,
+              podfic_id: podficData.podfic_id,
+            })
           ).chapter_id;
-          chapter.chapter_id = chapter_id;
+          await linkChapterAndSection(chapter_id, section_id);
+
+          await createUpdateSection({
+            number: 1,
+            wordcount:
+              typeof podficData.wordcount === 'number'
+                ? podficData.wordcount
+                : parseInt(podficData.wordcount),
+            podfic_id: podficData.podfic_id,
+          });
+        }
+        break;
+      // if splitting chapters into smaller sections
+      // create each chapter and then create its subsections and link them
+      case SectionType.CHAPTERS_SPLIT:
+        let counter = 1;
+        console.log({ sections: podficData.sections });
+        for (const chapter of podficData.chapters) {
+          console.log({ chapter });
+          const chapter_id = (
+            await createUpdateChapter({
+              ...chapter,
+              podfic_id: podficData.podfic_id,
+            })
+          ).chapter_id;
+          console.log({ chapter_id });
+          const sectionsForChapter =
+            podficData.sections?.filter(
+              (section) =>
+                section.chapters?.[0]?.chapter_number === chapter.chapter_number
+            ) ?? [];
+          console.log({ sectionsForChapter });
+          for (const section of sectionsForChapter) {
+            const section_id = await createUpdateSection({
+              ...section,
+              number: counter,
+              podfic_id: podficData.podfic_id,
+            });
+            counter++;
+            await linkChapterAndSection(chapter_id, section_id);
+          }
+        }
+        break;
+      // if combining multiple chapters into one section
+      // create sections and then create the chapters contained in each one
+      // and link them
+      // this will be implemented later since I don't post like this and it's annoying to implement
+      case SectionType.CHAPTERS_COMBINE:
+        console.log('combined chapters not supported yet!');
+        break;
+      // in the default case
+      // if work is chaptered create and link single chapters & sections
+      // if work is non-chaptered create a single section
+      case SectionType.DEFAULT:
+      default:
+        if (podficData.chapters?.length) {
+          for (const chapter of podficData.chapters) {
+            const chapter_id = (
+              await createUpdateChapter({
+                ...chapter,
+                podfic_id: podficData.podfic_id,
+              })
+            ).chapter_id;
+            const section_id = await createUpdateSection({
+              number: chapter.chapter_number,
+              wordcount: chapter.wordcount,
+              podfic_id: podficData.podfic_id,
+            });
+
+            await linkChapterAndSection(chapter_id, section_id);
+          }
+        } else {
+          await createUpdateSection({
+            number: 1,
+            wordcount:
+              typeof podficData.wordcount === 'number'
+                ? podficData.wordcount
+                : parseInt(podficData.wordcount),
+            length: podficData.length,
+            ao3_link: podficData.ao3_link,
+            posted_date: podficData.posted_date,
+            podfic_id: podficData.podfic_id,
+          });
         }
     }
   } else {
@@ -447,17 +674,17 @@ export const createUpdatePodfic = async (
       length = $4,
       event_id = $5,
       ao3_link = $6,
-      posted_date = $7,
-      exclude_stats = $8,
-      type = $9,
-      giftee_id = $10,
-      deadline = $11,
-      added_date = $12,
-      posted_year = $13,
-      vt_project_id = $14,
-      series_id = $15,
-      posted_unchaptered = $16,
-      is_multivoice = $17,
+      exclude_stats = $7,
+      type = $8,
+      giftee_id = $9,
+      deadline = $10,
+      added_date = $11,
+      vt_project_id = $12,
+      series_id = $13,
+      is_multivoice = $14,
+      section_type = $15,
+      posted_date = $16,
+      posted_year = $17,
       updated_at = $18
     WHERE podfic_id = $19
     RETURNING *
@@ -469,17 +696,17 @@ export const createUpdatePodfic = async (
         podficData.length,
         podficData.event_id,
         podficData.ao3_link,
-        podficData.posted_date ? podficData.posted_date : null,
         podficData.exclude_stats,
         podficData.type,
         podficData.giftee_id,
         podficData.deadline,
         new Date(podficData.added_date),
-        podficData.posted_year,
         podficData.vt_project_id,
         podficData.series_id,
-        podficData.posted_unchaptered,
         podficData.is_multivoice,
+        podficData.section_type,
+        podficData.posted_date ? podficData.posted_date : null,
+        podficData.posted_year,
         new Date(),
         podficData.podfic_id,
       ]
@@ -504,7 +731,7 @@ export const createUpdatePodficClient = async (podficData: Podfic & Work) => {
 };
 
 export const createUpdatePodficHTML = async (podficId, htmlString) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   // return result?
   await client.query(
@@ -513,17 +740,17 @@ export const createUpdatePodficHTML = async (podficId, htmlString) => {
   );
 };
 
-export const createUpdateChapterHTML = async (chapterId, htmlString) => {
-  const client = await getClient();
+export const createUpdateSectionHTML = async (sectionId, htmlString) => {
+  const client = await getDBClient();
 
   await client.query(
-    `UPDATE chapter SET html_string = $1 where chapter_id = $2`,
-    [htmlString, chapterId]
+    `UPDATE section SET html_string = $1 where section_id = $2`,
+    [htmlString, sectionId]
   );
 };
 
 export const createUpdateFandomCategory = async (categoryData) => {
-  const client = await getClient();
+  const client = await getDBClient();
   // TODO: handle updating categories
   const result = await client.query(
     `insert into fandom_category (name) values ($1) returning *`,
@@ -545,7 +772,7 @@ export const createUpdateFandom = async (fandomData): Promise<any> => {
     ).fandom_category_id;
   }
 
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     `insert into fandom (category_id, name) values ($1, $2) returning *`,
     [fandomData.category_id, fandomData.fandom_name]
@@ -560,7 +787,7 @@ export const createUpdateAuthorClient = async (authorData): Promise<any> => {
 export const createUpdateAuthor = async (authorData): Promise<any> => {
   let authorResult = null;
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (!authorData.author_id) {
     authorResult = await client.query(
       `
@@ -604,13 +831,13 @@ export const createUpdateAuthor = async (authorData): Promise<any> => {
 export const createUpdateResource = async ({
   resourceData,
   podfic_id,
-  chapter_id,
+  section_id,
   author_id,
   event_id,
 }: {
   resourceData: Resource;
   podfic_id?: number;
-  chapter_id?: number;
+  section_id?: number;
   author_id?: number;
   event_id?: number;
 }) => {
@@ -618,7 +845,7 @@ export const createUpdateResource = async ({
 
   // console.log({ resourceData });
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (!resourceData.resource_id) {
     // nah its prob fine nvm
     // if (!podficId && !chapterId && !authorId && !eventId) {
@@ -642,8 +869,8 @@ export const createUpdateResource = async ({
     if (podfic_id) {
       await joinResourcePodfic(resourceId, podfic_id, client);
     }
-    if (chapter_id) {
-      await joinResourceChapter(resourceId, chapter_id, podfic_id, client);
+    if (section_id) {
+      await joinResourceSection(resourceId, section_id, podfic_id, client);
     }
     if (author_id) {
       await joinResourceAuthor(resourceId, author_id, client);
@@ -682,14 +909,13 @@ export const createUpdateResource = async ({
         await joinResourcePodfic(resourceId, podfic_id, client);
       }
     }
-    if (chapter_id) {
-      const chapterJoinResult = await client.query(
-        `select * from resource_chapter where resource_id = $1 and chapter_id = $2`,
-        [resourceId, chapter_id]
+    if (section_id) {
+      const sectionJoinResults = await client.query(
+        `select * from resource_section where resource_id = $1 and section_id = $2`,
+        [resourceId, section_id]
       );
-      // console.log({ chapterJoinResult });
-      if (!chapterJoinResult.rows?.length) {
-        await joinResourceChapter(resourceId, chapter_id, podfic_id, client);
+      if (!sectionJoinResults.rows?.length) {
+        await joinResourceSection(resourceId, section_id, podfic_id, client);
       }
     }
     if (author_id) {
@@ -722,15 +948,15 @@ export const createUpdateFile = async (fileData): Promise<any> => {
 
   // console.log({ fileData });
   fileData.length = getLengthUpdateString(fileData.length);
-  const client = await getClient();
+  const client = await getDBClient();
   if (!fileData.file_id) {
     const result = await client.query(
       `INSERT INTO file (
-      podfic_id, chapter_id, length, size, filetype, label, is_plain
+      podfic_id, section_id, length, size, filetype, label, is_plain
     ) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
       [
         fileData.podficId,
-        fileData.chapterId,
+        fileData.sectionId,
         fileData.length,
         fileData.size,
         fileData.filetype,
@@ -779,7 +1005,7 @@ export const createUpdateFile = async (fileData): Promise<any> => {
 export const createUpdateFileLink = async (fileLinkData): Promise<any> => {
   let fileLinkResult = null;
 
-  const client = await getClient();
+  const client = await getDBClient();
   // console.log({ fileLinkData });
   if (!fileLinkData.file_link_id) {
     const result = await client.query(
@@ -825,18 +1051,18 @@ export const createUpdateFileLink = async (fileLinkData): Promise<any> => {
 export const createUpdateNote = async (noteData: Note): Promise<any> => {
   let noteResult = null;
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (!noteData.note_id) {
     const result = await client.query(
       `
       INSERT INTO note
-      (podfic_id, chapter_id, author_id, event_id, label, value)
+      (podfic_id, section_id, author_id, event_id, label, value)
       VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     `,
       [
         noteData.podfic_id,
-        noteData.chapter_id,
+        noteData.section_id,
         noteData.author_id,
         noteData.event_id,
         noteData.label,
@@ -849,7 +1075,7 @@ export const createUpdateNote = async (noteData: Note): Promise<any> => {
       `
       UPDATE note SET
         podfic_id = $1,
-        chapter_id = $2,
+        section_id = $2,
         author_id = $3,
         event_id = $4,
         label = $5,
@@ -859,7 +1085,7 @@ export const createUpdateNote = async (noteData: Note): Promise<any> => {
     `,
       [
         noteData.podfic_id,
-        noteData.chapter_id,
+        noteData.section_id,
         noteData.author_id,
         noteData.event_id,
         noteData.label,
@@ -881,12 +1107,10 @@ const joinResourcePodfic = async (resourceId, podficId, client) => {
   );
 };
 
-// includes podfic id for easier grabbing by podfic.
-// is it necessary? nah but who cares tbh
-const joinResourceChapter = async (resourceId, chapterId, podficId, client) => {
+const joinResourceSection = async (resourceId, sectionId, podficId, client) => {
   await client.query(
-    `INSERT INTO resource_chapter (resource_id, chapter_id, podfic_id) VALUES ($1, $2, $3)`,
-    [resourceId, chapterId, podficId]
+    `INSERT INTO resource_section (resource_id, section_id, podfic_id) VALUES ($1, $2, $3)`,
+    [resourceId, sectionId, podficId]
   );
 };
 
@@ -911,7 +1135,7 @@ export const createUpdateEvent = async (eventData: Event): Promise<Event> => {
 
   let eventResult = null;
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (!eventData.event_id) {
     const result = await client.query(
       `INSERT INTO event (parent_id, name, year) VALUES ($1, $2, $3) RETURNING *`,
@@ -941,7 +1165,7 @@ export const createUpdateEventParent = async (
     throw new Error('Cannot update event parents yet!');
   }
 
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     `INSERT INTO event_parent (name, description) VALUES ($1, $2) RETURNING *`,
     [eventParentData.name, eventParentData.description]
@@ -957,7 +1181,7 @@ export const createUpdateCoverArt = async (coverArtData: any) => {
 
   let coverArtResult = null;
 
-  const client = await getClient();
+  const client = await getDBClient();
 
   if (!coverArtData.cover_art_id) {
     const result = await client.query(
@@ -1002,7 +1226,7 @@ export const createUpdateCoverArt = async (coverArtData: any) => {
 export const createUpdatePodficcer = async (podficcerData: Podficcer) => {
   let podficcerResult = null;
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (!podficcerData.podficcer_id) {
     const result = await client.query(
       `INSERT INTO podficcer (username, name, profile) VALUES ($1, $2, $3) RETURNING *`,
@@ -1033,7 +1257,7 @@ export const createUpdatePodficcer = async (podficcerData: Podficcer) => {
 export const createUpdateSeries = async (seriesData) => {
   let seriesResult = null;
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (!seriesData.series_id) {
     const result = await client.query(
       `
@@ -1063,7 +1287,7 @@ export const createUpdateVoiceteamEvent = async () => {
 };
 
 export const createUpdateRound = async (roundData: Round) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   let roundResult = null;
 
@@ -1120,7 +1344,7 @@ export const createUpdateChallenge = async (challengeData: Challenge) => {
     throw new Error('Cannot create a challenge without a round!');
   }
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (!challengeData.challenge_id) {
     await client.query(
       `INSERT INTO challenge
@@ -1163,7 +1387,7 @@ export const createUpdateChallenge = async (challengeData: Challenge) => {
 export const createUpdateProject = async (projectData: Project) => {
   let projectResult = null;
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (!projectData.vt_project_id) {
     // TODO: insert the other things as well......
     const result = await client.query(
@@ -1230,20 +1454,20 @@ export const createUpdateProject = async (projectData: Project) => {
     projectResult = result.rows[0];
   }
 
-  return projectResult;
+  // return projectResult;
 };
 
-export const saveChapterHTML = async (chapterId, htmlString) => {
-  const client = await getClient();
+export const saveSectionHTML = async (sectionId, htmlString) => {
+  const client = await getDBClient();
 
   await client.query(
-    `UPDATE chapter SET html_string = $1 WHERE chapter_id = $2`,
-    [htmlString, chapterId]
+    `UPDATE section SET html_string = $1 WHERE section_id = $2`,
+    [htmlString, sectionId]
   );
 };
 
 export const savePodficHTML = async (podficId, htmlString) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   await client.query(
     `UPDATE podfic SET html_string = $1 WHERE podfic_id = $2`,
@@ -1251,8 +1475,9 @@ export const savePodficHTML = async (podficId, htmlString) => {
   );
 };
 
+// TODO: update for handling sections
 export const createUpdateScheduleEvents = async (events) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   // TODO: do them all at once??
   for (const event of events) {
@@ -1300,8 +1525,9 @@ export const createUpdateScheduleEvents = async (events) => {
   }
 };
 
+// TODO: update for handling sections
 export const createUpdateScheduleEvent = async (event) => {
-  const client = await getClient();
+  const client = await getDBClient();
 
   // console.log({ event });
 
@@ -1355,42 +1581,37 @@ export const createUpdatePartData = async (partData) => {
   // console.log({ partData });
 
   try {
-    const client = await getClient();
+    const client = await getDBClient();
 
     if (partData.podficData) {
       const podfic = await createUpdatePodfic(partData.podficData);
       partData.podfic_id = podfic.podfic_id;
     }
 
+    let partResult = null;
     if (!partData.part_id) {
-      await client.query(
-        `insert into part (podfic_id, chapter_id, doc, organizer, words, status, part, deadline, created_at) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *`,
+      partResult = await client.query(
+        `insert into part (podfic_id, chapter_id, organizer, status, part, created_at) values ($1, $2, $3, $4, $5, $6) returning *`,
         [
           partData.podfic_id,
           partData.chapter_id,
-          partData.doc,
           partData.organizer,
-          partData.words,
           partData.status,
           partData.part,
-          partData.deadline ? partData.deadline : null,
           new Date(),
         ]
       );
     } else {
       if (typeof partData.part_id !== 'number')
         partData.part_id = parseInt(partData.part_id);
-      await client.query(
+      partResult = await client.query(
         `update part set
           podfic_id = $1,
           chapter_id = $2,
-          doc = $3,
-          organizer = $4,
-          words = $5,
-          status = $6,
-          part = $7,
-          deadline = $8
-        where part_id = $9
+          organizer = $3,
+          status = $4,
+          part = $5,
+        where part_id = $6
         returning *
       `,
         [
@@ -1401,54 +1622,62 @@ export const createUpdatePartData = async (partData) => {
           partData.words,
           partData.status,
           partData.part,
-          partData.deadline ? partData.deadline : null,
           partData.part_id,
         ]
       );
     }
+    return partResult.rows[0].part_id;
   } catch (e) {
     throw new Error(e);
   }
 };
 
-export const updatePartMinified = async (data: any) => {
-  const partData = JSON.parse(data);
-  // console.log({ partData });
+export const updatePartAndSectionMinified = async (dataString: any) => {
+  const data = JSON.parse(dataString);
+  console.log({ data });
 
-  if (partData.length) partData.length = getLengthUpdateString(partData.length);
+  if (data.length) data.length = getLengthUpdateString(data.length);
 
-  if (typeof partData.part_id !== 'number')
-    partData.part_id = parseInt(partData.part_id);
+  if (typeof data.part_id !== 'number') data.part_id = parseInt(data.part_id);
 
-  const client = await getClient();
-  const updateString = `UPDATE part SET
-      doc = $1,
-      audio_link = $2,
-      part = $3,
-      words = $4,
-      type = $5,
-      length = $6,
-      status = $7
-    WHERE part_id = $8
+  const client = await getDBClient();
+  const partUpdateString = `UPDATE part SET
+      audio_link = $1,
+      part = $2,
+      type = $3,
+      status = $4
+    WHERE part_id = $5
     RETURNING *`;
-  const parameterArray = [
-    partData.doc,
-    partData.audio_link ? partData.audio_link : null,
-    partData.part,
-    partData.words,
-    partData.type ? partData.type : null,
-    partData.length,
-    partData.status,
-    partData.part_id,
+  const partParameterArray = [
+    data.audio_link ? data.audio_link : null,
+    data.part,
+    data.type ? data.type : null,
+    data.status,
+    data.part_id,
   ];
-  await client.query(updateString, parameterArray);
+  await client.query(partUpdateString, partParameterArray);
+
+  const sectionUpdateString = `UPDATE section SET
+    text_link = $1,
+    wordcount = $2,
+    length = $3
+    WHERE section_id = $4
+    RETURNING *
+  `;
+  const sectionParameterArray = [
+    data.text_link,
+    data.wordcount,
+    data.length,
+    data.section_id,
+  ];
+  await client.query(sectionUpdateString, sectionParameterArray);
 };
 
 export const linkPodficcerToPodfic = async (
   podficcerId: number,
   podficId: number
 ) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     `INSERT INTO podfic_podficcer (podfic_id, podficcer_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *`,
     [podficId, podficcerId]
@@ -1457,7 +1686,7 @@ export const linkPodficcerToPodfic = async (
 };
 
 export const linkTagToPodfic = async (tagId: number, podficId: number) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     `INSERT INTO tag_podfic (tag_id, podfic_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *`,
     [tagId, podficId]
@@ -1466,7 +1695,7 @@ export const linkTagToPodfic = async (tagId: number, podficId: number) => {
 };
 
 export const unlinkTagFromPodfic = async (tagId: number, podficId: number) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     'DELETE FROM tag_podfic WHERE tag_id = $1 AND podfic_id = $2',
     [tagId, podficId]
@@ -1476,10 +1705,138 @@ export const unlinkTagFromPodfic = async (tagId: number, podficId: number) => {
 
 // TODO: use values instead
 export const updateTag = async (tagId: number, tagText: string) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(
     'UPDATE tag SET tag = $1 WHERE tag_id = $2 RETURNING *',
     [tagText, tagId]
   );
   return result.rows[0];
+};
+
+export const linkChapterAndSection = async (
+  chapterId: number,
+  sectionId: number
+) => {
+  const client = await getDBClient();
+  const result = await client.query(
+    `INSERT INTO chapter_section (chapter_id, section_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *`,
+    [chapterId, sectionId]
+  );
+  return result.rows[0];
+};
+
+/**
+ * Deletes podfic and all records associated with it
+ */
+export const deletePodfic = async (podficId: number, workId?: number) => {
+  const client = await getDBClient();
+
+  await client.query('DELETE FROM tag_podfic WHERE podfic_id = $1', [podficId]);
+  await client.query('DELETE FROM podfic_podficcer WHERE podfic_id = $1', [
+    podficId,
+  ]);
+  await client.query('DELETE FROM cover_art WHERE podfic_id = $1', [podficId]);
+  await client.query('DELETE FROM schedule_event WHERE podfic_id = $1', [
+    podficId,
+  ]);
+  await client.query('DELETE FROM resource_podfic WHERE podfic_id = $1', [
+    podficId,
+  ]);
+  await client.query('DELETE FROM resource_section WHERE podfic_id = $1', [
+    podficId,
+  ]);
+  await client.query('DELETE FROM note WHERE podfic_id = $1', [podficId]);
+  await client.query('DELETE FROM recording_session WHERE podfic_id = $1', [
+    podficId,
+  ]);
+
+  const fileResult = await client.query(
+    'SELECT file_id from file where podfic_id = $1',
+    [podficId]
+  );
+  const files = fileResult.rows;
+  for (const file of files) {
+    const fileId = file.file_id;
+    await client.query('DELETE FROM file_link WHERE file_id = $1', [fileId]);
+    await client.query('DELETE FROM file WHERE file_id = $1', [fileId]);
+  }
+
+  await client.query('DELETE FROM part where podfic_id = $1', [podficId]);
+  const chapterResult = await client.query(
+    'SELECT chapter_id from chapter where podfic_id = $1',
+    [podficId]
+  );
+  const chapters = chapterResult.rows;
+  for (const chapter of chapters) {
+    const chapterId = chapter.chapter_id;
+    await client.query('DELETE FROM chapter_section WHERE chapter_id = $1', [
+      chapterId,
+    ]);
+    await client.query('DELETE FROM chapter where chapter_id = $1', [
+      chapterId,
+    ]);
+  }
+
+  await client.query('DELETE FROM section WHERE podfic_id = $1', [podficId]);
+
+  if (!workId) {
+    const workResult = await client.query(
+      'SELECT work_id FROM podfic WHERE podfic_id = $1',
+      [podficId]
+    );
+    workId = workResult.rows[0];
+  }
+  await client.query('DELETE FROM podfic WHERE podfic_id = $1', [podficId]);
+  await client.query('DELETE FROM work WHERE work_id = $1', [workId]);
+};
+
+export const createUpdatePermissionAsk = async (permissionData: Permission) => {
+  let permissionResult = null;
+
+  const client = await getDBClient();
+  if (!permissionData.permission_id) {
+    const result = await client.query(
+      `INSERT INTO permission
+      (asked_date, response_date, permission_status, ask_link, ask_medium, work_id, author_id)
+      VALUES
+      ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING *`,
+      [
+        permissionData.asked_date,
+        permissionData.response_date,
+        permissionData.permission_status,
+        permissionData.ask_link,
+        permissionData.ask_medium,
+        permissionData.work_id,
+        permissionData.author_id,
+      ]
+    );
+    permissionResult = result.rows[0];
+  } else {
+    const result = await client.query(
+      `UPDATE permission SET
+      work_id = $1,
+      author_id = $2,
+      asked_date = $3,
+      response_date = $4,
+      permission_status = $5,
+      ask_link = $6,
+      ask_medium = $7
+    WHERE permission_id = $8
+    RETURNING *`,
+      [
+        permissionData.work_id,
+        permissionData.author_id,
+        permissionData.asked_date ? permissionData.asked_date : null,
+        permissionData.response_date ? permissionData.response_date : null,
+        permissionData.permission_status,
+        permissionData.ask_link,
+        permissionData.ask_medium,
+        permissionData.permission_id,
+      ]
+    );
+    permissionResult = result.rows[0];
+  }
+
+  // return permissionResult;
 };

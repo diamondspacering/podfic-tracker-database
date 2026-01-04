@@ -1,6 +1,11 @@
 import styles from '@/app/forms/forms.module.css';
 import { Typography } from '@mui/material';
 import RecordingSessionForm from '../recording-session-form';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Edit Recording Session',
+};
 
 export default function Page({ params, searchParams }) {
   return (

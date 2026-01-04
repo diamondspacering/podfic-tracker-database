@@ -1,11 +1,11 @@
 'use server';
 import { redirect } from 'next/navigation';
 import { auth } from './auth';
-import { getClient } from './db-helpers';
+import { getDBClient } from './db-helpers';
 import { headers } from 'next/headers';
 
 export const signUp = async (data, returnUrl) => {
-  const client = await getClient();
+  const client = await getDBClient();
   const userResult = await client.query('SELECT name from user');
   if (userResult.rows.length) return 'Max number of users reached.';
 

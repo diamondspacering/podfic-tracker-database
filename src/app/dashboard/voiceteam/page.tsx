@@ -1,5 +1,10 @@
 import { fetchVoiceteams } from '@/app/lib/loaders';
+import { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Voiceteams',
+};
 
 export default async function Page() {
   const voiceteams = await fetchVoiceteams();

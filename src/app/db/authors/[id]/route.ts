@@ -1,4 +1,4 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
@@ -6,11 +6,11 @@ export async function GET(
   context: { params: { id: any } }
 ) {
   const id = context.params.id;
-  if (id === 'new') {
+  if (id === 'new' || id === 'null') {
     return Response.json({});
   }
 
-  const client = await getClient();
+  const client = await getDBClient();
 
   const result = await client.query(
     `select * from author where author_id = $1`,

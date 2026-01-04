@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { unstable_noStore as noStore } from 'next/cache';
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 
 export async function GET(request: NextRequest) {
   noStore();
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   const podficId = searchParams.get('podfic_id');
   const chapterId = searchParams.get('chapter_id');
 
-  const client = await getClient();
+  const client = await getDBClient();
   if (chapterId && chapterId !== 'null') {
     const result = await client.query(`
       select * from chapter where chapter_id = ${chapterId}

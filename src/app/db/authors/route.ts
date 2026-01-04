@@ -1,10 +1,10 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { unstable_noStore as noStore } from 'next/cache';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
   noStore();
-  const client = await getClient();
+  const client = await getDBClient();
   const result = await client.query(`
     select * from author order by username asc
   `);
@@ -23,6 +23,12 @@ export async function GET() {
       [author.author_id]
     );
     author.notes = (noteResult.rows ?? []) as Note[];
+
+    const permissionResult = await client.query(
+      `select * from permission where author_id = $1`,
+      [author.author_id]
+    );
+    author.permission_asks = (permissionResult.rows ?? []) as Permission[];
   }
 
   return NextResponse.json(result.rows ?? []);

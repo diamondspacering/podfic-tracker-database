@@ -9,6 +9,11 @@ import {
 } from '../lib/loaders';
 import StatusBadge from '../ui/StatusBadge';
 import { getLengthText } from '../lib/format';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Dashboard',
+};
 
 export const revalidate = 30;
 

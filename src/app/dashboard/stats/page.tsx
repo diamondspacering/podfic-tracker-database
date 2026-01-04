@@ -23,6 +23,11 @@ import {
 } from '@/app/lib/stats';
 import { getLengthText } from '@/app/lib/format';
 import YearStats from './YearStats';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Stats',
+};
 
 export const revalidate = 30;
 

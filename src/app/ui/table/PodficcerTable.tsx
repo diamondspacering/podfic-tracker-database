@@ -62,7 +62,7 @@ export default function PodficcerTable() {
         submitCallback={() => {
           setPodficcerDialogOpen(false);
         }}
-        podficcer={selectedPodficcer}
+        item={selectedPodficcer}
       />
       <Button
         variant='contained'

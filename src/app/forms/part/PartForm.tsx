@@ -1,7 +1,12 @@
 'use client';
 
-import { usePart, usePodficcers, usePodficsFull } from '@/app/lib/swrLoaders';
-import { createUpdatePartData } from '@/app/lib/updaters';
+import {
+  usePart,
+  usePodficcers,
+  usePodficsFull,
+  useSectionForPart,
+} from '@/app/lib/swrLoaders';
+import { createUpdatePartData, createUpdateSection } from '@/app/lib/updaters';
 import { PartStatus, PodficType } from '@/app/types';
 import StatusSelect from '@/app/ui/StatusSelect';
 import {
@@ -23,6 +28,7 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
   const router = useRouter();
   const { podfics, isLoading: podficsLoading } = usePodficsFull({});
   const { part, isLoading: partLoading } = usePart(part_id);
+  const { section, isLoading: sectionLoading } = useSectionForPart(part_id);
   const { podficcers, isLoading: podficcersLoading } = usePodficcers();
 
   const [partId] = useState<number | null>(part_id);
@@ -30,7 +36,8 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
   const [selectedPodfic, setSelectedPodfic] = useState({} as Podfic & Work);
   const [selectedChapter, setSelectedChapter] = useState({} as Chapter);
 
-  const [doc, setDoc] = useState('');
+  const [sectionData, setSectionData] = useState({} as Section);
+
   const [organizerId, setOrganizerId] = useState(null);
   const [podficId, setPodficId] = useState(null);
   const [isNewPodfic, setIsNewPodfic] = useState(false);
@@ -38,7 +45,6 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
     type: PodficType.MULTIVOICE,
   } as Podfic & Work);
   const [chapterId, setChapterId] = useState(null);
-  const [words, setWords] = useState('');
   const [status, setStatus] = useState<PartStatus>(PartStatus.PICKED);
   const [partName, setPartName] = useState('');
   const [deadline, setDeadline] = useState('');
@@ -48,17 +54,20 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
 
   useEffect(() => {
     if (!partLoading) {
-      // console.log('setting part & podfics');
-      if (part.doc) setDoc(part.doc);
       if (part.organizer) setOrganizerId(part.organizer);
       if (part.podfic_id) setPodficId(part.podfic_id);
       if (part.chapter_id) setChapterId(part.chapter_id);
-      if (part.words) setWords(part.words?.toString());
       if (part.status) setStatus(part.status);
       if (part.part) setPartName(part.part);
       if (part.deadline) setDeadline(part.deadline);
     }
   }, [partLoading, part]);
+
+  useEffect(() => {
+    if (!sectionLoading) {
+      setSectionData(section);
+    }
+  }, [sectionLoading, section]);
 
   useEffect(() => {
     if (!podficsLoading && !!podficId) {
@@ -86,8 +95,10 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
         <TextField
           size='small'
           label='Doc'
-          value={doc}
-          onChange={(e) => setDoc(e.target.value)}
+          value={sectionData.text_link}
+          onChange={(e) =>
+            setSectionData((prev) => ({ ...prev, text_link: e.target.value }))
+          }
         />
 
         <Autocomplete
@@ -153,6 +164,7 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
           />
         )}
 
+        {/* TODO: respect sections for this, etc. */}
         {selectedPodfic.chaptered && (
           <div>
             <Autocomplete
@@ -190,8 +202,13 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
           <TextField
             size='small'
             label='Words'
-            value={words}
-            onChange={(e) => setWords(e.target.value)}
+            value={sectionData.wordcount}
+            onChange={(e) =>
+              setSectionData((prev) => ({
+                ...prev,
+                wordcount: parseInt(e.target.value),
+              }))
+            }
           />
           <TextField
             size='small'
@@ -218,17 +235,20 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
           variant='contained'
           onClick={async () => {
             try {
-              await createUpdatePartData({
+              const newPartId = await createUpdatePartData({
                 part_id: partId,
                 ...(isNewPodfic ? { podficData: newPodfic } : {}),
-                doc,
                 organizer: organizerId,
                 podfic_id: podficId,
                 chapter_id: chapterId,
-                words: words ? parseInt(words) : null,
                 part: partName,
-                deadline,
                 status,
+              });
+              await createUpdateSection({
+                ...sectionData,
+                part_id: newPartId,
+                podfic_id: podficId,
+                deadline,
               });
               router.push(returnUrl ?? `/dashboard/parts`);
             } catch (e) {

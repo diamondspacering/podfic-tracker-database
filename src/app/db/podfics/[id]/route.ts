@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 
 export async function GET(
   request: NextRequest,
   context: { params: { id: any } }
 ) {
   const id = context.params.id;
-  if (id === 'new') {
+  if (id === 'new' || id === 'null') {
     return NextResponse.json({});
   }
 
@@ -15,8 +15,9 @@ export async function GET(
   const withAuthor = searchParams.get('with_author');
   const withPodficcers = searchParams.get('with_podficcers');
   const withTags = searchParams.get('with_tags');
+  const withSectionChapters = searchParams.get('with_section_chapters');
 
-  const client = await getClient();
+  const client = await getDBClient();
 
   let podfic = null;
   if (withCoverArt && withAuthor) {
@@ -69,7 +70,23 @@ export async function GET(
   const chapterResult = await client.query(
     `select * from chapter where chapter.podfic_id = ${id} order by chapter_number asc`
   );
-  if (podfic) podfic.chapters = chapterResult.rows;
+  const sectionResult = await client.query(
+    `select * from section where section.podfic_id = ${id} order by number asc`
+  );
+  if (podfic) {
+    podfic.chapters = chapterResult.rows;
+    podfic.sections = sectionResult.rows;
+  }
+
+  if (withSectionChapters) {
+    for (const section of podfic.sections) {
+      const sectionChapterResult = await client.query(
+        `select * from chapter inner join chapter_section on chapter.chapter_id = chapter_section.chapter_id where section_id = $1 order by chapter_number asc limit 1`,
+        [section.section_id]
+      );
+      section.chapters = sectionChapterResult.rows;
+    }
+  }
 
   return NextResponse.json(podfic ?? {});
 }

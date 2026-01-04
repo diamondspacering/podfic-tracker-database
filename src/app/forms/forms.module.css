@@ -36,3 +36,7 @@
 .mlAuto {
   margin-left: auto;
 }
+
+.fullWidth {
+  width: 100%;
+}

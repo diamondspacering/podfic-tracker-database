@@ -1,6 +1,6 @@
 'use client';
 
-import { FileType, getDefaultLength } from '@/app/types';
+import { FileType, getDefaultLength, SectionType } from '@/app/types';
 import DurationPicker from '@/app/ui/DurationPicker';
 import {
   Button,
@@ -9,7 +9,7 @@ import {
   MenuItem,
   TextField,
 } from '@mui/material';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styles from '@/app/forms/forms.module.css';
 import { Add } from '@mui/icons-material';
 import FileLinkForm from './file-link-form';
@@ -18,7 +18,10 @@ interface FileFormProps {
   file?: File;
   setFile?: React.Dispatch<React.SetStateAction<File>>;
   podficTitle?: string;
-  chapterId?: number;
+  sectionType?: SectionType;
+  sectionId?: number;
+  section?: Section;
+  chaptered?: boolean;
   existingLength?: Length;
 }
 
@@ -26,7 +29,10 @@ export default function FileForm({
   file,
   setFile,
   podficTitle,
-  chapterId,
+  sectionType,
+  sectionId,
+  section,
+  chaptered,
   existingLength,
 }: FileFormProps) {
   const length = useMemo(
@@ -110,7 +116,10 @@ export default function FileForm({
             }))
           }
           podficTitle={podficTitle}
-          chapterId={chapterId}
+          sectionId={sectionId}
+          sectionType={sectionType}
+          section={section}
+          chaptered={chaptered}
           label={file.label}
         />
       ))}

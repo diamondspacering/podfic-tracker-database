@@ -1,4 +1,4 @@
-import { getClient } from '@/app/lib/db-helpers';
+import { getDBClient } from '@/app/lib/db-helpers';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
@@ -7,7 +7,7 @@ export async function GET(
 ) {
   const id = context.params.id;
 
-  const client = await getClient();
+  const client = await getDBClient();
   const fileResult = await client.query(
     'select * from file where file.file_id = $1',
     [id]
@@ -27,7 +27,7 @@ export async function DELETE(
 ) {
   const id = context.params.id;
 
-  const client = await getClient();
+  const client = await getDBClient();
 
   const links = await client.query(
     `select * from file_link where file_id = $1`,

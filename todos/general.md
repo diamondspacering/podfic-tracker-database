@@ -1,0 +1,195 @@
+# General Todos
+
+- [ ] Variable titles per page
+- [ ] Snackbar/toasts for relevant things
+- [x] Make metadata pulling actually set number of chapters as well
+- [ ] Make filters update when data is updated (e.g., new author) - prob have more `null` support?
+- [x] Podfic deletion
+- [ ] Actually use giftee_id and designating a podficcer who something is gifted to
+- [x] Generic dialog props that get extended
+- [ ] Individual author permission
+  - [ ] Basic feature
+    - [x] Permission asks for authors
+    - [x] Backfill data correctly
+    - [x] Permission pulling for works/podfics
+    - [ ] make it not close dialog when revalidating every time
+    - [ ] Display it more compressed/less ugly
+      - preferably still with inline editing
+    - [x] Figure out pulling correct permission ask when grabbing for works - consider like an archived field or something?
+    - [x] Permission asks for works
+    - [ ] lighter grey for unknown/inactive
+    - [ ] filtering authors on child permission statuses as well? Like I may want to see authors with open permission asks/ones I still need to ask
+      - this may be complicated
+    - [ ] Filter authors based on provided work id as well as works based on authors/set author manually
+    - [ ] In permission ask form, render authors w/ color of status? or display that somewhere? pull their links?
+  - [ ] Consider doing the events method of combined headers? it's very sloppy but. useful.
+- [ ] To podfic table crashing when resetting filters bc of tags?
+- [x] statusType enum for tables
+- [x] Separate [id] and new pages for all forms (if only for page titles)
+- [ ] Use transactions or something so you stop getting extra elements created by processes failing halfway through
+  - transaction wrapper? is that a bad idea. Would require some restructuring
+- [ ] await params for other pages that need it
+
+## Tables
+
+- [ ] Author table - include option for viewing works by that author? link to podfic table & set filter?
+- [ ] General chapter table for all chapters?
+- [ ] Custom meta type for tables
+- [ ] Figure out the errors on custom tables
+
+### ChapterTable
+
+- [ ] individual files and resources expanded per chapter
+- [ ] global color scale for wordcount?
+- [x] column show/hide like podfic table
+- [x] chapter columns defined in separate file
+- [ ] Show section recording sessions
+
+### Parts
+
+- [ ] Easily visible submission instructions notes?
+- [ ] Make type selectable for parts table
+- [ ] Make deadlines not mandatory in form
+
+### PodficTable
+
+- [ ] Files expanded?
+- [ ] Expanding row still doesn't work quite the way I want it to I think, maybe select it when editing? and don't allow other things to be selected?
+  - also do the indices in an array or whatever to be neater
+- [ ] Make immutable length when chaptered work
+  - Current non-working code: `immutable: (rowId: string) => !podfics.find((p) => p.podfic_id === parseInt(rowId))?.chapters?.length 1 > 1`
+- [ ] Add filtering based on chaptered status - toggle filter...? manually specified options? yeagh
+- [ ] Check if any processing is needed on posted date
+- [ ] Should files expanded state be in AdditionalContentRows?
+- [ ] Pull in resources in podfic loader for AdditionalContentRows
+- [ ] Filtering on dates
+- [ ] Filtering on chaptered/chapter numbers
+- [ ] Allow editing event and type inline
+- [ ] Add podficcer function on cover art dialog like is in part form
+- [ ] More refined missing AA links search? Not all files need an AA link
+- [ ] Loading/in progress state for podfic deletion dialog
+
+### To podfic
+
+- [ ] Actually show notes & stuff
+- [ ] Number filtering on chapters column
+- [ ] Just custom enum types and filters for rating/statuses/etc.
+
+## HTML
+
+- [ ] Generated links dialog keeps its own state
+
+### HTMLPage.tsx
+
+- [ ] SWR?
+- [ ] Format on paste
+- [x] Better loading state - could be improved but better now
+- [ ] Add drag & drop, or at least select which resources are included
+  - [x] Select what resources to include
+  - [ ] Reorder files
+- [ ] Only include chapter resources per chapter
+  - and don't include chapter resources on whole-podfic posting
+- [ ] Be able to collapse resources - DetailsWrapper from podfic form?
+- [ ] Saving state for HTML save button
+- [ ] Select podfic/chapter if not already selected
+- [ ] Proper chaptered support
+  - is_chapter state variable?
+- [ ] Better reload from DB, also load template?
+- [ ] Show that thing has been copied - little toast or snackbar or whatever?
+- [ ] Also be able to save specific HTML, with specific label? Like for template or custom? Note or resource for podfic?
+- [ ] Smartly add `up` class(es) when there's multiple audio sources & cover art?
+
+## SchedulePage
+
+- [ ] Set up automatic triggers to create schedule events for deadlines (partially implemented)
+  - make sure you know how date is being sent
+- [ ] Actually implement deadlines for all things that support it
+- [ ] Make query that automatically pulls in info for the podfic/chapter/part/round that it's linked to so the info is already there and you don't have to find it or whatever
+- [ ] Relevant link to thing based on its properties
+- [ ] Limit query based on selected date range
+- [ ] Better date selection
+- [ ] Add changing deadlines on things by dragging?
+- [ ] Height flexing based on items?
+- [ ] Switch statement in `onDoubleClickEvent` for appropriate action based on event type
+
+## Stats
+
+- [ ] Client component?
+- [ ] More detailed overview & each year pages? Switch to specific years/all years? Topic-based guys like authors, time you did stuff, etc.
+- [ ] Actually put in charts, figure out a charting library
+- [ ] Have a single getstats hook (it's not a hook whatever) for each combo of things? and do mapping? maybe for individual years manually doing it but it's fine
+- [ ] Something is weird about recorded stats. They're ALMOST right. But something is very weird. Figure that out.
+
+## Voiceteam
+
+- [ ] Figure out how to make buttons on overview page sticky instead of replicating add challenge button at the bottom
+- [ ] Actually create voiceteam_events in application
+- [ ] Generally improve points update methods, etc., origIndex is cursed. Scared of breaking it though
+- [ ] Figure out a checkbox renderer (might have to do something more involved/specialized for the checkbox so it can be crossed out?)
+  - Is it possible to have a number at the bottom of a checkbox row?
+- [ ] Strikethrough styling for submitted/abandoned projects (complete)
+- [ ] Summary of projected & real pts - background color green when reached points cap? Different green for projected pts?
+- [ ] Have the alternating colors so it's easier to follow lines?
+- [ ] Figure out how to make tableStyles.arial work?
+- [ ] Make challenge dropdown work correctly
+- [ ] How to conditionally display thing? points_manual?
+- [ ] Custom row at bottom might be best for own functions, render them all in bold?
+
+### VoiceteamResourcesTable.tsx
+
+- [ ] Can you use the custom ExternalLink component for the link column?
+
+## Routes
+
+- /authors
+  - Have like a ?full=true?
+- /chapters
+  - Have some method of sorting?
+- /files
+  - /[id]
+    - DELETE: surely incorrect to loop over deleting and it only needs to happen once?
+  - Promise.all for fetching file links at end
+- /podfics
+  - /[id]
+    - Make query params more fine-grained
+- /post
+  - Better chapter support
+- /schedule_events
+  - More thorough date filtering
+  - Have the limiting to unfinished things be a query param
+- /topodfic
+  - Consider podfic notes as well, and have them separate from author notes?
+  - Consider just pulling author permission notes?
+- /voiceteam
+  - /[id]/challenges
+    - Is there a way to do project selection inline in postgres
+
+## Forms
+
+- author form create new author with the more information & automatic things like in the metadata form
+- author/id page: swr, use loading state
+- author-form.tsx fix statusselect types
+- partform - be able to create a new podfic from here? and not show its part selection...?; pull deadline from event in podfic?
+- podfic page:
+  - swr
+  - loading state
+- submit chapter error state
+- chapter form useEffect does not load things in properly
+- fandom form: use swr
+- file form: any submit callbacks?
+- file link form:
+  - useEffect dependencies for setting audiofic archive things (adding too many makes it continuously update)
+- metadata form, for rating item have colors? just letters? look at stats mapping & generalize?
+- podfic form:
+  - make it default type of podfic
+    - just have a defaultPodfic?
+  - consider a full formcontrol for required fields & stuff?
+  - work autocomplete doesn't work for removing stuff very well, needs to have null fallback
+  - rating & category do not visibly autofill
+  - how to do main character & relationship - autocomplete w/ create...?
+  - consider being able to create VT project from page?
+- series form: use the loading button?
+- recording session form:
+  - more minified podfic fetch - names endpoint or smth?
+  - swr
+  - sorting of podfic list?
