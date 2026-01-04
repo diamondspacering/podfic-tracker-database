@@ -28,6 +28,8 @@
 
 # Chapter table
 
+- [ ] Support for single-to-multiple (just SectionOnlyTable?)
+
 ## Chapter table context
 
 - [ ] Consider using columns in chapter table context? and managing some expansion?

@@ -2,14 +2,14 @@ import styles from '@/app/forms/forms.module.css';
 import { useAuthors, useWorks } from '@/app/lib/swrLoaders';
 import { PermissionAskStatus } from '@/app/types';
 import { Autocomplete, Button, MenuItem, TextField } from '@mui/material';
-import { useEffect, useMemo } from 'react';
+import { Dispatch, SetStateAction, useMemo } from 'react';
 import StatusBadge from '../StatusBadge';
 import DatePicker from '../DatePicker';
 import { socialMedia } from '@/app/lib/dataGeneral';
 
 interface PermissionAskProps {
   permissionAsk: Permission;
-  setPermissionAsk: React.Dispatch<React.SetStateAction<Permission>>;
+  setPermissionAsk: Dispatch<SetStateAction<Permission>>;
 }
 
 export default function PermissionAskForm({

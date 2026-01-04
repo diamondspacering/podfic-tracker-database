@@ -28,7 +28,7 @@
 - [x] Separate [id] and new pages for all forms (if only for page titles)
 - [ ] Use transactions or something so you stop getting extra elements created by processes failing halfway through
   - transaction wrapper? is that a bad idea. Would require some restructuring
-- [ ] const in `dataGeneral` for ratings & categories
+- [ ] await params for other pages that need it
 
 ## Tables
 
