@@ -1,3 +1,5 @@
+'use client';
+
 import { useRouter } from 'next/navigation';
 import styles from '@/app/forms/forms.module.css';
 import { useCallback, useEffect, useState } from 'react';
