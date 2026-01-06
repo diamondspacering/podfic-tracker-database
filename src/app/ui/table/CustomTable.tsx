@@ -130,7 +130,7 @@ export default function CustomTable<T>({
     [isLoading, columns]
   );
 
-  // useEffect(() => console.log({ data }), [data]);
+  useEffect(() => console.log({ data }), [data]);
 
   const table = useReactTable<T>({
     data: tableData,
