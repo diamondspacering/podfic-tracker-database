@@ -2,9 +2,10 @@ import styles from '@/app/dashboard/dashboard.module.css';
 import { Add } from '@mui/icons-material';
 import { Button } from '@mui/material';
 import Link from 'next/link';
-import PodficTable from './PodficTable';
 import { Suspense } from 'react';
 import { Metadata } from 'next';
+import dynamic from 'next/dynamic';
+const PodficTable = dynamic(() => import('./PodficTable'), { ssr: false });
 
 export const metadata: Metadata = {
   title: 'Podfics',

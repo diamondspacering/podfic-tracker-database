@@ -119,6 +119,7 @@ export default function CustomTable<T>({
     () => (isLoading ? Array(numLoadingRows).fill({} as T) : data),
     [isLoading, numLoadingRows, data]
   );
+
   const tableColumns = useMemo(
     () =>
       isLoading
