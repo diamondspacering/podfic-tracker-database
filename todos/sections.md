@@ -53,6 +53,14 @@
 # Stats Page
 
 - [ ] Fix it to work with sections
+- [ ] Should posted_year be retired entirely?
+- [ ] is_multivoice vs. type = 'multivoice'?
+- [ ] median as well as mean?
+- [ ] several posted sections with null length - this is problematic, investigate
+- [ ] also do number of all podfics posted, not just solo ones
+- [ ] add total raw wordcount
+- [ ] Check numbers against previous stats to make sure you're not severely messing up
+  - check out master below PR and link to previous server database
 
 # Parts
 

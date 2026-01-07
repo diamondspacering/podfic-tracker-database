@@ -68,6 +68,7 @@
 - [ ] Add podficcer function on cover art dialog like is in part form
 - [ ] More refined missing AA links search? Not all files need an AA link
 - [ ] Loading/in progress state for podfic deletion dialog
+- [ ] [IMPT] ability to actually...edit cover art
 
 ### To podfic
 
@@ -115,10 +116,12 @@
 ## Stats
 
 - [ ] Client component?
+  - for interactivity, different modes of interacting, etc.
 - [ ] More detailed overview & each year pages? Switch to specific years/all years? Topic-based guys like authors, time you did stuff, etc.
 - [ ] Actually put in charts, figure out a charting library
 - [ ] Have a single getstats hook (it's not a hook whatever) for each combo of things? and do mapping? maybe for individual years manually doing it but it's fine
 - [ ] Something is weird about recorded stats. They're ALMOST right. But something is very weird. Figure that out.
+- [ ] Backfill data and update multivoices
 
 ## Voiceteam
 
