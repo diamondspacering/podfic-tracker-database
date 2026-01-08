@@ -352,10 +352,7 @@ export const generateHTMLAzdaema = (
     podfic.cover_artist_name &&
     podfic.cover_artist_name !== defaultPodficcer.username
   ) {
-    htmlString += `<li><b>Cover art:</b> <a href="${
-      coverArtistProfile ??
-      `https://archiveofourown.org/users/${podfic.cover_artist_name}`
-    }">${podfic.cover_artist_name}</a></li>`;
+    htmlString += `<li><b>Cover art:</b> <a href="${coverArtistProfile}">${podfic.cover_artist_name}</a></li>`;
   }
   resources.forEach((resource) => {
     if (resource.notes) {

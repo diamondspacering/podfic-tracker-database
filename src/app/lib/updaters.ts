@@ -350,16 +350,21 @@ export const updatePodficMinified = async (data: any) => {
   const podficData = JSON.parse(data);
   // console.log({ podficData });
 
+  if (podficData.length)
+    podficData.length = getLengthUpdateString(podficData.length);
+
   const client = await getDBClient();
   await client.query(
     `UPDATE podfic SET
-      posted_date = $1,
-      ao3_link = $2,
-      status = $3,
-      updated_at = $4
-    WHERE podfic_id = $5
+      length = $1,
+      posted_date = $2,
+      ao3_link = $3,
+      status = $4,
+      updated_at = $5
+    WHERE podfic_id = $6
     RETURNING *`,
     [
+      podficData.length,
       podficData.posted_date,
       podficData.ao3_link,
       podficData.status,
