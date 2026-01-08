@@ -588,7 +588,6 @@ export default function PodficTable() {
       await updatePodficMinified(
         JSON.stringify({
           podfic_id: podfic.podfic_id,
-          length: podfic.length,
           posted_date: podfic.posted_date,
           ao3_link: podfic.ao3_link,
           status: podfic.status,
