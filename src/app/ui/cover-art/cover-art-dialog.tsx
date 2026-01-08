@@ -20,12 +20,15 @@ export default function CoverArtDialog({
   isOpen,
   onClose,
   submitCallback,
+  item: coverArtProp,
   cover_art_id = null,
   podfic_id,
   podficTitle = '',
 }: CoverArtDialogProps) {
   // TODO: use cover art prop instead of fetching
-  const [coverArt, setCoverArt] = useState({ podficcer_id: 1 } as CoverArt);
+  const [coverArt, setCoverArt] = useState(
+    coverArtProp ? coverArtProp : ({ podficcer_id: 1 } as CoverArt)
+  );
 
   useEffect(() => {
     const fetchCoverArt = async () => {
@@ -41,9 +44,10 @@ export default function CoverArtDialog({
     // console.log({ coverArt });
     try {
       const coverArtId = await createUpdateCoverArt({
+        cover_art_id: coverArt.cover_art_id,
         image_link: coverArt.image_link,
         cover_artist_name: coverArt.cover_artist_name,
-        status: coverArt.cover_art_status,
+        cover_art_status: coverArt.cover_art_status,
         podficcer_id: coverArt.podficcer_id,
         podfic_id,
       });
