@@ -167,12 +167,7 @@ export default async function YearStats({ year }) {
                 <td>
                   <b>Words:</b>
                 </td>
-                {/* that WAS totalwords sum what is total words how is it different?? */}
-                {/* TODO: these are slightly different which is exciting! check on that. yeah the added together ones are longer so there's some double counting going on. possibly a multivoice issue? check on indiv works */}
                 <td style={{ textAlign: 'right' }}>
-                  {/* {`${totalWords.toLocaleString()} (${(
-                    parseInt(podficWords.sum) + parseInt(chapterWords.sum)
-                  ).toLocaleString()})`} */}
                   {totalWords.toLocaleString()}
                 </td>
                 <td style={{ textAlign: 'right' }}>
@@ -183,8 +178,6 @@ export default async function YearStats({ year }) {
                 </td>
               </tr>
               {/* Recorded */}
-              {/* TODO: something is weird about these. they're ALMOST right. but something is very weird. figure that out. */}
-              {/* ok so one on far right *should* be shorter thats fine and normal */}
               <tr>
                 <td>
                   <b>Recorded:</b>
@@ -194,9 +187,6 @@ export default async function YearStats({ year }) {
                 </td>
                 <td style={{ textAlign: 'right' }}>
                   {getLengthText(rawLength.sum)}
-                </td>
-                <td style={{ textAlign: 'right' }}>
-                  {getLengthText(rawWordCount.length)}
                 </td>
               </tr>
               {/* Multivoice */}

@@ -482,6 +482,7 @@ export const getPostedSinglePodficWords = async (year) => {
       status = 'Posted'
       and date_part('year', posted_date) = $1
       and ${IS_NOT_CHAPTERED}
+      and ${IS_NOT_MULTIVOICE}
       and wordcount is not null`,
     [year]
   );
@@ -495,7 +496,7 @@ export const getPostedChapterWords = async (year) => {
   const client = await getDBClient();
 
   const result = await client.query(
-    `select sum(section.wordcount) from section ${CHECK_POSTED_CHAPTERED_SECTION} and date_part('year', section.posted_date) = $1 and section.wordcount is not null`,
+    `select sum(section.wordcount) from section ${CHECK_POSTED_CHAPTERED_SECTION} and ${IS_NOT_MULTIVOICE} and date_part('year', section.posted_date) = $1 and section.wordcount is not null`,
     [year]
   );
   return result.rows[0] ?? {};
@@ -597,7 +598,7 @@ export const getRawWordcount = async (year = null) => {
   if (year) {
     const result = await client.query(
       `
-    select sum(wordcount) as wordcount, sum(raw_length) as length from section
+    select sum(wordcount) as wordcount, sum(recording_session.length) as length from section
       left join recording_session on section.section_id = recording_session.section_id
     where
       status is not null

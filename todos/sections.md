@@ -62,6 +62,8 @@
 - [ ] Check numbers against previous stats to make sure you're not severely messing up
   - check out master below PR and link to previous server database
 - [ ] handle posted status on part sections?
+- [ ] figure out accurate work & chapter counts with multivoices included - there's a discrepancy there
+- [ ] figure out works count discrepancy
 
 # Parts
 
