@@ -588,7 +588,6 @@ export default function PodficTable() {
       await updatePodficMinified(
         JSON.stringify({
           podfic_id: podfic.podfic_id,
-          length: podfic.length,
           posted_date: podfic.posted_date,
           ao3_link: podfic.ao3_link,
           status: podfic.status,
@@ -756,58 +755,6 @@ export default function PodficTable() {
         }
         getExpandedContent={(row) => (
           <>
-            {!!row.original.coverArt && (
-              <>
-                <tr key='cover-art-expand'>
-                  <td
-                    colSpan={row.getAllCells().length}
-                    key='cover-art'
-                    style={{ paddingLeft: '30px' }}
-                  >
-                    <span>
-                      <b>Cover Art</b>
-                    </span>
-                  </td>
-                </tr>
-                <tr key='cover-art-expanded'>
-                  <td
-                    colSpan={row.getAllCells().length}
-                    style={{ paddingLeft: '30px' }}
-                  >
-                    <table className={tableStyles.table}>
-                      <thead>
-                        <tr>
-                          <th>Link</th>
-                          <th>Cover artist</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>
-                            <span
-                              style={{
-                                display: 'block',
-                                textOverflow: 'ellipsis',
-                                overflow: 'hidden',
-                                whiteSpace: 'nowrap',
-                                maxWidth: '100px',
-                              }}
-                            >
-                              <ExternalLink
-                                href={row.original.coverArt.image_link}
-                              />
-                            </span>
-                          </td>
-                          <td>{row.original.coverArt.cover_artist_name}</td>
-                          <td>{row.original.coverArt.cover_art_status}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
-                </tr>
-              </>
-            )}
             <tr key={'files-expanded'}>
               <td
                 key='2'
@@ -869,6 +816,7 @@ export default function PodficTable() {
 
             <AdditionalContentRows
               width={row.getVisibleCells().length}
+              coverArt={row.original.coverArt}
               notes={row.original.notes ?? []}
               resources={row.original.resources ?? []}
               permissionAsks={row.original.permission_asks ?? []}

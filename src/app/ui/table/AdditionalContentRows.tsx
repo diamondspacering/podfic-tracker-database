@@ -20,8 +20,11 @@ import { StatusType } from '@/app/types';
 import { formatTableDate } from '@/app/lib/utils';
 import { EditCell } from './EditCell';
 import { createUpdatePermissionAsk } from '@/app/lib/updaters';
+import tableStyles from '@/app/ui/table/table.module.css';
+import CoverArtDialog from '../cover-art/cover-art-dialog';
 
 interface AdditionalContentRowsProps {
+  coverArt?: CoverArt;
   notes?: Note[];
   resources?: Resource[];
   permissionAsks?: Permission[];
@@ -35,6 +38,7 @@ interface AdditionalContentRowsProps {
 }
 
 export default function AdditionalContentRows({
+  coverArt,
   notes,
   resources,
   permissionAsks,
@@ -46,6 +50,7 @@ export default function AdditionalContentRows({
   event_id,
   submitCallback,
 }: AdditionalContentRowsProps) {
+  const [coverArtDialogOpen, setCoverArtDialogOpen] = useState(false);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [resourceDialogOpen, setResourceDialogOpen] = useState(false);
   const [permissionAskDialogOpen, setPermissionAskDialogOpen] = useState(false);
@@ -207,6 +212,18 @@ export default function AdditionalContentRows({
           <Button onClick={deleteResource}>Delete</Button>
         </DialogActions>
       </Dialog>
+      <CoverArtDialog
+        isOpen={coverArtDialogOpen}
+        onClose={() => {
+          setCoverArtDialogOpen(false);
+        }}
+        submitCallback={async () => {
+          setCoverArtDialogOpen(false);
+          await submitCallback?.();
+        }}
+        podfic_id={podfic_id}
+        item={coverArt}
+      />
       <NoteDialog
         isOpen={noteDialogOpen}
         onClose={() => {
@@ -255,6 +272,51 @@ export default function AdditionalContentRows({
         workId={work_id}
         item={selectedPermissionAsk}
       />
+      {!!coverArt && (
+        <tr key={`cover-art-${coverArt.cover_art_id}`}>
+          <td colSpan={width} style={{ paddingLeft: '30px' }}>
+            <table className={tableStyles.table}>
+              <thead>
+                <tr>
+                  <th>Link</th>
+                  <th>Cover artist</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span
+                      style={{
+                        display: 'block',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '100px',
+                      }}
+                    >
+                      <ExternalLink href={coverArt.image_link} />
+                    </span>
+                  </td>
+                  <td>{coverArt.cover_artist_name}</td>
+                  <td>{coverArt.cover_art_status}</td>
+                  <td>
+                    <IconButton
+                      style={{ padding: '0px', paddingLeft: '5px' }}
+                      onClick={() => {
+                        setCoverArtDialogOpen(true);
+                      }}
+                    >
+                      <Edit />
+                    </IconButton>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      )}
       {notes?.map((note) => (
         <tr key={`note-${note.note_id}`}>
           <td colSpan={width} style={{ paddingLeft: '30px' }}>
