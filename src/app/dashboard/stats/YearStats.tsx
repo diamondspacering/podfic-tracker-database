@@ -2,6 +2,7 @@ import { sourceCodePro } from '@/app/fonts/fonts';
 import styles from './stats.module.css';
 import dashboardStyles from '@/app/dashboard/dashboard.module.css';
 import {
+  getAllPostedWords,
   getAvgChapterLength,
   getAvgPodficLength,
   getCategoryCount,
@@ -12,7 +13,7 @@ import {
   getMultivoice,
   getPodficLength,
   getPostedChapterWords,
-  getPostedPodficWords,
+  getPostedSinglePodficWords,
   getRatingCount,
   getRawWordcount,
   getShortestChapter,
@@ -38,18 +39,18 @@ export default async function YearStats({ year }) {
   const podficLen = await getPodficLength(year);
   const chapterLen = await getChapterLength(year);
 
+  const worksAvg = await getAvgPodficLength(year);
+  const chaptersAvg = await getAvgChapterLength(year);
+
   const longestPodfic = await getLongestPodfic(year);
   const longestSinglePodfic = await getLongestSingleWorkPodfic(year);
   const longestChapter = await getLongestChapter(year);
   const shortestPodfic = await getShortestPodfic(year);
   const shortestChapter = await getShortestChapter(year);
 
-  const worksAvg = await getAvgPodficLength(year);
-  const chaptersAvg = await getAvgChapterLength(year);
-
   const worksCount = await getWorksCount(year);
-  // const totalWords = await getPostedWords(year);
-  const podficWords = await getPostedPodficWords(year);
+  const totalWords = await getAllPostedWords(year);
+  const podficWords = await getPostedSinglePodficWords(year);
   const chapterWords = await getPostedChapterWords(year);
 
   const rawLength = await getTotalRawLength(year);
@@ -59,21 +60,18 @@ export default async function YearStats({ year }) {
   const withCoverArt = await getWithCoverArt(year);
   const withMusic = await getWithMusic(year);
 
-  const topFandomsCount = await getTopFandomsCount(year);
-  const topFandomsLen = await getTopFandomsLen(year);
-
   const ratings = await getRatingCount(year);
   const categories = await getCategoryCount(year);
   const events = await getTopEvents(year);
+
+  const topFandomsCount = await getTopFandomsCount(year);
+  const topFandomsLen = await getTopFandomsLen(year);
 
   return (
     <div className={`${dashboardStyles.flexRow} ${sourceCodePro.className}`}>
       <div className={styles.titleColumn}>{year}</div>
       <div className={styles.statsBlock}>
         <div className={styles.flexRow}>
-          {/* <div className={styles.flexColumn}>
-            <span className={styles.headerText}>Productivity Total</span>
-          </div> */}
           <table className={styles.statsTable}>
             <thead>
               <tr className={styles.headerText}>
@@ -169,11 +167,13 @@ export default async function YearStats({ year }) {
                 <td>
                   <b>Words:</b>
                 </td>
+                {/* that WAS totalwords sum what is total words how is it different?? */}
+                {/* TODO: these are slightly different which is exciting! check on that. yeah the added together ones are longer so there's some double counting going on. possibly a multivoice issue? check on indiv works */}
                 <td style={{ textAlign: 'right' }}>
-                  {/* that WAS totalwords sum what is total words how is it different?? */}
-                  {(
+                  {/* {`${totalWords.toLocaleString()} (${(
                     parseInt(podficWords.sum) + parseInt(chapterWords.sum)
-                  ).toLocaleString()}
+                  ).toLocaleString()})`} */}
+                  {totalWords.toLocaleString()}
                 </td>
                 <td style={{ textAlign: 'right' }}>
                   {parseInt(podficWords.sum).toLocaleString()}
@@ -184,6 +184,7 @@ export default async function YearStats({ year }) {
               </tr>
               {/* Recorded */}
               {/* TODO: something is weird about these. they're ALMOST right. but something is very weird. figure that out. */}
+              {/* ok so one on far right *should* be shorter thats fine and normal */}
               <tr>
                 <td>
                   <b>Recorded:</b>
@@ -223,6 +224,7 @@ export default async function YearStats({ year }) {
           </table>
 
           {/* Ratings */}
+          {/* TODO: use Rating enum */}
           <div className={styles.flexColumn}>
             <span className={styles.headerText}>Ratings</span>
             <table className={styles.statsTable}>
@@ -260,6 +262,7 @@ export default async function YearStats({ year }) {
           </div>
 
           {/* Categories */}
+          {/* TODO: use Category enum */}
           <div className={styles.flexColumn}>
             <span className={styles.headerText}>Categories</span>
             <table className={styles.statsTable}>
