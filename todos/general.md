@@ -29,6 +29,7 @@
 - [ ] Use transactions or something so you stop getting extra elements created by processes failing halfway through
   - transaction wrapper? is that a bad idea. Would require some restructuring
 - [ ] await params for other pages that need it
+- [ ] Support multiple categories (and adjust AO3 tags as well)
 
 ## Tables
 

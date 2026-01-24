@@ -24,6 +24,7 @@ import { getLengthText } from '@/app/lib/format';
 import YearStats from './YearStats';
 import { Metadata } from 'next';
 import { statsYears } from '@/app/lib/dataPersonal';
+import { getDefaultLength } from '@/app/types';
 
 export const metadata: Metadata = {
   title: 'Stats',
@@ -99,7 +100,10 @@ export default async function Page() {
                       {getLengthText(podficLengthByYearSingleWork?.[year])}
                     </td>
                     <td style={{ textAlign: 'center' }}>
-                      {getLengthText(combinedPostedLengthByYear?.[year] ?? 0)}
+                      {getLengthText(
+                        combinedPostedLengthByYear?.[year] ??
+                          getDefaultLength(),
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -165,7 +169,7 @@ export default async function Page() {
                       <i>raw length</i>
                     </b>
                   </td>
-                  <td>{getLengthText(totalRawLength.sum)}</td>
+                  <td>{getLengthText(totalRawLength)}</td>
                 </tr>
                 <tr>
                   <td>

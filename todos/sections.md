@@ -61,6 +61,10 @@
 - [ ] add total raw wordcount
 - [ ] Check numbers against previous stats to make sure you're not severely messing up
   - check out master below PR and link to previous server database
+- [ ] Styling
+  - not enough space btw indiv years top fandoms by count & length
+  - overall fandom counts on right side are not aligned well, should be on left like for indiv years
+- [ ] Investigate/fix number discrepancies
 - [ ] handle posted status on part sections?
 - [ ] figure out accurate work & chapter counts with multivoices included - there's a discrepancy there
 - [ ] figure out works count discrepancy

@@ -21,7 +21,7 @@ const IS_NOT_CHAPTERED = `
 const IS_NOT_MULTIVOICE = `is_multivoice is not true`;
 
 /**
- * Gets all podfics posted in a year, not paying attention to chaptered status, only whole podfic posting date. This also includes "Finished" pods that were not publicly posted but do have a posting date.
+ * Gets all podfics posted in a year, counting as generously as possible. This includes multivoices, unposted works marked "Finished" that have a posting date, and chaptered works (put under the year they were finished).
  * @returns {Promise< { [year: number]: number }>} Number of podfic per year
  */
 export const getPodficCountByYear = async (): Promise<{
@@ -29,7 +29,7 @@ export const getPodficCountByYear = async (): Promise<{
 }> => {
   const client = await getDBClient();
   const dateResult = await client.query(
-    `select date_part('year', posted_date) as year, count(posted_date) from podfic group by year;`
+    `select date_part('year', posted_date) as year, count(posted_date) from podfic group by year;`,
   );
   // console.log('podfic count by year:', dateResult.rows);
 
@@ -43,7 +43,9 @@ export const getPodficCountByYear = async (): Promise<{
 /**
  * Fetch the total length by year of all solo podfics posted in one chunk
  */
-export const fetchPostedPodficSingleWorkLengthByYear = async () => {
+export const getPostedPodficSingleWorkLengthByYear = async (): Promise<{
+  [year: number]: Length;
+}> => {
   const client = await getDBClient();
   const result = await client.query(`
     select sum(length), date_part('year', posted_date) as year from podfic 
@@ -54,12 +56,7 @@ export const fetchPostedPodficSingleWorkLengthByYear = async () => {
       and ${IS_NOT_MULTIVOICE}
     group by year;
   `);
-  // console.log('podfic single work length by year:', result.rows);
-  return result.rows;
-};
-
-export const getPostedPodficSingleWorkLengthByYear = async () => {
-  const podfics = await fetchPostedPodficSingleWorkLengthByYear();
+  const podfics = result.rows;
 
   const reducedPodfics = podfics.reduce((acc, cur) => {
     if (cur.year) acc[cur.year] = cur.sum;
@@ -68,13 +65,16 @@ export const getPostedPodficSingleWorkLengthByYear = async () => {
   return reducedPodfics;
 };
 
+// TODO: should this exclude multivoices? probably!
 /**
- * Gets combined length of all posted sections by year
+ * Gets combined length of all posted sections by year. Includes multivoices
  */
-export const getPostedLengthByYear = async () => {
+export const getPostedLengthByYear = async (): Promise<{
+  [year: number]: Length;
+}> => {
   const client = await getDBClient();
   const result = await client.query(
-    `select sum(length), date_part('year', posted_date) as year from section where status = 'Posted' and number > 0 group by year`
+    `select sum(length), date_part('year', posted_date) as year from section where status = 'Posted' and number > 0 group by year`,
   );
   const podfics = result.rows;
 
@@ -98,7 +98,7 @@ export const getPodficLength = async (year) => {
       and date_part('year', posted_date) = $1
       and ${IS_NOT_CHAPTERED}
     `,
-    [year]
+    [year],
   );
   return result.rows[0] ?? {};
 };
@@ -127,7 +127,7 @@ export const getChapterLength = async (year) => {
       ${CHECK_POSTED_CHAPTERED_SECTION}
       and date_part('year', section.posted_date) = $1
   `,
-    [year]
+    [year],
   );
   return result.rows[0] ?? {};
 };
@@ -137,14 +137,10 @@ export const getChapterLength = async (year) => {
  * NOTE: currently unused
  */
 export const getPodficAndChapterLengthByYear = async () => {
-  const podfics = await fetchPostedPodficSingleWorkLengthByYear();
+  const reducedPodfics = await getPostedPodficSingleWorkLengthByYear();
   const chapters = await getChapterLengthByYear();
 
   // and then combine and return
-  const reducedPodfics = podfics.reduce((acc, cur) => {
-    acc[cur.year] = cur.sum;
-    return acc;
-  }, {});
   // console.log({ reducedPodfics });
   const reducedChapters = chapters.reduce((acc, cur) => {
     if (cur.year) {
@@ -157,7 +153,7 @@ export const getPodficAndChapterLengthByYear = async () => {
   const combined = Object.keys(reducedPodfics).reduce((acc, cur) => {
     acc[cur] = addLengths(
       reducedPodfics[cur] ?? getEmptyLength(),
-      reducedChapters[cur] ?? getEmptyLength()
+      reducedChapters[cur] ?? getEmptyLength(),
     );
     return acc;
   }, {});
@@ -165,12 +161,14 @@ export const getPodficAndChapterLengthByYear = async () => {
   return combined;
 };
 
-// TODO: add params for like indiv podfic, etc.
 /**
- * Get longest posted podfic
+ * Get longest posted podfic, currently including multivoices
+ * TODO: add params for like indiv podfic, etc.
  * @param [year] Year to get longest podfic for, leave blank for all time
  */
-export const getLongestPodfic = async (year = null) => {
+export const getLongestPodfic = async (
+  year = null,
+): Promise<{ length: Length }> => {
   const client = await getDBClient();
 
   if (year) {
@@ -182,7 +180,7 @@ export const getLongestPodfic = async (year = null) => {
         and length is not null
       order by length desc
       limit 1`,
-      [year]
+      [year],
     );
     const sectionResult = await client.query(
       `select section.length from section
@@ -191,7 +189,7 @@ export const getLongestPodfic = async (year = null) => {
         and section.length is not null
       order by section.length desc
       limit 1`,
-      [year]
+      [year],
     );
     // console.log({
     //   year,
@@ -208,7 +206,7 @@ export const getLongestPodfic = async (year = null) => {
   } else {
     // comparing longest podfic to longest section is also possible here, but I know my longest podfic is longer than any section I would do, so it's not needed
     const result = await client.query(
-      `select length from podfic where podfic.status = 'Posted' and length is not null order by length desc limit 1`
+      `select length from podfic where podfic.status = 'Posted' and length is not null order by length desc limit 1`,
     );
     // console.log('longest podfic:', result.rows[0]);
     return result.rows[0] ?? {};
@@ -233,13 +231,13 @@ export const getLongestSingleWorkPodfic = async (year = null) => {
         and ${IS_NOT_CHAPTERED}
       order by length desc
       limit 1`,
-      [year]
+      [year],
     );
     // console.log({ year, result: result.rows[0] });
     return result.rows[0] ?? {};
   } else {
     const result = await client.query(
-      `select length from podfic where podfic.status = 'Posted' and length is not null and ${IS_NOT_CHAPTERED} order by length desc limit 1`
+      `select length from podfic where podfic.status = 'Posted' and length is not null and ${IS_NOT_CHAPTERED} order by length desc limit 1`,
     );
     return result.rows[0] ?? {};
   }
@@ -259,7 +257,7 @@ export const getLongestChapter = async (year = null) => {
         and date_part('year', section.posted_date) = $1
         and section.length is not null
       order by section.length desc limit 1`,
-      [year]
+      [year],
     );
     return result.rows[0] ?? {};
   } else {
@@ -267,7 +265,7 @@ export const getLongestChapter = async (year = null) => {
       `select section.length from section
         ${CHECK_POSTED_CHAPTERED_SECTION}
         and section.length is not null
-      order by length desc limit 1`
+      order by length desc limit 1`,
     );
     return result.rows[0] ?? {};
   }
@@ -278,7 +276,9 @@ export const getLongestChapter = async (year = null) => {
  * @param [year] Year to get shortest podfic in, leave empty for shortest of all time
  * @returns Shortest length
  */
-export const getShortestPodfic = async (year = null) => {
+export const getShortestPodfic = async (
+  year = null,
+): Promise<{ length: Length }> => {
   const client = await getDBClient();
 
   if (year) {
@@ -291,7 +291,7 @@ export const getShortestPodfic = async (year = null) => {
         and ${IS_NOT_MULTIVOICE}
       order by length
       limit 1`,
-      [year]
+      [year],
     );
     return result.rows[0] ?? {};
   } else {
@@ -302,7 +302,7 @@ export const getShortestPodfic = async (year = null) => {
         and length is not null
         and ${IS_NOT_MULTIVOICE}
       order by length
-      limit 1`
+      limit 1`,
     );
     // console.log('shortest podfic:', result.rows[0]);
     return result.rows[0] ?? {};
@@ -325,7 +325,7 @@ export const getShortestChapter = async (year = null) => {
         and date_part('year', section.posted_date) = $1
       order by length
       limit 1`,
-      [year]
+      [year],
     );
     return result.rows[0] ?? {};
   } else {
@@ -334,7 +334,7 @@ export const getShortestChapter = async (year = null) => {
         ${CHECK_POSTED_CHAPTERED_SECTION}
         and section.length is not null
       order by length
-      limit 1`
+      limit 1`,
     );
     return result.rows[0] ?? {};
   }
@@ -344,9 +344,11 @@ export const getShortestChapter = async (year = null) => {
  * Gets average posted solo podfic length
  * Includes posted_year
  * @param [year] Year to get average length for, leave blank for all time
- * @returns
+ * @returns Length
  */
-export const getAvgPodficLength = async (year = null) => {
+export const getAvgPodficLength = async (
+  year = null,
+): Promise<{ avg: Length }> => {
   const client = await getDBClient();
 
   if (year) {
@@ -358,12 +360,12 @@ export const getAvgPodficLength = async (year = null) => {
         and ${IS_NOT_MULTIVOICE}
         and date_part('year', posted_date) = $1
         and length is not null`,
-      [year]
+      [year],
     );
     return result.rows[0] ?? {};
   } else {
     const result = await client.query(
-      `select avg(length) from podfic where podfic.status = 'Posted' and length is not null and ${IS_NOT_MULTIVOICE}`
+      `select avg(length) from podfic where podfic.status = 'Posted' and length is not null and ${IS_NOT_MULTIVOICE}`,
     );
     // console.log('avg podfic length:', result.rows[0]);
     return result.rows[0] ?? {};
@@ -385,7 +387,7 @@ export const getAvgChapterLength = async (year = null) => {
         and date_part('year', section.posted_date) = $1
         and ${IS_NOT_MULTIVOICE}
       `,
-      [year]
+      [year],
     );
     return result.rows[0] ?? {};
   } else {
@@ -393,19 +395,22 @@ export const getAvgChapterLength = async (year = null) => {
       `select avg(section.length) from section
         ${CHECK_POSTED_CHAPTERED_SECTION}
       and section.length is not null
-      and ${IS_NOT_MULTIVOICE}`
+      and ${IS_NOT_MULTIVOICE}`,
     );
     return result.rows[0] ?? {};
   }
 };
 
 // TODO: allow counting multivoice part words as well - should work if we do sections where the podfic is posted
+// TODO: i dont like this.
 /**
  * Get wordcount for posted podfics (NOT in progress), excluding multivoices
  * @param [year] Year to get posted words for, leave blank for all time
  * @returns Number of words as string
  */
-export const getPostedPodficWords = async (year = null) => {
+export const getPostedPodficWords = async (
+  year = null,
+): Promise<{ sum: string }> => {
   const client = await getDBClient();
 
   // TODO: shouldn't this be sections?
@@ -418,7 +423,7 @@ export const getPostedPodficWords = async (year = null) => {
         and date_part('year', posted_date) = $1
         and ${IS_NOT_MULTIVOICE}
         and wordcount is not null`,
-      [year]
+      [year],
     );
     const sectionResult = await client.query(
       `select sum(section.wordcount) from section
@@ -430,19 +435,20 @@ export const getPostedPodficWords = async (year = null) => {
         and section.wordcount is not null
         and section.number > 0
       `,
-      [year]
+      [year],
     );
     const podficWordcount = result.rows[0] ?? {};
     const sectionWordcount = sectionResult.rows[0] ?? {};
     console.log(
-      `posted words for ${year}: ${podficWordcount} in podfics only, ${sectionWordcount} in sections`
+      `posted words for ${year}: ${podficWordcount} in podfics only, ${sectionWordcount} in sections`,
     );
     return result.rows[0] ?? {};
   } else {
     // TODO: fix this, similar result w/ sections
     const result = await client.query(
-      `select sum(wordcount) from podfic inner join work on podfic.work_id = work.work_id where podfic.status = 'Posted' and podfic.is_multivoice is not true and wordcount is not null`
+      `select sum(wordcount) from podfic inner join work on podfic.work_id = work.work_id where podfic.status = 'Posted' and ${IS_NOT_MULTIVOICE} and wordcount is not null`,
     );
+    console.log('number', result.rows[0]);
     return result.rows[0] ?? {};
   }
 };
@@ -457,13 +463,18 @@ export const getAllPostedWords = async (year = null): Promise<number> => {
 
   if (year) {
     const result = await client.query(
-      `select sum(section.wordcount) from section where status = 'Posted' and number > 0 and date_part('year', posted_date) = $1`,
-      [year]
+      `select sum(section.wordcount) from section
+        where status = 'Posted'
+        and number > 0
+        and date_part('year', posted_date) = $1`,
+      [year],
     );
     return parseInt(result.rows[0].sum);
   } else {
     const result = await client.query(
-      `select sum(wordcount) from section where status = 'Posted' and number > 0`
+      `select sum(wordcount) from section
+        where status = 'Posted'
+        and number > 0`,
     );
     return parseInt(result.rows[0].sum);
   }
@@ -484,7 +495,7 @@ export const getPostedSinglePodficWords = async (year) => {
       and ${IS_NOT_CHAPTERED}
       and ${IS_NOT_MULTIVOICE}
       and wordcount is not null`,
-    [year]
+    [year],
   );
   return result.rows[0] ?? {};
 };
@@ -497,17 +508,49 @@ export const getPostedChapterWords = async (year) => {
 
   const result = await client.query(
     `select sum(section.wordcount) from section ${CHECK_POSTED_CHAPTERED_SECTION} and ${IS_NOT_MULTIVOICE} and date_part('year', section.posted_date) = $1 and section.wordcount is not null`,
-    [year]
+    [year],
   );
   return result.rows[0] ?? {};
 };
 
 /**
- * Get average wordcount for posted podfics
+ * Gets total words in multivoice parts, either that were posted in a year or all time regardless of status
+ * @param [year] Year for multivoice sections, leave blank for all time
+ */
+export const getMultivoiceWords = async (
+  year = null,
+): Promise<{ sum: number }> => {
+  const client = await getDBClient();
+
+  if (year) {
+    const result = await client.query(
+      `
+      select sum(section.wordcount) from section
+        where section.part_id is not null
+        and date_part('year', section.posted_date) = $1
+        and section.wordcount is not null  
+    `,
+      [year],
+    );
+    return result.rows[0] ?? {};
+  } else {
+    const result = await client.query(`
+      select sum(section.wordcount) from section
+        where section.part_id is not null
+        and section.wordcount is not null
+    `);
+    return result.rows[0] ?? {};
+  }
+};
+
+/**
+ * Get average wordcount for posted solo podfics
  * @param [year] Year to get average for, leave blank for all time
  * @returns
  */
-export const getAvgPostedWords = async (year = null) => {
+export const getAvgPostedWords = async (
+  year = null,
+): Promise<{ avg: number }> => {
   const client = await getDBClient();
 
   if (year) {
@@ -516,10 +559,10 @@ export const getAvgPostedWords = async (year = null) => {
         inner join work on podfic.work_id = work.work_id
       where
         podfic.status = 'Posted'
-        and (date_part('year', posted_date) = $1 or posted_year = $1)
+        and date_part('year', posted_date) = $1
         and ${IS_NOT_MULTIVOICE}
         and wordcount is not null`,
-      [year]
+      [year],
     );
     return result.rows[0] ?? {};
   } else {
@@ -529,29 +572,37 @@ export const getAvgPostedWords = async (year = null) => {
       where
         podfic.status = 'Posted'
         and ${IS_NOT_MULTIVOICE}
-        and wordcount is not null`
+        and wordcount is not null`,
     );
     return result.rows[0] ?? {};
   }
 };
 
 /**
- * Get total length of all posted podfic sections
+ * Get total length of all posted podfic sections, including multivoices
+ * TODO: this could double-count length if you have parts on a multivoice as well as the full thing posted. we. uh. we need a way to fix this,
+ * (would require pulling in self_posted I think - exclude parts for self_posted)
+ * consider using more submitted/posted diff for multivoice parts? eh
  * @param [year] Year to get total from, leave blank for all time
  * @returns Total length
  */
-export const getTotalPodficLength = async (year = null) => {
+export const getTotalPodficLength = async (year = null): Promise<Length> => {
   const client = await getDBClient();
   if (year) {
     const result = await client.query(
-      `select sum(length) from section where status = 'Posted' and date_part('year', posted_date) = $1 and number > 0`,
-      [year]
+      `select sum(length) from section
+        where status = 'Posted'
+        and date_part('year', posted_date) = $1
+        and number > 0`,
+      [year],
     );
     // console.log(result.rows);
     return result.rows[0].sum;
   } else {
     const result = await client.query(
-      `select sum(length) from section where status = 'Posted' and number > 0`
+      `select sum(length) from section
+        where status = 'Posted'
+        and number > 0`,
     );
     // console.log(result.rows);
     return result.rows[0].sum;
@@ -563,20 +614,22 @@ export const getTotalPodficLength = async (year = null) => {
  * @param [year] Year to get total from, leave blank for all time
  * @returns {Length} Total length
  */
-export const getTotalRawLength = async (year = null) => {
+export const getTotalRawLength = async (year = null): Promise<Length> => {
   const client = await getDBClient();
 
   if (year) {
     const result = await client.query(
-      `select sum(length) from recording_session where date_part('year', date) = $1 or year = $1`,
-      [year]
+      `select sum(length) from recording_session
+        where date_part('year', date) = $1
+        or year = $1`,
+      [year],
     );
-    return result.rows[0] ?? {};
+    return result.rows[0].sum;
   } else {
     const result = await client.query(
-      `select sum(length) from recording_session`
+      `select sum(length) from recording_session`,
     );
-    return result.rows[0] ?? {};
+    return result.rows[0].sum;
   }
 };
 
@@ -587,7 +640,7 @@ export const getSoloCount = async (): Promise<number> => {
   const client = await getDBClient();
 
   const result = await client.query(
-    `select count(*) from podfic where ${IS_NOT_MULTIVOICE} and status = 'Posted'`
+    `select count(*) from podfic where ${IS_NOT_MULTIVOICE} and status = 'Posted'`,
   );
   return result.rows[0].count;
 };
@@ -606,9 +659,9 @@ export const getRawWordcount = async (year = null) => {
       and status != 'Planning'
       and (date_part('year', recording_session.date) = $1 or recording_session.year = $1);
     `,
-      [year]
+      [year],
     );
-    console.log('raw wordcount by year', result.rows);
+    // console.log('raw wordcount by year', result.rows);
     return {
       wordcount: parseInt(result.rows[0].wordcount ?? 0),
       length: result.rows[0].length,
@@ -621,11 +674,13 @@ export const getRawWordcount = async (year = null) => {
 // -- Categories --
 
 /**
- * Get top fandoms by length for posted podfic sections
+ * Get top fandoms by length for posted podfic sections, excluding multivoices
  * @param [year] Year to get top fandoms for, leave blank for all time
  * @returns Ordered list with objects with `fandom_name` ane `fandom_len`, 10 for all time and 5 for per year
  */
-export const getTopFandomsLen = async (year = null) => {
+export const getTopFandomsLen = async (
+  year = null,
+): Promise<{ fandom_name: string; fandom_len: Length }[]> => {
   const client = await getDBClient();
 
   if (year) {
@@ -639,12 +694,13 @@ export const getTopFandomsLen = async (year = null) => {
         and section.number > 0
         and work.fandom_id is not null
         and section.length is not null
+        and ${IS_NOT_MULTIVOICE}
         and date_part('year', section.posted_date) = $1
       group by fandom.name
       order by fandom_len desc
       limit 5;
       `,
-      [year]
+      [year],
     );
     const obj = result.rows.reduce((acc, cur) => {
       acc[cur.fandom_name] = cur.fandom_len;
@@ -655,7 +711,7 @@ export const getTopFandomsLen = async (year = null) => {
       fandom_len: obj[fandom],
     }));
     return list.sort(
-      (a, b) => getLengthValue(b.fandom_len) - getLengthValue(a.fandom_len)
+      (a, b) => getLengthValue(b.fandom_len) - getLengthValue(a.fandom_len),
     );
   } else {
     const result = await client.query(
@@ -668,10 +724,11 @@ export const getTopFandomsLen = async (year = null) => {
         and section.number > 0
         and work.fandom_id is not null
         and section.length is not null
+        and ${IS_NOT_MULTIVOICE}
       group by fandom.name
       order by fandom_len desc
       limit 10;
-      `
+      `,
     );
     const obj = result.rows.reduce((acc, cur) => {
       acc[cur.fandom_name] = cur.fandom_len;
@@ -682,17 +739,19 @@ export const getTopFandomsLen = async (year = null) => {
       fandom_len: obj[fandom],
     }));
     return list.sort(
-      (a, b) => getLengthValue(b.fandom_len) - getLengthValue(a.fandom_len)
+      (a, b) => getLengthValue(b.fandom_len) - getLengthValue(a.fandom_len),
     );
   }
 };
 
 /**
- * Get top fandoms by count of works posted with them
+ * Get top fandoms by count of works posted with them, excluding multivoices
  * @param [year] Year to get fandoms for, leave blank for all time
  * @returns Ordered list, 5 for per year and 10 for all time, with objects with `fandom_name` and `fandom_count`
  */
-export const getTopFandomsCount = async (year = null) => {
+export const getTopFandomsCount = async (
+  year = null,
+): Promise<{ fandom_name: string; fandom_count: number }[]> => {
   const client = await getDBClient();
 
   if (year) {
@@ -703,11 +762,12 @@ export const getTopFandomsCount = async (year = null) => {
       where
         work.fandom_id is not null
         and podfic.status = 'Posted'
-        and (date_part('year', posted_date) = $1 or posted_year = $1)
+        and ${IS_NOT_MULTIVOICE}
+        and date_part('year', posted_date) = $1
       group by fandom.name
       order by fandom_count desc
       limit 5;`,
-      [year]
+      [year],
     );
     return result.rows;
   } else {
@@ -718,9 +778,10 @@ export const getTopFandomsCount = async (year = null) => {
       where
         work.fandom_id is not null
         and podfic.status = 'Posted'
+        and ${IS_NOT_MULTIVOICE}
       group by fandom.name
       order by fandom_count desc
-      limit 5;`
+      limit 5;`,
     );
     return result.rows;
   }
@@ -728,12 +789,14 @@ export const getTopFandomsCount = async (year = null) => {
 
 // TODO: consider including in-progress too
 /**
- * Get top authors by length of works by them posted (not in progress)
+ * Get top authors by length of sections by them posted, excluding multivoices
  * NOTE: Does not return per year bc those stats aren't being used right now
  * @param [year] Year to get authors for, leave blank for all time
  * @returns Ordered list of 10 top authors by length, with objects with `author_name` and `author_len`
  */
-export const getTopAuthorsLen = async (year = null) => {
+export const getTopAuthorsLen = async (
+  year = null,
+): Promise<{ author_name: string; author_len: Length }[]> => {
   const client = await getDBClient();
 
   if (year) {
@@ -744,15 +807,26 @@ export const getTopAuthorsLen = async (year = null) => {
         inner join podfic on section.podfic_id = podfic.podfic_id
         inner join work on podfic.work_id = work.work_id
         inner join author on work.author_id = author.author_id
-      where work.author_id is not null and section.length is not null and section.status = 'Posted' and section.number > 0
+      where
+        work.author_id is not null
+        and section.length is not null
+        and section.status = 'Posted'
+        and section.number > 0
+        and ${IS_NOT_MULTIVOICE}
       group by author.username
-      order by author_len desc limit 10;
-      `
+      order by author_len desc
+      limit 10;
+      `,
     );
     return result.rows;
   }
 };
 
+// TODO: make all these support an include multivoice toggle
+/**
+ * Get top authors by count of works by them posted, excluding multivoices
+ * NOTE: Does not use year param as this currently isn't supported per year
+ */
 export const getTopAuthorsCount = async (year = null) => {
   const client = await getDBClient();
 
@@ -760,7 +834,16 @@ export const getTopAuthorsCount = async (year = null) => {
     return [];
   } else {
     const result = await client.query(
-      `select author.username as author_name, count(*) as author_count from podfic inner join work on podfic.work_id = work.work_id inner join author on work.author_id = author.author_id where work.author_id is not null and podfic.status = 'Posted' group by author.username order by author_count desc limit 5;`
+      `select author.username as author_name, count(*) as author_count from podfic
+        inner join work on podfic.work_id = work.work_id
+        inner join author on work.author_id = author.author_id
+      where
+        work.author_id is not null
+        and podfic.status = 'Posted'
+        and ${IS_NOT_MULTIVOICE}
+      group by author.username
+      order by author_count desc
+      limit 5;`,
     );
     return result.rows;
   }
@@ -772,15 +855,15 @@ export const getWorksCount = async (year) => {
   const client = await getDBClient();
   const singleWorksResult = await client.query(
     `select count(*) from podfic inner join work on podfic.work_id = work.work_id where date_part('year', posted_date) = $1 and (chaptered is not true or section_type = 'multiple-to-single')`,
-    [year]
+    [year],
   );
   const chaptersResult = await client.query(
     `select count(*) from section ${CHECK_POSTED_CHAPTERED_SECTION} and date_part('year', section.posted_date) = $1`,
-    [year]
+    [year],
   );
   const totalResultWorks = await client.query(
     `select count(*) from podfic where date_part('year', posted_date) = $1 or posted_year = $1`,
-    [year]
+    [year],
   );
 
   return {
@@ -798,7 +881,7 @@ export const getRatingCount = async (year = null) => {
   if (year) {
     const result = await client.query(
       `select rating, count(*) from podfic inner join work on podfic.work_id = work.work_id where status = 'Posted' and (date_part('year', posted_date) = $1 or posted_year = $1) and rating is not null group by rating;`,
-      [year]
+      [year],
     );
     const reduced = result.rows.reduce((acc, cur) => {
       acc[cur.rating] = cur.count;
@@ -807,7 +890,7 @@ export const getRatingCount = async (year = null) => {
     return reduced;
   } else {
     const result = await client.query(
-      `select rating, count(*) from podfic inner join work on podfic.work_id = work.work_id where status = 'Posted' and rating is not null group by rating;`
+      `select rating, count(*) from podfic inner join work on podfic.work_id = work.work_id where status = 'Posted' and rating is not null group by rating;`,
     );
     return result.rows;
   }
@@ -819,7 +902,7 @@ export const getCategoryCount = async (year = null) => {
   if (year) {
     const result = await client.query(
       `select category, count(*) from podfic inner join work on podfic.work_id = work.work_id where status = 'Posted' and (date_part('year', posted_date) = $1 or posted_year = $1) and category is not null group by category;`,
-      [year]
+      [year],
     );
     const reduced = result.rows.reduce((acc, cur) => {
       acc[cur.category] = cur.count;
@@ -828,7 +911,7 @@ export const getCategoryCount = async (year = null) => {
     return reduced;
   } else {
     const result = await client.query(
-      `select category, count(*) from podfic inner join work on podfic.work_id = work.work_id where status = 'Posted' and category is not null group by category;`
+      `select category, count(*) from podfic inner join work on podfic.work_id = work.work_id where status = 'Posted' and category is not null group by category;`,
     );
     return result.rows;
   }
@@ -839,7 +922,7 @@ export const getTopEvents = async (year) => {
 
   const result = await client.query(
     `select event.name as event_name, event.year as year, count(*) from podfic inner join work on podfic.work_id = work.work_id inner join event on podfic.event_id = event.event_id where (date_part('year', posted_date) = $1 or posted_year = $1) group by event.name, event.year order by event_name`,
-    [year]
+    [year],
   );
   return result.rows;
 };
@@ -851,7 +934,7 @@ export const getWithCoverArt = async (year = null) => {
     const result = await client.query(
       `
       select count(*) from podfic inner join cover_art on cover_art.podfic_id = podfic.podfic_id where podfic.status = 'Posted' and (date_part('year', posted_date) = $1 or posted_year = $1);`,
-      [year]
+      [year],
     );
     return result.rows[0].count;
   } else {
@@ -871,7 +954,7 @@ export const getWithMusic = async (year = null) => {
         inner join resource_podfic on resource_podfic.podfic_id = podfic.podfic_id
         inner join resource on resource.resource_id = resource_podfic.resource_id
       where podfic.status = 'Posted' and (date_part('year', posted_date) = $1 or posted_year = $1) and resource.resource_type = 'Music';`,
-      [year]
+      [year],
     );
     return result.rows[0].count;
   } else {
@@ -895,12 +978,12 @@ export const getMultivoice = async (year = null) => {
   if (year) {
     const result = await client.query(
       `select count(*) from podfic where is_multivoice is true and status = 'Posted' and (date_part('year', posted_date) = $1 or posted_year = $1);`,
-      [year]
+      [year],
     );
     return result.rows[0].count;
   } else {
     const result = await client.query(
-      `select count(*) from podfic where is_multivoice is true and status = 'Posted';`
+      `select count(*) from podfic where is_multivoice is true and status = 'Posted';`,
     );
     return result.rows[0].count;
   }
@@ -912,12 +995,12 @@ export const getParts = async (year = null) => {
   if (year) {
     const result = await client.query(
       `select count(*) from part inner join podfic on part.podfic_id = podfic.podfic_id where status = 'Posted' and (date_part('year', created_at) = $1 or year = $1);`,
-      [year]
+      [year],
     );
     return result.rows[0].count;
   } else {
     const result = await client.query(
-      `select count(*) from part inner join podfic on part.podfic_id = podfic.podfic_id where status = 'Posted';`
+      `select count(*) from part inner join podfic on part.podfic_id = podfic.podfic_id where status = 'Posted';`,
     );
     return result.rows[0].count;
   }

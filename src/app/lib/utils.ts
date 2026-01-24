@@ -25,7 +25,7 @@ export const formatTableDate = (date: any, isEditingRow: boolean) => {
   if (isEditingRow)
     formattedDate = date
       ? formatDateString(
-          new Date(date.includes('T') ? date : `${date}T00:00:00`)
+          new Date(date.includes('T') ? date : `${date}T00:00:00`),
         )
       : '';
   else if (!!date) formattedDate = formatDateStringMonthFirst(new Date(date));
@@ -54,37 +54,37 @@ export const tagFilter = (row, columnId, filterValue, exclude = false) => {
 export const filterActivated = (column, filterType: FilterType) => {
   if (filterType === FilterType.STATUS) {
     return !Object.values(PodficStatus).every((f) =>
-      (column.getFilterValue() ?? []).includes(f)
+      (column.getFilterValue() ?? []).includes(f),
     );
   }
   if (filterType === FilterType.PERMISSION) {
     return !allPermissionStatusValues.every((f) =>
-      (column.getFilterValue() ?? []).includes(f)
+      (column.getFilterValue() ?? []).includes(f),
     );
   }
   if (filterType === FilterType.AUTHOR_PERMISSION) {
     return !Object.values(AuthorPermissionStatus).every((f) =>
-      (column.getFilterValue() ?? []).includes(f)
+      (column.getFilterValue() ?? []).includes(f),
     );
   }
   if (filterType === FilterType.PERMISSION_ASK) {
     return !Object.values(PermissionAskStatus).every((f) =>
-      (column.getFilterValue() ?? []).includes(f)
+      (column.getFilterValue() ?? []).includes(f),
     );
   }
   if (filterType === FilterType.PART_STATUS) {
     return !Object.values(PartStatus).every((f) =>
-      (column.getFilterValue() ?? []).includes(f)
+      (column.getFilterValue() ?? []).includes(f),
     );
   }
   if (filterType === FilterType.TYPE) {
     return !Array.from(column.getFacetedUniqueValues().keys()).every((f) =>
-      (column.getFilterValue() ?? []).includes(f)
+      (column.getFilterValue() ?? []).includes(f),
     );
   }
   if (filterType === FilterType.STRING) {
     return !Array.from(column.getFacetedUniqueValues().keys()).every((f) =>
-      (column.getFilterValue() ?? []).includes(f)
+      (column.getFilterValue() ?? []).includes(f),
     );
   }
   // so should list as activated if there's non-truthy keys in there
@@ -107,9 +107,9 @@ export const useColorScale = (data: any[], propertyName: string) => {
         data.length
           ? Math.max(Math.max(...data.map((d) => d[propertyName] ?? 0)), 1)
           : 1,
-        ['#ffffff', '#4285f4']
+        ['#ffffff', '#4285f4'],
       ),
-    [data, propertyName]
+    [data, propertyName],
   );
 
   return colorScale;
@@ -128,15 +128,15 @@ export const useLengthColorScale = (data: any[], propertyName: string) => {
           ? Math.max(
               Math.max(
                 ...data.map((d) =>
-                  getLengthValue(d[propertyName] ?? getDefaultLength())
-                )
+                  getLengthValue(d[propertyName] ?? getDefaultLength()),
+                ),
               ),
-              1
+              1,
             )
           : 1,
-        ['#ffffff', '#4285f4']
+        ['#ffffff', '#4285f4'],
       ),
-    [data, propertyName]
+    [data, propertyName],
   );
 
   return colorScale;
@@ -206,7 +206,7 @@ export const getDefaultColumnVisibility = (columns: any[]) => {
 
 export const getIsPostedChaptered = (
   sectionType: SectionType,
-  chaptered: boolean
+  chaptered: boolean,
 ) => {
   return (
     (sectionType === SectionType.DEFAULT && chaptered) ||
@@ -219,8 +219,46 @@ export const getIsPostedChaptered = (
 export const getPodficSectionId = (podfic: Podfic & Work) => {
   const isPostedChaptered = getIsPostedChaptered(
     podfic.section_type,
-    podfic.chaptered
+    podfic.chaptered,
   );
-  if (isPostedChaptered || !podfic.sections?.length) return null;
-  else return podfic.sections[0]?.section_id;
+  const filteredSections = podfic.sections?.filter((s) => s.number > 0);
+  if (isPostedChaptered || !filteredSections?.length) return null;
+  else return filteredSections[0].section_id;
+};
+
+// TODO: support multivoice for these too
+
+export const getPodficSectionCount = (podfic: Podfic & Work) => {
+  const isMultipleToSingle =
+    podfic.section_type === SectionType.MULTIPLE_TO_SINGLE;
+  if (isMultipleToSingle) {
+    return podfic.sections?.filter((s) => s.number < 0)?.length ?? 0;
+  } else {
+    return podfic.sections?.length ?? '?';
+  }
+};
+
+export const getPodficFinishedSectionCount = (podfic: Podfic & Work) => {
+  const isMultipleToSingle =
+    podfic.section_type === SectionType.MULTIPLE_TO_SINGLE;
+  if (isMultipleToSingle) {
+    if (
+      podfic.status === PodficStatus.POSTED ||
+      podfic.status === PodficStatus.POSTING ||
+      podfic.status === PodficStatus.FINISHED
+    ) {
+      return podfic.sections?.filter((s) => s.number < 0)?.length ?? 0;
+    } else {
+      return 0;
+    }
+  } else {
+    return (
+      podfic.sections?.filter(
+        (s) =>
+          s.status === PodficStatus.FINISHED ||
+          s.status === PodficStatus.POSTED ||
+          status === PodficStatus.POSTING,
+      )?.length ?? '?'
+    );
+  }
 };
