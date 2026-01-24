@@ -95,7 +95,7 @@ export default function RecordingSessionForm({
     if (podficId) {
       setSelectedPodfic(
         podficList.find((podfic) => podfic.podfic_id === podficId) ??
-          ({ type: PodficType.PODFIC } as Podfic & Work)
+          ({ type: PodficType.PODFIC } as Podfic & Work),
       );
     }
   }, [podficId, podficList]);
@@ -104,8 +104,8 @@ export default function RecordingSessionForm({
     if (chapterId) {
       setSelectedChapter(
         selectedPodficChapters.find(
-          (chapter) => chapter.chapter_id === chapterId
-        ) ?? ({} as Chapter)
+          (chapter) => chapter.chapter_id === chapterId,
+        ) ?? ({} as Chapter),
       );
     }
   }, [chapterId, selectedPodficChapters]);
@@ -124,7 +124,7 @@ export default function RecordingSessionForm({
 
   const sectionType = useMemo(
     () => selectedPodfic.section_type,
-    [selectedPodfic.section_type]
+    [selectedPodfic.section_type],
   );
 
   useEffect(() => {
@@ -140,7 +140,8 @@ export default function RecordingSessionForm({
       selectedSection.chapters?.length &&
       !chapterId &&
       (sectionType === SectionType.DEFAULT ||
-        sectionType === SectionType.CHAPTERS_SPLIT)
+        sectionType === SectionType.CHAPTERS_SPLIT ||
+        sectionType === SectionType.MULTIPLE_TO_SINGLE)
     ) {
       const chapterIdFromSection = selectedSection.chapters?.[0].chapter_id;
       setChapterId(chapterIdFromSection);
@@ -158,7 +159,7 @@ export default function RecordingSessionForm({
 
   useEffect(
     () => console.log({ shouldShowChapterSelect }),
-    [shouldShowChapterSelect]
+    [shouldShowChapterSelect],
   );
 
   const shouldShowSectionSelect = useMemo(() => {
@@ -209,8 +210,8 @@ export default function RecordingSessionForm({
     if (selectedPodficSections && !!chapterId) {
       setSelectedPodficSections(
         selectedPodfic.sections?.filter(
-          (section) => section.chapters?.[0].chapter_id === chapterId
-        ) ?? []
+          (section) => section.chapters?.[0].chapter_id === chapterId,
+        ) ?? [],
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -221,8 +222,8 @@ export default function RecordingSessionForm({
     if (selectedPodfic.chaptered) {
       setSelectedPodficChapters(
         selectedPodfic.chapters?.sort((a, b) =>
-          a.chapter_number < b.chapter_number ? -1 : 1
-        ) ?? ([] as Chapter[])
+          a.chapter_number < b.chapter_number ? -1 : 1,
+        ) ?? ([] as Chapter[]),
       );
     }
     if (selectedPodfic.parts) {
@@ -546,9 +547,9 @@ export default function RecordingSessionForm({
             selectedPodfic.is_multivoice
               ? 'Completes part?'
               : sectionType === SectionType.DEFAULT ||
-                sectionType === SectionType.MULTIPLE_TO_SINGLE
-              ? 'Completes chapter?'
-              : 'Completes section?'
+                  sectionType === SectionType.MULTIPLE_TO_SINGLE
+                ? 'Completes chapter?'
+                : 'Completes section?'
           }
           control={
             <Checkbox

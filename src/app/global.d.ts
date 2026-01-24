@@ -84,6 +84,7 @@ interface Podfic {
   series_id?: number;
   vt_project_id?: any;
   is_multivoice: boolean;
+  self_posted?: boolean;
   section_type: SectionType;
 
   sections?: Section[];
@@ -344,6 +345,8 @@ interface Note {
   value: string;
 }
 
+// -- EVENTS --
+
 // parent name is not in the db it's a convenience variable don't worry about my very questionable design here
 interface EventParent {
   event_parent_id?: number;
@@ -393,6 +396,40 @@ interface ScheduleEvent {
   part_status?: PartStatus;
 
   round_number?: number;
+}
+
+interface BingoCard {
+  bingo_card_id?: number;
+  title?: string;
+  event_id?: number;
+  // can't be smaller than 2
+  // we should do error handling on this sweetie!!
+  size: number;
+  active?: boolean;
+  headers?: string[];
+  rows?: BingoSquare[][];
+  created_at?: string;
+}
+
+interface BingoSquare {
+  // PK is a composite of bingo card, row, and column
+  bingo_card_id: number;
+  row: number;
+  // NOTE: this needs to be in quotes, reserved word
+  column: number;
+  title?: string;
+  description?: string;
+  // TODO: this seems redundant, can just pull podfics
+  // this might be a frontend-only field tbh
+  filled?: boolean;
+  // these are not necessarily fills, just associations
+  podfics?: (Podfic & Work)[];
+}
+
+interface BingoSquarePodfic {
+  podfic_id: number;
+  bingo_cell_id: number;
+  description?: string;
 }
 
 // --VOICETEAM--

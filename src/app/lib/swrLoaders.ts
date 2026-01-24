@@ -7,7 +7,7 @@ export const fetcher = (url) => fetch(url).then((res) => res.json());
 export const useChaptersForPodfic = (podficId) => {
   const { data, error, isLoading } = useSWR(
     `/db/chapters/${podficId}`,
-    fetcher
+    fetcher,
   );
 
   return {
@@ -20,7 +20,7 @@ export const useChaptersForPodfic = (podficId) => {
 export const useSectionsForPodfic = (podficId) => {
   const { data, error, isLoading } = useSWR(
     `/db/sections/${podficId}`,
-    fetcher
+    fetcher,
   );
 
   return {
@@ -33,7 +33,7 @@ export const useSectionsForPodfic = (podficId) => {
 export const useDefaultSectionChaptersForPodfic = ({ podficId }) => {
   const { data, error, isLoading, mutate } = useSWR(
     `/db/chapters/${podficId}?section_type=${SectionType.DEFAULT}`,
-    fetcher
+    fetcher,
   );
 
   return {
@@ -47,7 +47,7 @@ export const useDefaultSectionChaptersForPodfic = ({ podficId }) => {
 export const usePodficChaptersWithSubSections = ({ podficId }) => {
   const { data, error, isLoading, mutate } = useSWR(
     `/db/chapters/${podficId}?section_type=${SectionType.CHAPTERS_SPLIT}`,
-    fetcher
+    fetcher,
   );
 
   return {
@@ -61,7 +61,7 @@ export const usePodficChaptersWithSubSections = ({ podficId }) => {
 export const useMaxSectionLengthValues = ({ podficId }) => {
   const { data, error, isLoading, mutate } = useSWR(
     `/db/max-section-length/${podficId}`,
-    fetcher
+    fetcher,
   );
 
   const lengthData = data ?? { length: null, rawLength: null };
@@ -80,7 +80,7 @@ export const useMaxSectionLengthValues = ({ podficId }) => {
 export const useMaxSectionLength = ({ podficId }) => {
   const { data, error, isLoading, mutate } = useSWR(
     `/db/max-section-length/${podficId}`,
-    fetcher
+    fetcher,
   );
 
   return {
@@ -94,7 +94,7 @@ export const useMaxSectionLength = ({ podficId }) => {
 export const useResourcesOfType = (resourceType = null) => {
   const { data, error, isLoading } = useSWR(
     ['/db/resources', resourceType],
-    () => fetcher(`/db/resources?resource_type=${resourceType}`)
+    () => fetcher(`/db/resources?resource_type=${resourceType}`),
   );
 
   return {
@@ -106,7 +106,7 @@ export const useResourcesOfType = (resourceType = null) => {
 
 export const useEventResources = (eventId) => {
   const { data, error, isLoading } = useSWR(['/db/resources', eventId], () =>
-    fetcher(`/db/resources?event_id=${eventId}`)
+    fetcher(`/db/resources?event_id=${eventId}`),
   );
 
   return {
@@ -119,7 +119,7 @@ export const useEventResources = (eventId) => {
 export const useEventPodfics = (eventId) => {
   const { data, error, isLoading } = useSWR(
     `/db/podfics?event_id=${eventId}`,
-    fetcher
+    fetcher,
   );
 
   const podfics = (data ?? []) as (Podfic & Work & Author)[];
@@ -206,16 +206,16 @@ export const useVoiceteamEvent = (id) => {
 const recordingSessionFetcher = async (
   podficId,
   sectionId = null,
-  full = false
+  full = false,
 ) => {
   let response = null;
   if (!!sectionId) {
     response = await fetch(
-      `/db/recording_sessions?podfic_id=${podficId}&section_id=${sectionId}`
+      `/db/recording_sessions?podfic_id=${podficId}&section_id=${sectionId}`,
     );
   } else if (!!full) {
     response = await fetch(
-      `/db/recording_sessions?podfic_id=${podficId}&full=true`
+      `/db/recording_sessions?podfic_id=${podficId}&full=true`,
     );
   } else {
     response = await fetch(`/db/recording_sessions?podfic_id=${podficId}`);
@@ -267,10 +267,13 @@ export const usePodficsFull = ({ missingAALinks = false }) => {
     ['/db/podfics', missingAALinks],
     () => podficsFetcher(missingAALinks),
     {
-      revalidateIfStale: !missingAALinks,
-      revalidateOnFocus: !missingAALinks,
-      revalidateOnReconnect: !missingAALinks,
-    }
+      // revalidateIfStale: !missingAALinks,
+      // revalidateOnFocus: !missingAALinks,
+      // revalidateOnReconnect: !missingAALinks,
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    },
   );
 
   const podfics = (data ?? []) as (Podfic & Work & Fandom & Event)[];
@@ -285,7 +288,7 @@ export const usePodficsFull = ({ missingAALinks = false }) => {
 export const useFiles = ({ podficId, sectionId, onlyNonAAFiles = false }) => {
   const { data, error, isLoading } = useSWR(
     ['/db/files', podficId, sectionId, onlyNonAAFiles],
-    () => filesFetcher(podficId, sectionId, onlyNonAAFiles)
+    () => filesFetcher(podficId, sectionId, onlyNonAAFiles),
   );
 
   const files = (data ?? []) as File[];
@@ -300,7 +303,7 @@ export const useFiles = ({ podficId, sectionId, onlyNonAAFiles = false }) => {
 export const useResources = ({ podficId, chapterId }) => {
   const { data, error, isLoading } = useSWR(
     ['/db/resources', podficId, chapterId],
-    () => resourcesFetcher(podficId, chapterId)
+    () => resourcesFetcher(podficId, chapterId),
   );
 
   const resources = (data ?? []) as Resource[];
@@ -308,6 +311,22 @@ export const useResources = ({ podficId, chapterId }) => {
   return {
     resources,
     error,
+    isLoading,
+  };
+};
+
+export const useBingoCards = ({ active = true }) => {
+  const { data, error, mutate, isLoading } = useSWR(
+    `/db/bingos?active=${active}`,
+    fetcher,
+  );
+
+  const bingoCards = (data ?? []) as BingoCard[];
+
+  return {
+    bingoCards,
+    error,
+    mutate,
     isLoading,
   };
 };
@@ -321,7 +340,7 @@ export const useScheduleEvents = ({
 }) => {
   const { data, error, isLoading } = useSWR(
     `/db/schedule_events?min_date=${minDate || ''}&max_date=${maxDate || ''}`,
-    fetcher
+    fetcher,
   );
 
   const scheduleEvents = data ?? [];
@@ -336,7 +355,7 @@ export const useScheduleEvents = ({
 export const useRecordingSessions = ({ podficId, sectionId, full }) => {
   const { data, error, isLoading } = useSWR(
     ['/db/recording_sessions', podficId, sectionId, full],
-    () => recordingSessionFetcher(podficId, sectionId, full)
+    () => recordingSessionFetcher(podficId, sectionId, full),
   );
 
   const recordingSessions = (data ?? []) as RecordingSession[];
@@ -375,7 +394,7 @@ export const usePart = (id: number) => {
 export const useSectionForPart = (partId: number) => {
   const { data, error, isLoading } = useSWR(
     `/db/sections?part_id=${partId}`,
-    fetcher
+    fetcher,
   );
 
   const section = (data ?? {}) as Section;
@@ -390,7 +409,7 @@ export const useSectionForPart = (partId: number) => {
 export const usePodficCountByYear = () => {
   const { data, error, isLoading } = useSWR(
     `/db/stats/podfic_count_by_year`,
-    fetcher
+    fetcher,
   );
 
   const podficCountByYear = (data ?? {}) as Record<string, number>;
@@ -406,7 +425,7 @@ export const useTags = () => {
   const { data, error, isLoading } = useSWR('/db/tags', fetcher);
 
   const tags = ((data ?? []) as Tag[]).sort((a, b) =>
-    a.tag.localeCompare(b.tag)
+    a.tag.localeCompare(b.tag),
   );
 
   return {
@@ -431,7 +450,7 @@ export const useToPodficPodfics = () => {
 export const useWorkMetadata = ({ workUrl }: { workUrl: string }) => {
   const { data, error, isLoading } = useSWR(
     `/db/metadata/work?work_url=${encodeURIComponent(workUrl)}`,
-    fetcher
+    fetcher,
   );
 
   const metadata = (data ?? {}) as WorkMetadata;
@@ -452,7 +471,7 @@ export interface TagMappings {
 export const useTagMappings = () => {
   const { data, error, isLoading } = useSWR(
     '/db/metadata/tagmappings',
-    fetcher
+    fetcher,
   );
 
   const tagMappings = (data ?? {}) as TagMappings;

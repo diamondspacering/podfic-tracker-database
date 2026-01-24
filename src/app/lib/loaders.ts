@@ -5,7 +5,7 @@ export const fetchChapters = async (podficId) => {
   const client = await getDBClient();
   const result = await client.query(
     'select * from chapter where podfic_id = $1 order by chapter_number asc',
-    [podficId]
+    [podficId],
   );
 
   const chapters = result.rows;
@@ -21,34 +21,34 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
       left join fandom on work.fandom_id = fandom.fandom_id
       left join event on podfic.event_id = event.event_id
       left join event_parent on event.parent_id = event_parent.event_parent_id
-    order by added_date asc;`
+    order by added_date asc;`,
   );
   const coverArtResult = await client.query(
-    'select *,status as cover_art_status from cover_art'
+    'select *,status as cover_art_status from cover_art',
   );
   const sectionResult = await client.query(
-    'select * from section order by number asc'
+    'select * from section order by number asc',
   );
   const chapterResult = await client.query('select * from chapter');
   const partResult = await client.query('select * from part');
   // console.log('parts', partResult.rows);
   const noteResult = await client.query(
-    'select * from note where podfic_id is not null'
+    'select * from note where podfic_id is not null',
   );
   const resourceResult = await client.query(
-    'select * from resource inner join resource_podfic on resource.resource_id = resource_podfic.resource_id'
+    'select * from resource inner join resource_podfic on resource.resource_id = resource_podfic.resource_id',
   );
   const tagResult = await client.query(
-    'select * from tag inner join tag_podfic on tag.tag_id = tag_podfic.tag_id'
+    'select * from tag inner join tag_podfic on tag.tag_id = tag_podfic.tag_id',
   );
   const permissionResult = await client.query(
-    'select * from permission where work_id is not null order by asked_date desc'
+    'select * from permission where work_id is not null order by asked_date desc',
   );
 
   let podfics = result.rows;
   podfics = podfics.map((podfic) => {
     const permissionAsks = permissionResult.rows.filter(
-      (permission) => permission.work_id === podfic.work_id
+      (permission) => permission.work_id === podfic.work_id,
     );
     let permissionStatus = null;
     if (permissionAsks.length)
@@ -56,23 +56,23 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
     return {
       ...podfic,
       sections: sectionResult.rows.filter(
-        (section) => section.podfic_id === podfic.podfic_id
+        (section) => section.podfic_id === podfic.podfic_id,
       ),
       chapters: chapterResult.rows.filter(
-        (chapter) => chapter.podfic_id === podfic.podfic_id
+        (chapter) => chapter.podfic_id === podfic.podfic_id,
       ),
       parts: partResult.rows.filter(
-        (part) => part.podfic_id === podfic.podfic_id
+        (part) => part.podfic_id === podfic.podfic_id,
       ),
       coverArt:
         coverArtResult.rows.find(
-          (coverArt) => coverArt.podfic_id === podfic.podfic_id
+          (coverArt) => coverArt.podfic_id === podfic.podfic_id,
         ) ?? null,
       notes: noteResult.rows.filter(
-        (note) => note.podfic_id === podfic.podfic_id
+        (note) => note.podfic_id === podfic.podfic_id,
       ),
       resources: resourceResult.rows.filter(
-        (resource) => resource.podfic_id === podfic.podfic_id
+        (resource) => resource.podfic_id === podfic.podfic_id,
       ),
       tags: tagResult.rows.filter((tag) => tag.podfic_id === podfic.podfic_id),
       permission_asks: permissionAsks,
@@ -91,7 +91,9 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
     `)
     ).rows;
     podfics = podfics.filter((podfic) =>
-      allFilesMissingAALinks.some((file) => file.podfic_id === podfic.podfic_id)
+      allFilesMissingAALinks.some(
+        (file) => file.podfic_id === podfic.podfic_id,
+      ),
     );
   }
 
@@ -103,7 +105,7 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
 export const fetchPodficsWithChapters = async () => {
   const client = await getDBClient();
   const result = await client.query(
-    'select *,name as fandom_name from podfic inner join work on podfic.work_id = work.work_id left join fandom on work.fandom_id = fandom.fandom_id order by added_date asc;'
+    'select *,name as fandom_name from podfic inner join work on podfic.work_id = work.work_id left join fandom on work.fandom_id = fandom.fandom_id order by added_date asc;',
   );
   const chapterResult = await client.query('select * from chapter');
 
@@ -113,10 +115,10 @@ export const fetchPodficsWithChapters = async () => {
       ? {
           ...podfic,
           chapters: chapterResult.rows.filter(
-            (chapter) => chapter.podfic_id === podfic.podfic_id
+            (chapter) => chapter.podfic_id === podfic.podfic_id,
           ),
         }
-      : podfic
+      : podfic,
   );
 
   return podfics as (Podfic & Work & Fandom)[];
@@ -125,7 +127,7 @@ export const fetchPodficsWithChapters = async () => {
 export const fetchPodficsWithWorksStringified = async () => {
   const client = await getDBClient();
   const result = await client.query(
-    'select * from podfic inner join work on podfic.work_id = work.work_id order by title asc;'
+    'select * from podfic inner join work on podfic.work_id = work.work_id order by title asc;',
   );
 
   return JSON.stringify(result.rows);
@@ -137,7 +139,7 @@ export const fetchPodfic = async (podficId) => {
     `
     select * from podfic inner join work on podfic.work_id = work.work_id where podfic_id = $1;
   `,
-    [podficId]
+    [podficId],
   );
 
   return result.rows[0] as Podfic & Work;
@@ -182,7 +184,7 @@ export const fetchInProgressPodfics = async () => {
     `
       select * from podfic inner join work on podfic.work_id = work.work_id where status != $1 and status != $2 and status != $3 order by updated_at desc;
     `,
-    [PodficStatus.PLANNING, PodficStatus.FINISHED, PodficStatus.POSTED]
+    [PodficStatus.PLANNING, PodficStatus.FINISHED, PodficStatus.POSTED],
   );
 
   return result.rows as (Podfic & Work)[];
@@ -192,7 +194,7 @@ export const fetchVoiceteams = async () => {
   const client = await getDBClient();
 
   const result = await client.query(
-    `select * from event where name like '%Voiceteam%' or name like '%Mystery Box%'`
+    `select * from event where name like '%Voiceteam%' or name like '%Mystery Box%'`,
   );
   return result.rows;
 };
