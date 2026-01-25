@@ -18,9 +18,9 @@ export async function GET(request: NextRequest) {
       for (const eventParent of eventParents) {
         const eventResult = await client.query(
           `
-      select * from event where parent_id = $1 order by name, year
+      select * from event where parent_id = $1 order by year
     `,
-          [eventParent.event_parent_id]
+          [eventParent.event_parent_id],
         );
         const events = eventResult.rows as Event[];
         eventParent.events = events;
@@ -35,13 +35,13 @@ export async function GET(request: NextRequest) {
         event.name as event_name
       from event
         inner join event_parent on parent_id = event_parent_id
-      order by event.name asc;`
+      order by event.name,year asc;`,
     );
     return NextResponse.json(
       eventsResult.rows?.map((event) => ({
         ...event,
         name: event.event_name,
-      })) ?? []
+      })) ?? [],
     );
   }
 }

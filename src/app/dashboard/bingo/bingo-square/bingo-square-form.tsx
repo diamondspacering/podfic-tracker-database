@@ -41,6 +41,15 @@ export default function BingoSquareForm({
       />
       <TextField
         size='small'
+        label='Link'
+        onKeyDown={handleKeyDown}
+        value={square.title_link ?? ''}
+        onChange={(e) =>
+          setSquare((prev) => ({ ...prev, title_link: e.target.value }))
+        }
+      />
+      <TextField
+        size='small'
         label='Description'
         onKeyDown={handleKeyDown}
         value={square.description ?? ''}

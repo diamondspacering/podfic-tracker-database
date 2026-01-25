@@ -9,6 +9,7 @@ import { useBingoCards } from '@/app/lib/swrLoaders';
 import BingoCardDialog from './bingo-card/bingo-card-dialog';
 import { Add } from '@mui/icons-material';
 import BingoFillsDialog from './bingo-fills/bingo-fills-dialog';
+import styles from '@/app/forms/forms.module.css';
 
 export default function BingoPage() {
   const searchParams = useSearchParams();
@@ -94,24 +95,26 @@ export default function BingoPage() {
         Add Bingo Card
       </Button>
 
-      {bingoCards.map((bingoCard) => (
-        <BingoCard
-          key={bingoCard.bingo_card_id}
-          card={bingoCard}
-          editCardCallback={() => {
-            setSelectedBingoCard(bingoCard);
-            setCardDialogOpen(true);
-          }}
-          openSquareCallback={(square: BingoSquare) => {
-            setSelectedBingoSquare(square);
-            setSquareDialogOpen(true);
-          }}
-          editFillsCallback={(square: BingoSquare) => {
-            setSelectedBingoSquare(square);
-            setFillsDialogOpen(true);
-          }}
-        />
-      ))}
+      <div className={styles.flexRow} style={{ gap: '30px' }}>
+        {bingoCards.map((bingoCard) => (
+          <BingoCard
+            key={bingoCard.bingo_card_id}
+            card={bingoCard}
+            editCardCallback={() => {
+              setSelectedBingoCard(bingoCard);
+              setCardDialogOpen(true);
+            }}
+            openSquareCallback={(square: BingoSquare) => {
+              setSelectedBingoSquare(square);
+              setSquareDialogOpen(true);
+            }}
+            editFillsCallback={(square: BingoSquare) => {
+              setSelectedBingoSquare(square);
+              setFillsDialogOpen(true);
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

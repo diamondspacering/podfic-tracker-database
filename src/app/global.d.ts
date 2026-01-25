@@ -418,6 +418,7 @@ interface BingoSquare {
   // NOTE: this needs to be in quotes, reserved word
   column: number;
   title?: string;
+  title_link?: string;
   description?: string;
   filled?: boolean;
   // these are not necessarily fills, just associations

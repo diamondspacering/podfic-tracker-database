@@ -1925,20 +1925,22 @@ export const createUpdateBingoSquare = async (bingoSquare: BingoSquare) => {
   await client.query(
     `
     INSERT INTO bingo_square
-      (bingo_card_id, row, "column", title, description, filled)
+      (bingo_card_id, row, "column", title, title_link, description, filled)
     VALUES
-      ($1, $2, $3, $4, $5, $6)
+      ($1, $2, $3, $4, $5, $6, $7)
     ON CONFLICT (bingo_card_id, row, "column")
     DO UPDATE SET
       title = $4,
-      description = $5,
-      filled = $6
+      title_link = $5,
+      description = $6,
+      filled = $7
   `,
     [
       bingoSquare.bingo_card_id,
       bingoSquare.row,
       bingoSquare.column,
       bingoSquare.title,
+      bingoSquare.title_link,
       bingoSquare.description,
       bingoSquare.filled,
     ],

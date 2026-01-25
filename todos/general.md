@@ -30,6 +30,7 @@
   - transaction wrapper? is that a bad idea. Would require some restructuring
 - [ ] await params for other pages that need it
 - [ ] Support multiple categories (and adjust AO3 tags as well)
+- [ ] Fix the assorted component changing from controlled to uncontrolled errors (provide fallback value for missing values)
 
 ## Tables
 
@@ -142,9 +143,11 @@
 ## Bingos
 
 - [ ] Custom CSS?
-- [ ] Allow links in square titles
+- [x] Allow links in square titles
 - [ ] Background images?
-- [ ] Width so that two can go side by side
+- [x] Width so that two can go side by side
+- [ ] Make bingo vs. blackout styling clearer
+- [ ] Make it easier to take notes?
 
 ### VoiceteamResourcesTable.tsx
 

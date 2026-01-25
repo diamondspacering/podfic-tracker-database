@@ -2,6 +2,9 @@ import { IconButton, Typography } from '@mui/material';
 import styles from './bingo.module.css';
 import { Edit } from '@mui/icons-material';
 import { useSquaresInBingo } from './bingoUtil';
+import ExternalLink from '@/app/ui/ExternalLink';
+import { useMemo } from 'react';
+import extraStyles from './extra-bingo.module.css';
 
 export default function BingoCard({
   card,
@@ -15,6 +18,8 @@ export default function BingoCard({
   editFillsCallback: (square: BingoSquare) => void;
 }) {
   const { squaresInBingo, blackout } = useSquaresInBingo(card);
+
+  const isMixtape = useMemo(() => card.event_id === 25, [card.event_id]);
 
   return (
     <div className={`${styles.bingoCard}`}>
@@ -39,7 +44,7 @@ export default function BingoCard({
             return (
               <div
                 key={j}
-                className={`${styles.bingoSquare} ${blackout ? styles.blackout : isBingo ? styles.isBingo : square.filled ? styles.filled : ''}`}
+                className={`${styles.bingoSquare} ${blackout ? styles.blackout : isBingo ? styles.isBingo : square.filled ? styles.filled : ''} ${isMixtape ? extraStyles.mixtapeBingo : ''}`}
                 onClick={() => {
                   if (!!square.title) {
                     editFillsCallback(square);
@@ -66,7 +71,24 @@ export default function BingoCard({
                 <div className={styles.bingoSquareContent}>
                   {square.title ? (
                     <div>
-                      {square.title}
+                      {square.title_link ? (
+                        <ExternalLink
+                          className={styles.bingoTitleLink}
+                          href={square.title_link}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        >
+                          {square.title}
+                        </ExternalLink>
+                      ) : (
+                        square.title
+                      )}
+                      {!!square.description && (
+                        <div className={styles.bingoSquareDescription}>
+                          {square.description}
+                        </div>
+                      )}
                       <div className={styles.bingoFills}>
                         {square.fills?.map((fill) => (
                           <span key={fill.bingo_fill_id}>
