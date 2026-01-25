@@ -11,7 +11,9 @@ export const useSquaresInBingo = (
   const rowsFlat = rows.flat();
   let bingos: BingoSquare[] = [];
 
-  // TODO: case to return early if not all cells are filled in?
+  // no bingos if not all squares are filled in
+  if (rowsFlat.length < bingoCard.size * bingoCard.size)
+    return { squaresInBingo: [], blackout: false };
 
   const hasBlackout = rowsFlat.every((square) => square.filled);
   if (hasBlackout) return { squaresInBingo: rowsFlat, blackout: true };

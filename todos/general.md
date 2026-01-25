@@ -139,6 +139,13 @@
 - [ ] How to conditionally display thing? points_manual?
 - [ ] Custom row at bottom might be best for own functions, render them all in bold?
 
+## Bingos
+
+- [ ] Custom CSS?
+- [ ] Allow links in square titles
+- [ ] Background images?
+- [ ] Width so that two can go side by side
+
 ### VoiceteamResourcesTable.tsx
 
 - [ ] Can you use the custom ExternalLink component for the link column?
