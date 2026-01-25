@@ -419,17 +419,21 @@ interface BingoSquare {
   column: number;
   title?: string;
   description?: string;
-  // TODO: this seems redundant, can just pull podfics
-  // this might be a frontend-only field tbh
   filled?: boolean;
   // these are not necessarily fills, just associations
-  podfics?: (Podfic & Work)[];
+  fills?: BingoFill[];
 }
 
-interface BingoSquarePodfic {
-  podfic_id: number;
-  bingo_cell_id: number;
+interface BingoFill {
+  bingo_fill_id?: number;
+  bingo_card_id: number;
+  row: number;
+  column: number;
+  podfic_id?: number;
+  podfic_title?: string;
+  title?: string;
   description?: string;
+  completed?: boolean;
 }
 
 // --VOICETEAM--

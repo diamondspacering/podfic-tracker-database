@@ -1,6 +1,13 @@
-import { Dispatch, SetStateAction, useMemo } from 'react';
+import { Dispatch, SetStateAction, useEffect, useMemo } from 'react';
 import styles from '@/app/forms/forms.module.css';
-import { Button, Checkbox, FormControlLabel, TextField } from '@mui/material';
+import {
+  Autocomplete,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  TextField,
+} from '@mui/material';
+import { useEvents } from '@/app/lib/swrLoaders';
 
 interface BingoCardFormProps {
   card: BingoCard;
@@ -9,6 +16,10 @@ interface BingoCardFormProps {
 
 export default function BingoCardForm({ card, setCard }: BingoCardFormProps) {
   const size = useMemo(() => card.size.toString(), [card.size]);
+
+  const { events, isLoading: eventsLoading } = useEvents({
+    childrenFirst: true,
+  });
 
   return (
     <div className={`${styles.flexColumn} ${styles.mt1}`}>
@@ -32,7 +43,28 @@ export default function BingoCardForm({ card, setCard }: BingoCardFormProps) {
           setCard((prev) => ({ ...prev, size: parseInt(e.target.value) }))
         }
       />
-      {/* TODO: event select */}
+      <Autocomplete
+        size='small'
+        options={events}
+        loading={eventsLoading}
+        isOptionEqualToValue={(option, value) => {
+          return option.event_id === value.event_id;
+        }}
+        value={events?.find((event) => event.event_id === card.event_id)}
+        sx={{
+          width: '300px',
+        }}
+        getOptionLabel={(option) =>
+          option?.name ? `${option?.name} ${option?.year}` : ''
+        }
+        groupBy={(option) => option?.parent_name ?? '(unknown parent)'}
+        onChange={(_, newValue) =>
+          setCard((prev) => ({ ...prev, event_id: newValue?.event_id ?? null }))
+        }
+        renderInput={(params) => (
+          <TextField {...params} size='small' label='Event&nbsp;&nbsp;' />
+        )}
+      />
       <FormControlLabel
         label='Active?'
         control={

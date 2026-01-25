@@ -1,6 +1,7 @@
 import {
-  linkBingoSquareAndPodfic,
-  unlinkBingoSquareAndPodfic,
+  createUpdateBingoFill,
+  createUpdateBingoSquare,
+  deleteBingoFill,
 } from '@/app/lib/updaters';
 import { DialogProps } from '@/app/types';
 import {
@@ -20,51 +21,50 @@ export default function BingoFillsDialog({
   submitCallback,
 }: DialogProps<BingoSquare>) {
   // TODO: implement fill descriptions
-  const [fills, setFills] = useState<(Podfic & Work & Fandom & Event)[]>(
-    (bingoSquareProp.podfics ?? []) as (Podfic & Work & Fandom & Event)[],
+  const [fills, setFills] = useState<BingoFill[]>(
+    (bingoSquareProp.fills ?? []) as BingoFill[],
+  );
+
+  const getDefaultFill = useCallback(
+    (): BingoFill => ({
+      bingo_card_id: bingoSquareProp.bingo_card_id,
+      row: bingoSquareProp.row,
+      column: bingoSquareProp.column,
+      podfic_id: -1,
+    }),
+    [
+      bingoSquareProp.bingo_card_id,
+      bingoSquareProp.column,
+      bingoSquareProp.row,
+    ],
   );
 
   const submitFills = useCallback(async () => {
     try {
       console.log({ bingoSquareProp });
-      const originalPodfics =
-        bingoSquareProp.podfics?.map((podfic) => podfic.podfic_id) ?? [];
-      const newPodfics = fills.map((podfic) => podfic.podfic_id) ?? [];
+      const originalFills = bingoSquareProp.fills ?? [];
 
-      if (!originalPodfics.length && !newPodfics.length) {
+      if (!originalFills.length && !fills.length) {
         return;
       }
 
-      const addedPodfics = newPodfics.filter(
-        (podfic) => !originalPodfics.includes(podfic),
-      );
-      const removedPodfics = originalPodfics.filter(
-        (podfic) => !newPodfics.includes(podfic),
+      const fillIds = fills.map((fill) => fill.bingo_fill_id);
+      const removedFillIds = originalFills
+        .map((fill) => fill.bingo_fill_id)
+        .filter(Boolean)
+        .filter((fill) => !fillIds.includes(fill));
+
+      await Promise.all(fills.map((fill) => createUpdateBingoFill(fill)));
+      await Promise.all(
+        removedFillIds.map((fillId) => deleteBingoFill(fillId)),
       );
 
-      console.log({ addedPodfics, removedPodfics });
-
-      await Promise.all(
-        addedPodfics.map((podfic) =>
-          linkBingoSquareAndPodfic(
-            bingoSquareProp.bingo_card_id,
-            bingoSquareProp.row,
-            bingoSquareProp.column,
-            podfic,
-            '',
-          ),
-        ),
-      );
-      await Promise.all(
-        removedPodfics.map((podfic) =>
-          unlinkBingoSquareAndPodfic(
-            bingoSquareProp.bingo_card_id,
-            bingoSquareProp.row,
-            bingoSquareProp.column,
-            podfic,
-          ),
-        ),
-      );
+      const completesPodfic = fills.some((fill) => fill.completed);
+      if (completesPodfic && !bingoSquareProp.filled) {
+        await createUpdateBingoSquare({ ...bingoSquareProp, filled: true });
+      } else if (!completesPodfic && !!bingoSquareProp.filled) {
+        await createUpdateBingoSquare({ ...bingoSquareProp, filled: false });
+      }
 
       await submitCallback?.();
     } catch (e) {
@@ -80,7 +80,11 @@ export default function BingoFillsDialog({
     >
       <DialogTitle>Edit fills for {bingoSquareProp.title}</DialogTitle>
       <DialogContent>
-        <BingoFillsForm fills={fills} setFills={setFills} />
+        <BingoFillsForm
+          fills={fills}
+          setFills={setFills}
+          getDefaultFill={getDefaultFill}
+        />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>

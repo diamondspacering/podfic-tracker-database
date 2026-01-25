@@ -1,6 +1,7 @@
 import { IconButton, Typography } from '@mui/material';
 import styles from './bingo.module.css';
 import { Edit } from '@mui/icons-material';
+import { useSquaresInBingo } from './bingoUtil';
 
 export default function BingoCard({
   card,
@@ -13,8 +14,10 @@ export default function BingoCard({
   openSquareCallback: (square: BingoSquare) => void;
   editFillsCallback: (square: BingoSquare) => void;
 }) {
+  const { squaresInBingo, blackout } = useSquaresInBingo(card);
+
   return (
-    <div className={styles.bingoCard}>
+    <div className={`${styles.bingoCard}`}>
       <Typography variant='h5'>
         <span>{card.title ?? 'Untitled'}</span>
         <IconButton onClick={editCardCallback} sx={{ width: 'fit-content' }}>
@@ -29,10 +32,14 @@ export default function BingoCard({
               row: i,
               column: j,
             };
+            const isBingo = !!squaresInBingo.find(
+              (value) =>
+                value.row === square.row && value.column === square.column,
+            );
             return (
               <div
                 key={j}
-                className={styles.bingoSquare}
+                className={`${styles.bingoSquare} ${blackout ? styles.blackout : isBingo ? styles.isBingo : square.filled ? styles.filled : ''}`}
                 onClick={() => {
                   if (!!square.title) {
                     editFillsCallback(square);
@@ -61,7 +68,11 @@ export default function BingoCard({
                     <div>
                       {square.title}
                       <div className={styles.bingoFills}>
-                        {square.podfics?.map((podfic) => podfic.title)}
+                        {square.fills?.map((fill) => (
+                          <span key={fill.bingo_fill_id}>
+                            {fill.podfic_title ?? fill.title}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   ) : (

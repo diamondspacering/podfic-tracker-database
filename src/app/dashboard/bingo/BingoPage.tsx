@@ -67,6 +67,10 @@ export default function BingoPage() {
           item={selectedBingoCard}
         />
       )}
+      <Button variant='contained' onClick={() => console.log(bingoCards)}>
+        log
+      </Button>
+      <br />
       <FormControlLabel
         label='Only active bingos'
         control={

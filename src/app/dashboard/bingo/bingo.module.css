@@ -1,3 +1,10 @@
+.bingoCard {
+}
+
+.blackout {
+  background-color: #c1daf1 !important;
+}
+
 .bingoRow {
   display: flex;
   flex-direction: row;
@@ -21,10 +28,14 @@
     font-style: italic;
     color: gray;
   }
+}
 
-  .filled {
-    background-color: lightgrey;
-  }
+.filled {
+  background-color: lightgrey;
+}
+
+.isBingo {
+  background-color: lightblue;
 }
 
 .editSquare {
@@ -43,5 +54,7 @@
 }
 
 .bingoFills {
+  display: flex;
+  flex-direction: column;
   color: gray;
 }

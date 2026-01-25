@@ -18,7 +18,7 @@ import { useEvents } from '@/app/lib/swrLoaders';
 import { mutate } from 'swr';
 
 export default function EventTable() {
-  const { events, isLoading } = useEvents();
+  const { events, isLoading } = useEvents({});
 
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
 
@@ -62,7 +62,7 @@ export default function EventTable() {
               // props.row.toggleExpanded();
               if (expandedEventIds.includes(props.row.original.event_id)) {
                 setExpandedEventIds((prev) =>
-                  prev.filter((id) => id !== props.row.original.event_id)
+                  prev.filter((id) => id !== props.row.original.event_id),
                 );
               } else {
                 setExpandedEventIds((prev) => [
@@ -168,7 +168,7 @@ export default function EventTable() {
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </td>
                   ))}

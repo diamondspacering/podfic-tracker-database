@@ -1738,42 +1738,6 @@ export const updateTag = async (tagId: number, tagText: string) => {
   return result.rows[0];
 };
 
-export const linkBingoSquareAndPodfic = async (
-  bingoCardId: number,
-  row: number,
-  column: number,
-  podficId: number,
-  description: string,
-) => {
-  const client = await getDBClient();
-  const result = await client.query(
-    `
-    INSERT INTO bingo_square_podfic (bingo_card_id, row, "column", podfic_id, description) VALUES ($1, $2, $3, $4, $5) ON CONFLICT DO NOTHING RETURNING *
-  `,
-    [bingoCardId, row, column, podficId, description],
-  );
-  return result.rows[0];
-};
-
-export const unlinkBingoSquareAndPodfic = async (
-  bingoCardId: number,
-  row: number,
-  column: number,
-  podficId: number,
-) => {
-  const client = await getDBClient();
-  await client.query(
-    `DELETE FROM bingo_square_podfic
-    WHERE
-      bingo_card_id = $1
-      AND row = $2
-      AND "column" = $3
-      AND podfic_id = $4
-  `,
-    [bingoCardId, row, column, podficId],
-  );
-};
-
 export const linkChapterAndSection = async (
   chapterId: number,
   sectionId: number,
@@ -1979,4 +1943,53 @@ export const createUpdateBingoSquare = async (bingoSquare: BingoSquare) => {
       bingoSquare.filled,
     ],
   );
+};
+
+export const createUpdateBingoFill = async (bingoFill: BingoFill) => {
+  const client = await getDBClient();
+
+  console.log({ bingoFill });
+
+  if (!bingoFill.bingo_fill_id) {
+    await client.query(
+      `INSERT INTO bingo_fill
+      (bingo_card_id, row, "column", podfic_id, title, description, completed)
+    VALUES
+      ($1, $2, $3, $4, $5, $6, $7)
+    `,
+      [
+        bingoFill.bingo_card_id,
+        bingoFill.row,
+        bingoFill.column,
+        bingoFill.podfic_id,
+        bingoFill.title,
+        bingoFill.description,
+        bingoFill.completed,
+      ],
+    );
+  } else {
+    await client.query(
+      `UPDATE bingo_fill SET
+      title = $1,
+      description = $2,
+      completed = $3,
+      podfic_id = $4
+    WHERE
+      bingo_fill_id = $5
+    `,
+      [
+        bingoFill.title,
+        bingoFill.description,
+        bingoFill.completed,
+        bingoFill.podfic_id,
+        bingoFill.bingo_fill_id,
+      ],
+    );
+  }
+};
+
+export const deleteBingoFill = async (id: number) => {
+  const client = await getDBClient();
+
+  await client.query('DELETE FROM bingo_fill WHERE bingo_fill_id = $1', [id]);
 };

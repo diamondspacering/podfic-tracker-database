@@ -131,8 +131,11 @@ export const useEventPodfics = (eventId) => {
   };
 };
 
-export const useEvents = () => {
-  const { data, error, isLoading } = useSWR('/db/events', fetcher);
+export const useEvents = ({ childrenFirst = false }) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/events?children_first=${childrenFirst}`,
+    fetcher,
+  );
 
   const events = (data ?? []) as (Event & EventParent)[];
 

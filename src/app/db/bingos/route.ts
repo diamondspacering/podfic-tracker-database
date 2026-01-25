@@ -23,15 +23,15 @@ export async function GET(request: NextRequest) {
       cards.flatMap((card) =>
         client.query(
           `select *,
-            (select to_json(array_agg(row_to_json(p))) from
-              (select podfic.podfic_id,description,title from bingo_square_podfic
-                inner join podfic on bingo_square_podfic.podfic_id = podfic.podfic_id
-                inner join work on podfic.work_id = work.work_id
+            (select to_json(array_agg(row_to_json(f))) from
+              (select bingo_fill_id,bingo_card_id,row,"column",bingo_fill.podfic_id,description,bingo_fill.title,completed,work.title as podfic_title from bingo_fill
+                left join podfic on bingo_fill.podfic_id = podfic.podfic_id
+                left join work on podfic.work_id = work.work_id
               where
-                bingo_square_podfic.bingo_card_id = bingo_square.bingo_card_id
-                and bingo_square_podfic.row = bingo_square.row
-                and bingo_square_podfic."column" = bingo_square."column")
-              p) as podfics
+                bingo_fill.bingo_card_id = bingo_square.bingo_card_id
+                and bingo_fill.row = bingo_square.row
+                and bingo_fill."column" = bingo_square."column")
+              f) as fills
             from bingo_square
             where
               bingo_card_id = $1;
