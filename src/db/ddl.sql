@@ -461,6 +461,27 @@ create table public.work
 alter table public.work
     owner to "podfic-tracker-db_owner";
 
+create table public.permission
+(
+    permission_id     serial
+        constraint permission_pk
+            primary key,
+    asked_date        date,
+    response_date     date,
+    permission_status varchar(50),
+    ask_link          varchar(200),
+    ask_medium        varchar(200),
+    work_id           integer
+        constraint permission_work_work_id_fk
+            references public.work,
+    author_id         integer not null
+        constraint permission_author_author_id_fk
+            references public.author
+);
+
+alter table public.permission
+    owner to "podfic-tracker-db_owner";
+
 create table public.podfic
 (
     podfic_id     serial
@@ -495,7 +516,8 @@ create table public.podfic
         constraint podfic_vt_project_vt_project_id_fk
             references public.vt_project,
     is_multivoice boolean,
-    section_type  sectiontype default 'default'::sectiontype not null
+    section_type  sectiontype default 'default'::sectiontype not null,
+    self_posted   boolean     default true
 );
 
 alter table public.podfic
@@ -650,24 +672,6 @@ alter sequence public.schedule_event_chapter_id_seq owned by public.schedule_eve
 
 alter sequence public.schedule_event_podfic_id_seq owned by public.schedule_event.podfic_id;
 
-create table public.tag_podfic
-(
-    tag_id    integer not null
-        constraint tag_podfic_tag_tag_id_fk
-            references public.tag,
-    podfic_id integer not null
-        constraint tag_podfic_podfic_podfic_id_fk
-            references public.podfic,
-    constraint tag_podfic_pk
-        primary key (tag_id, podfic_id)
-);
-
-alter table public.tag_podfic
-    owner to "podfic-tracker-db_owner";
-
-create unique index work_work_id_uindex
-    on public.work (work_id);
-
 create table public.section
 (
     section_id   serial
@@ -695,6 +699,21 @@ create table public.section
 );
 
 alter table public.section
+    owner to "podfic-tracker-db_owner";
+
+create table public.chapter_section
+(
+    chapter_id integer not null
+        constraint chapter_section_chapter_chapter_id_fk
+            references public.chapter,
+    section_id integer not null
+        constraint chapter_section_section_section_id_fk
+            references public.section,
+    constraint chapter_section_pk
+        primary key (chapter_id, section_id)
+);
+
+alter table public.chapter_section
     owner to "podfic-tracker-db_owner";
 
 create table public.file
@@ -732,7 +751,7 @@ create table public.file_link
         constraint file_link_file_file_id_fk
             references public.file,
     host         varchar(20),
-    link         varchar(200) not null,
+    link         varchar(500) not null,
     is_direct    boolean,
     is_embed     boolean
 );
@@ -804,21 +823,6 @@ alter sequence public.recording_session_podfic_id_seq owned by public.recording_
 create unique index recording_session_recording_id_uindex
     on public.recording_session (recording_id);
 
-create table public.chapter_section
-(
-    chapter_id integer not null
-        constraint chapter_section_chapter_chapter_id_fk
-            references public.chapter,
-    section_id integer not null
-        constraint chapter_section_section_section_id_fk
-            references public.section,
-    constraint chapter_section_pk
-        primary key (chapter_id, section_id)
-);
-
-alter table public.chapter_section
-    owner to "podfic-tracker-db_owner";
-
 create table public.resource_section
 (
     resource_id integer not null
@@ -837,26 +841,186 @@ create table public.resource_section
 alter table public.resource_section
     owner to "podfic-tracker-db_owner";
 
-create table public.permission
+create table public.tag_podfic
 (
-    permission_id     serial
-        constraint permission_pk
-            primary key,
-    asked_date        date,
-    response_date     date,
-    permission_status varchar(50),
-    ask_link          varchar(200),
-    ask_medium        varchar(200),
-    work_id           integer
-        constraint permission_work_work_id_fk
-            references public.work,
-    author_id         integer not null
-        constraint permission_author_author_id_fk
-            references public.author
+    tag_id    integer not null
+        constraint tag_podfic_tag_tag_id_fk
+            references public.tag,
+    podfic_id integer not null
+        constraint tag_podfic_podfic_podfic_id_fk
+            references public.podfic,
+    constraint tag_podfic_pk
+        primary key (tag_id, podfic_id)
 );
 
-alter table public.permission
+alter table public.tag_podfic
     owner to "podfic-tracker-db_owner";
+
+create unique index work_work_id_uindex
+    on public.work (work_id);
+
+create table public.bingo_card
+(
+    bingo_card_id serial
+        constraint bingo_card_pk
+            primary key,
+    title         text,
+    event_id      integer
+        constraint bingo_card_event_event_id_fk
+            references public.event,
+    size          integer not null,
+    active        boolean,
+    headers       text[],
+    created_at    timestamp with time zone
+);
+
+alter table public.bingo_card
+    owner to "podfic-tracker-db_owner";
+
+create table public.bingo_square
+(
+    bingo_card_id integer not null
+        constraint bingo_square_bingo_card_bingo_card_id_fk
+            references public.bingo_card,
+    row           integer not null,
+    "column"      integer not null,
+    title         text,
+    description   text,
+    filled        boolean,
+    title_link    text,
+    constraint bingo_square_pk
+        primary key (bingo_card_id, row, "column"),
+    constraint bingo_square_pk_2
+        unique (bingo_card_id, row, "column")
+);
+
+alter table public.bingo_square
+    owner to "podfic-tracker-db_owner";
+
+create table public.bingo_fill
+(
+    bingo_fill_id serial
+        constraint bingo_fill_pk
+            primary key,
+    bingo_card_id integer not null,
+    row           integer not null,
+    "column"      integer not null,
+    title         text,
+    description   text,
+    podfic_id     integer
+        constraint bingo_fill_podfic_podfic_id_fk
+            references public.podfic,
+    completed     boolean,
+    constraint bingo_fill_bingo_square_bingo_card_id_row_column_fk
+        foreign key (bingo_card_id, row, "column") references public.bingo_square
+);
+
+alter table public.bingo_fill
+    owner to "podfic-tracker-db_owner";
+
+create view public.podfic_work
+            (podfic_id, work_id, title, nickname, status, length, event_id, link, ao3_link, type, posted_date,
+             posted_year, is_multivoice, section_type, wordcount, chaptered, chapter_count)
+as
+SELECT podfic.podfic_id,
+       podfic.work_id,
+       work.title,
+       work.nickname,
+       podfic.status,
+       podfic.length,
+       podfic.event_id,
+       work.link,
+       podfic.ao3_link,
+       podfic.type,
+       podfic.posted_date,
+       podfic.posted_year,
+       podfic.is_multivoice,
+       podfic.section_type,
+       work.wordcount,
+       work.chaptered,
+       work.chapter_count
+FROM podfic
+         JOIN work ON podfic.work_id = work.work_id;
+
+alter table public.podfic_work
+    owner to "podfic-tracker-db_owner";
+
+create function public.backfill_podfic_sections() returns void
+    language plpgsql
+as
+$$
+DECLARE
+    record record;
+BEGIN
+    RAISE NOTICE 'backfilling podfic sections';
+
+    FOR record in SELECT * FROM podfic INNER JOIN work ON podfic.work_id = work.work_id LOOP
+        RAISE NOTICE 'running loop';
+        IF record.section_type = 'default' THEN
+            RAISE NOTICE 'creating default sections for podfic %', record.podfic_id;
+            PERFORM create_default_podfic_sections(record.podfic_id, record.chaptered, record.is_multivoice);
+        ELSEIF record.section_type = 'multiple-to-single' THEN
+            RAISE NOTICE 'creating posted unchaptered sections for podfic %', record.podfic_id;
+            PERFORM create_posted_unchaptered_podfic_sections(record.podfic_id);
+        ELSE
+            RAISE NOTICE 'non-applicable section type for podfic (%)', record.podfic_id;
+        END IF;
+        END LOOP;
+
+    RETURN;
+END;
+$$;
+
+alter function public.backfill_podfic_sections() owner to "podfic-tracker-db_owner";
+
+create function public.create_default_podfic_sections(id integer, chaptered boolean, is_multivoice boolean) returns void
+    language plpgsql
+as
+$$
+DECLARE
+    section_result int;
+    record record;
+    counter int;
+BEGIN
+    RAISE NOTICE 'creating default podfic sections for podfic (%)', id;
+
+    section_result = (select section_id from section where section.podfic_id = id limit 1);
+    RAISE NOTICE 'section result: (%)', section_result;
+
+    counter := 0;
+
+    IF section_result is not null THEN
+        RAISE NOTICE 'there are sections present for the podfic, returning';
+        RETURN;
+    END IF;
+
+    RAISE NOTICE 'creating default section(s)';
+
+    IF is_multivoice THEN
+        RAISE NOTICE 'inserting with parts';
+        FOR record in SELECT * FROM part WHERE part.podfic_id = id ORDER BY created_at LOOP
+            counter := counter + 1;
+            INSERT INTO section (podfic_id, number, part_id, length, raw_length, wordcount, status, text_link, updated_at) VALUES (id, counter, record.part_id, record.length,record.raw_length,record.words, record.status,record.doc,NOW()) RETURNING section_id INTO section_result;
+            PERFORM update_dependent_resources(id,null,record.part_id,section_result);
+            END LOOP;
+    ELSEIF chaptered THEN
+        RAISE NOTICE 'inserting with chapters';
+        FOR record in SELECT * FROM chapter WHERE chapter.podfic_id = id LOOP
+            INSERT INTO section (podfic_id, number, length, raw_length, plain_length, wordcount, status, text_link, ao3_link, posted_date, html_string, updated_at) VALUES (id, record.chapter_number, record.length, record.raw_length, record.plain_length, record.wordcount, record.status, record.link, record.ao3_link, record.posted_date, record.html_string, NOW()) RETURNING section_id INTO section_result;
+            INSERT INTO chapter_section (chapter_id, section_id) VALUES (record.chapter_id, section_result);
+            PERFORM update_dependent_resources(id,record.chapter_id,null,section_result);
+            END LOOP;
+    ELSE
+        RAISE NOTICE 'inserting without chapters';
+        INSERT INTO section (podfic_id, length, raw_length, plain_length, wordcount, status, text_link, ao3_link, posted_date, html_string, deadline, number, updated_at) SELECT podfic_id, length, raw_length, plain_length, wordcount, status, link, ao3_link, posted_date, html_string, deadline, 1, NOW() FROM podfic INNER JOIN work on podfic.work_id = work.work_id WHERE podfic_id = id RETURNING section_id INTO section_result;
+        PERFORM update_dependent_resources(id, null, null, section_result);
+    END IF;
+
+    RETURN;
+END;
+$$;
+
+alter function public.create_default_podfic_sections(integer, boolean, boolean) owner to "podfic-tracker-db_owner";
 
 create function public.create_part_schedule_event() returns trigger
     language plpgsql
@@ -890,6 +1054,42 @@ create trigger on_update_create_part_schedule_event
     on public.part
     for each row
 execute procedure public.create_part_schedule_event();
+
+create function public.create_posted_unchaptered_podfic_sections(id integer) returns void
+    language plpgsql
+as
+$$
+DECLARE
+    section_result int;
+    chapter_record record;
+    podfic_record record;
+BEGIN
+    RAISE NOTICE 'creating posted unchaptered podfic sections for podfic (%)', id;
+
+    section_result = (select section_id from section where section.podfic_id = id limit 1);
+    RAISE NOTICE 'section result: (%)', section_result;
+
+    IF section_result is not null THEN
+        RAISE NOTICE 'there are sections present for the podfic, returning';
+        RETURN;
+    END IF;
+
+    RAISE NOTICE 'creating posted unchaptered section(s)';
+
+    FOR chapter_record in SELECT * FROM chapter where chapter.podfic_id = id LOOP
+        INSERT INTO section (podfic_id, number, length, raw_length, plain_length, wordcount, status, text_link, ao3_link, posted_date, html_string, updated_at) VALUES (id, chapter_record.chapter_number * (-1), chapter_record.length, chapter_record.raw_length, chapter_record.plain_length, chapter_record.wordcount, chapter_record.status, chapter_record.link, chapter_record.ao3_link, chapter_record.posted_date, chapter_record.html_string,  NOW()) RETURNING section_id INTO section_result;
+        INSERT INTO chapter_section (chapter_id, section_id) VALUES (chapter_record.chapter_id, section_result);
+        PERFORM update_dependent_resources(id, chapter_record.chapter_id,null,section_result);
+        END LOOP;
+
+    SELECT * INTO podfic_record FROM podfic INNER JOIN work ON podfic.work_id = work.work_id WHERE podfic.podfic_id = id;
+    INSERT INTO section (podfic_id, number, length, raw_length, plain_length, wordcount, status, text_link, ao3_link, posted_date, html_string,updated_at) VALUES (id, 1, podfic_record.length, podfic_record.raw_length, podfic_record.plain_length, podfic_record.wordcount, podfic_record.status, podfic_record.link, podfic_record.ao3_link, podfic_record.posted_date, podfic_record.html_string, NOW());
+
+    RETURN;
+END;
+$$;
+
+alter function public.create_posted_unchaptered_podfic_sections(integer) owner to "podfic-tracker-db_owner";
 
 create function public.create_round_schedule_event() returns trigger
     language plpgsql
@@ -928,6 +1128,32 @@ $$;
 
 alter procedure public.update_all_raw_lengths_from_recording_sessions() owner to "podfic-tracker-db_owner";
 
+create function public.update_dependent_resources(podficid integer, chapterid integer, partid integer, sectionid integer) returns void
+    language plpgsql
+as
+$$
+BEGIN
+    RAISE NOTICE 'updating dependent resources for podfic (%), chapter (%), section (%)', podficid, chapterid, sectionid;
+
+    IF partid is not null THEN
+        UPDATE recording_session SET section_id = sectionid WHERE part_id = partid AND podfic_id = podficid;
+    ELSEIF chapterid is not null THEN
+        UPDATE recording_session SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
+        INSERT INTO resource_section (resource_id, section_id, podfic_id) SELECT resource_id, sectionid, podficid FROM resource_chapter WHERE chapter_id = chapterid ON CONFLICT DO NOTHING;
+        UPDATE file SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
+        UPDATE note SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
+    ELSE
+        -- NOTE: this only works bc we don't have single-to-multiple podfics rn
+        UPDATE recording_session SET section_id = sectionid WHERE podfic_id = podficid AND chapter_id is null;
+        UPDATE file SET section_id = sectionid WHERE podfic_id = podficid AND chapter_id is null;
+    END IF;
+
+    INSERT INTO resource_section (resource_id, section_id, podfic_id) SELECT resource_id, sectionid, podficid FROM resource_podfic WHERE podfic_id = podficid ON CONFLICT DO NOTHING;
+END;
+$$;
+
+alter function public.update_dependent_resources(integer, integer, integer, integer) owner to "podfic-tracker-db_owner";
+
 create function public.update_plain_length_from_file() returns trigger
     language plpgsql
 as
@@ -958,6 +1184,80 @@ create trigger update_file_update_plain_length
     on public.file
     for each row
 execute procedure public.update_plain_length_from_file();
+
+create function public.update_podfic_length_from_sections() returns trigger
+    language plpgsql
+as
+$$
+DECLARE sum_length interval;
+        sum_raw_length interval;
+        sum_plain_length interval;
+        sum_not_plain_length interval;
+        sectiontype sectiontype;
+        podfic_record record;
+BEGIN
+    RAISE NOTICE 'updating podfic length from its sections';
+    -- TODO: there needs to be a way to distinguish summary sections/sections that don't count? bc of the whole negative numbers posted in one thing
+    SELECT section_type INTO sectiontype from podfic WHERE podfic.podfic_id = new.podfic_id;
+
+    -- if length has changed/it just got posted, meaning that the length should go into the podfic
+    -- TODO: sections don't have statuses rn.
+    IF (new.length != old.length or old.length is null or new.status = 'Posted' or new.status = 'Finished' or new.status = 'Posting') and new.number > 0 THEN
+        RAISE NOTICE 'updating podfic length';
+        SELECT * INTO podfic_record FROM podfic WHERE podfic.podfic_id = new.podfic_id;
+        IF podfic_record.is_multivoice THEN
+            IF podfic_record.self_posted AND new.part_id is null THEN
+                RAISE NOTICE 'Self-posted multivoice posting section, updating length from this section alone';
+                UPDATE podfic SET length = new.length WHERE podfic_id = new.podfic_id;
+            END IF;
+
+            IF podfic_record.self_posted = false AND new.part_id is not null THEN
+                RAISE NOTICE 'updating multivoice length from your part';
+                SELECT sum(length) INTO sum_length from section where podfic_id = new.podfic_id and section.part_id is not null;
+                RAISE NOTICE 'sum_length: %', sum_length;
+                UPDATE podfic SET length = sum_length WHERE podfic_id = new.podfic_id;
+            END IF;
+        ELSE
+            SELECT SUM(length) into sum_length from section WHERE podfic_id = new.podfic_id and (section.status = 'Posted' or section.status = 'Finished' or section.status = 'Posting');
+            RAISE NOTICE 'sum_length: %', sum_length;
+            UPDATE podfic SET length = sum_length WHERE podfic_id = new.podfic_id;
+        END IF;
+    END IF;
+
+    -- update raw length
+    IF new.raw_length != old.raw_length or old.raw_length is null THEN
+        RAISE NOTICE 'updating podfic raw length';
+        SELECT SUM(raw_length) into sum_raw_length from section where podfic_id = new.podfic_id;
+        RAISE NOTICE 'sum_raw_length: %', sum_raw_length;
+        UPDATE podfic SET raw_length = sum_raw_length WHERE podfic_id = new.podfic_id;
+    END IF;
+    
+    -- update plain length
+    IF new.plain_length != old.plain_length or old.plain_length is null THEN
+        RAISE NOTICE 'updating podfic plain length';
+        SELECT SUM(plain_length) into sum_plain_length from section where podfic_id = new.podfic_id;
+        RAISE NOTICE 'sum plain length: %', sum_plain_length;
+        SELECT sum(length) into sum_not_plain_length from section where podfic_id = new.podfic_id and section.plain_length is null and length is not null;
+        RAISE NOTICE 'sum not plain length: %', sum_not_plain_length;
+        IF sum_not_plain_length is null THEN
+            RAISE NOTICE 'null, setting to only plain length';
+            UPDATE podfic SET plain_length = sum_plain_length WHERE podfic_id = new.podfic_id;
+        ELSE
+            UPDATE podfic SET plain_length = sum_plain_length + sum_not_plain_length WHERE podfic_id = new.podfic_id;
+        END IF;
+    END IF;
+
+    RETURN null;
+END;
+$$;
+
+alter function public.update_podfic_length_from_sections() owner to "podfic-tracker-db_owner";
+
+create trigger update_podfic_length
+    after update
+    on public.section
+    for each row
+execute procedure public.update_podfic_length_from_sections();
 
 create function public.update_raw_length_from_recording_session() returns trigger
     language plpgsql
@@ -1080,174 +1380,7 @@ create trigger update_update_schedule_event_type
     for each row
 execute procedure public.update_schedule_event_type();
 
-create function public.update_podfic_length_from_sections() returns trigger
-    language plpgsql
-as
-$$
-DECLARE sum_length interval;
-        sum_raw_length interval;
-        sum_plain_length interval;
-        sum_not_plain_length interval;
-        sectiontype sectiontype;
-BEGIN
-    RAISE NOTICE 'updating podfic length from its sections';
-    -- TODO: there needs to be a way to distinguish summary sections/sections that don't count? bc of the whole negative numbers posted in one thing
-    SELECT section_type INTO sectiontype from podfic WHERE podfic.podfic_id = new.podfic_id;
-
-    IF new.number < 0 THEN
-        RETURN null;
-    END IF;
-
-    -- if length has changed/it just got posted, meaning that the length should go into the podfic
-    IF new.length != old.length or old.length is null or (new.status != old.status and new.status = 'Posted') THEN
-        RAISE NOTICE 'updating podfic length';
-        SELECT SUM(length) into sum_length from section WHERE podfic_id = new.podfic_id and section.status = 'Posted';
-        RAISE NOTICE 'sum_length: %', sum_length;
-        UPDATE podfic SET length = sum_length WHERE podfic_id = new.podfic_id;
-    END IF;
-
-    -- update raw length
-    IF new.raw_length != old.raw_length or old.raw_length is null THEN
-        RAISE NOTICE 'updating podfic raw length';
-        SELECT SUM(raw_length) into sum_raw_length from section where podfic_id = new.podfic_id;
-        RAISE NOTICE 'sum_raw_length: %', sum_raw_length;
-        UPDATE podfic SET raw_length = sum_raw_length WHERE podfic_id = new.podfic_id;
-    END IF;
-    
-    -- update plain length
-    IF new.plain_length != old.plain_length or old.plain_length is null THEN
-        RAISE NOTICE 'updating podfic plain length';
-        SELECT SUM(plain_length) into sum_plain_length from section where podfic_id = new.podfic_id;
-        RAISE NOTICE 'sum plain length: %', sum_plain_length;
-        SELECT sum(length) into sum_not_plain_length from section where podfic_id = new.podfic_id and section.plain_length is null;
-        RAISE NOTICE 'sum not plain length: %', sum_not_plain_length;
-        UPDATE podfic SET plain_length = sum_plain_length + sum_not_plain_length WHERE podfic_id = new.podfic_id;
-    END IF;
-
-    RETURN null;
-END;
-$$;
-
-alter function public.update_podfic_length_from_sections() owner to "podfic-tracker-db_owner";
-
-create trigger update_podfic_length
-    after update
-    on public.section
-    for each row
-execute procedure public.update_podfic_length_from_sections();
-
-create function public.update_dependent_resources(podficid integer, chapterid integer, partid integer, sectionid integer) returns void
-    language plpgsql
-as
-$$
-BEGIN
-    RAISE NOTICE 'updating dependent resources for podfic (%), chapter (%), section (%)', podficid, chapterid, sectionid;
-
-    IF partid is not null THEN
-        UPDATE recording_session SET section_id = sectionid WHERE part_id = partid AND podfic_id = podficid;
-    ELSEIF chapterid is not null THEN
-        UPDATE recording_session SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
-        INSERT INTO resource_section (resource_id, section_id, podfic_id) SELECT resource_id, sectionid, podficid FROM resource_chapter WHERE chapter_id = chapterid ON CONFLICT DO NOTHING;
-        UPDATE file SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
-        UPDATE note SET section_id = sectionid WHERE chapter_id = chapterid AND podfic_id = podficid;
-    ELSE
-        -- NOTE: this only works bc we don't have single-to-multiple podfics rn
-        UPDATE recording_session SET section_id = sectionid WHERE podfic_id = podficid AND chapter_id is null;
-        UPDATE file SET section_id = sectionid WHERE podfic_id = podficid AND chapter_id is null;
-    END IF;
-
-    INSERT INTO resource_section (resource_id, section_id, podfic_id) SELECT resource_id, sectionid, podficid FROM resource_podfic WHERE podfic_id = podficid ON CONFLICT DO NOTHING;
-END;
-$$;
-
-alter function public.update_dependent_resources(integer, integer, integer, integer) owner to "podfic-tracker-db_owner";
-
-create function public.create_default_podfic_sections(id integer, chaptered boolean, is_multivoice boolean) returns void
-    language plpgsql
-as
-$$
-DECLARE
-    section_result int;
-    record record;
-    counter int;
-BEGIN
-    RAISE NOTICE 'creating default podfic sections for podfic (%)', id;
-
-    section_result = (select section_id from section where section.podfic_id = id limit 1);
-    RAISE NOTICE 'section result: (%)', section_result;
-
-    counter := 0;
-
-    IF section_result is not null THEN
-        RAISE NOTICE 'there are sections present for the podfic, returning';
-        RETURN;
-    END IF;
-
-    RAISE NOTICE 'creating default section(s)';
-
-    IF is_multivoice THEN
-        RAISE NOTICE 'inserting with parts';
-        FOR record in SELECT * FROM part WHERE part.podfic_id = id ORDER BY created_at LOOP
-            counter := counter + 1;
-            INSERT INTO section (podfic_id, number, part_id, length, raw_length, wordcount, status, text_link, updated_at) VALUES (id, counter, record.part_id, record.length,record.raw_length,record.words, record.status,record.doc,NOW()) RETURNING section_id INTO section_result;
-            PERFORM update_dependent_resources(id,null,record.part_id,section_result);
-            END LOOP;
-    ELSEIF chaptered THEN
-        RAISE NOTICE 'inserting with chapters';
-        FOR record in SELECT * FROM chapter WHERE chapter.podfic_id = id LOOP
-            INSERT INTO section (podfic_id, number, length, raw_length, plain_length, wordcount, status, text_link, ao3_link, posted_date, html_string, updated_at) VALUES (id, record.chapter_number, record.length, record.raw_length, record.plain_length, record.wordcount, record.status, record.link, record.ao3_link, record.posted_date, record.html_string, NOW()) RETURNING section_id INTO section_result;
-            INSERT INTO chapter_section (chapter_id, section_id) VALUES (record.chapter_id, section_result);
-            PERFORM update_dependent_resources(id,record.chapter_id,null,section_result);
-            END LOOP;
-    ELSE
-        RAISE NOTICE 'inserting without chapters';
-        INSERT INTO section (podfic_id, length, raw_length, plain_length, wordcount, status, text_link, ao3_link, posted_date, html_string, deadline, number, updated_at) SELECT podfic_id, length, raw_length, plain_length, wordcount, status, link, ao3_link, posted_date, html_string, deadline, 1, NOW() FROM podfic INNER JOIN work on podfic.work_id = work.work_id WHERE podfic_id = id RETURNING section_id INTO section_result;
-        PERFORM update_dependent_resources(id, null, null, section_result);
-    END IF;
-
-    RETURN;
-END;
-$$;
-
-alter function public.create_default_podfic_sections(integer, boolean, boolean) owner to "podfic-tracker-db_owner";
-
-create function public.create_posted_unchaptered_podfic_sections(id integer) returns void
-    language plpgsql
-as
-$$
-DECLARE
-    section_result int;
-    chapter_record record;
-    podfic_record record;
-BEGIN
-    RAISE NOTICE 'creating posted unchaptered podfic sections for podfic (%)', id;
-
-    section_result = (select section_id from section where section.podfic_id = id limit 1);
-    RAISE NOTICE 'section result: (%)', section_result;
-
-    IF section_result is not null THEN
-        RAISE NOTICE 'there are sections present for the podfic, returning';
-        RETURN;
-    END IF;
-
-    RAISE NOTICE 'creating posted unchaptered section(s)';
-
-    FOR chapter_record in SELECT * FROM chapter where chapter.podfic_id = id LOOP
-        INSERT INTO section (podfic_id, number, length, raw_length, plain_length, wordcount, status, text_link, ao3_link, posted_date, html_string, updated_at) VALUES (id, chapter_record.chapter_number * (-1), chapter_record.length, chapter_record.raw_length, chapter_record.plain_length, chapter_record.wordcount, chapter_record.status, chapter_record.link, chapter_record.ao3_link, chapter_record.posted_date, chapter_record.html_string,  NOW()) RETURNING section_id INTO section_result;
-        INSERT INTO chapter_section (chapter_id, section_id) VALUES (chapter_record.chapter_id, section_result);
-        PERFORM update_dependent_resources(id, chapter_record.chapter_id,null,section_result);
-        END LOOP;
-
-    SELECT * INTO podfic_record FROM podfic INNER JOIN work ON podfic.work_id = work.work_id WHERE podfic.podfic_id = id;
-    INSERT INTO section (podfic_id, number, length, raw_length, plain_length, wordcount, status, text_link, ao3_link, posted_date, html_string,updated_at) VALUES (id, 1, podfic_record.length, podfic_record.raw_length, podfic_record.plain_length, podfic_record.wordcount, podfic_record.status, podfic_record.link, podfic_record.ao3_link, podfic_record.posted_date, podfic_record.html_string, NOW());
-
-    RETURN;
-END;
-$$;
-
-alter function public.create_posted_unchaptered_podfic_sections(integer) owner to "podfic-tracker-db_owner";
-
-create function public.backfill_podfic_sections() returns void
+create function public.backfill_resource_section_podfic_id() returns void
     language plpgsql
 as
 $$
@@ -1256,21 +1389,12 @@ DECLARE
 BEGIN
     RAISE NOTICE 'backfilling podfic sections';
 
-    FOR record in SELECT * FROM podfic INNER JOIN work ON podfic.work_id = work.work_id LOOP
-        RAISE NOTICE 'running loop';
-        IF record.section_type = 'default' THEN
-            RAISE NOTICE 'creating default sections for podfic %', record.podfic_id;
-            PERFORM create_default_podfic_sections(record.podfic_id, record.chaptered, record.is_multivoice);
-        ELSEIF record.section_type = 'multiple-to-single' THEN
-            RAISE NOTICE 'creating posted unchaptered sections for podfic %', record.podfic_id;
-            PERFORM create_posted_unchaptered_podfic_sections(record.podfic_id);
-        ELSE
-            RAISE NOTICE 'non-applicable section type for podfic (%)', record.podfic_id;
-        END IF;
+    FOR record in SELECT resource_section.resource_id,resource_section.section_id,section.podfic_id FROM resource_section INNER JOIN section ON resource_section.section_id = section.section_id LOOP
+        UPDATE resource_section SET podfic_id = record.podfic_id WHERE resource_id = record.resource_id AND section_id = record.section_id;
         END LOOP;
 
     RETURN;
 END;
 $$;
 
-alter function public.backfill_podfic_sections() owner to "podfic-tracker-db_owner";
+alter function public.backfill_resource_section_podfic_id() owner to "podfic-tracker-db_owner";
