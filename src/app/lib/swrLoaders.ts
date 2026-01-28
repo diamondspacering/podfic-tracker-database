@@ -270,12 +270,9 @@ export const usePodficsFull = ({ missingAALinks = false }) => {
     ['/db/podfics', missingAALinks],
     () => podficsFetcher(missingAALinks),
     {
-      // revalidateIfStale: !missingAALinks,
-      // revalidateOnFocus: !missingAALinks,
-      // revalidateOnReconnect: !missingAALinks,
-      revalidateIfStale: false,
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
+      revalidateIfStale: !missingAALinks,
+      revalidateOnFocus: !missingAALinks,
+      revalidateOnReconnect: !missingAALinks,
     },
   );
 

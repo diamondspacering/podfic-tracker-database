@@ -403,7 +403,6 @@ interface BingoCard {
   title?: string;
   event_id?: number;
   // can't be smaller than 2
-  // we should do error handling on this sweetie!!
   size: number;
   active?: boolean;
   headers?: string[];

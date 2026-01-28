@@ -20,7 +20,6 @@ export default function BingoFillsDialog({
   onClose,
   submitCallback,
 }: DialogProps<BingoSquare>) {
-  // TODO: implement fill descriptions
   const [fills, setFills] = useState<BingoFill[]>(
     (bingoSquareProp.fills ?? []) as BingoFill[],
   );
@@ -41,7 +40,6 @@ export default function BingoFillsDialog({
 
   const submitFills = useCallback(async () => {
     try {
-      console.log({ bingoSquareProp });
       const originalFills = bingoSquareProp.fills ?? [];
 
       if (!originalFills.length && !fills.length) {

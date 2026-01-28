@@ -1,7 +1,5 @@
 // TODO: how to make it evaluate proper number of times?
-// oh no it needs to return the bingos as well,,,,
 // TODO: do we need to track specific bingos, or just the cards that are filled?
-// also we should just make a set of ids. that's simpler. oh no yeah they don't have ids nvm
 export const useSquaresInBingo = (
   bingoCard: BingoCard,
 ): { squaresInBingo: BingoSquare[]; blackout: boolean } => {
@@ -49,8 +47,6 @@ export const useSquaresInBingo = (
     );
     return index === i || index === -1;
   });
-
-  console.log({ bingos, uniqueSquares });
 
   return { squaresInBingo: uniqueSquares, blackout: false };
 };

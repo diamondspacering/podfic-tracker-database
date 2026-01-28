@@ -45,7 +45,6 @@ export async function GET(request: NextRequest) {
   cards = cards.map((card) => {
     const size = card.size;
     const rows = Array.from(Array(size).keys()).map((index) => {
-      // these SHOULD be sorted. I think. I am writing this blind which I believe is unwise.
       const rowSquares = squares.filter(
         (square) =>
           square.bingo_card_id === card.bingo_card_id && square.row === index,
