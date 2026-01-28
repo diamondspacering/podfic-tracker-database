@@ -9,7 +9,7 @@ import {
   MenuItem,
   TextField,
 } from '@mui/material';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import styles from '@/app/forms/forms.module.css';
 import { Add } from '@mui/icons-material';
 import FileLinkForm from './file-link-form';
@@ -37,7 +37,7 @@ export default function FileForm({
 }: FileFormProps) {
   const length = useMemo(
     () => file?.length ?? existingLength ?? getDefaultLength(),
-    [file, existingLength]
+    [file, existingLength],
   );
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,7 +48,7 @@ export default function FileForm({
       <TextField
         size='small'
         label='Label'
-        value={file.label}
+        value={file.label ?? ''}
         onChange={(e) =>
           setFile((prev) => ({ ...prev, label: e.target.value }))
         }
@@ -79,7 +79,7 @@ export default function FileForm({
         select
         size='small'
         label='File Type'
-        value={file.filetype}
+        value={file.filetype ?? null}
         onChange={(e) =>
           setFile((prev) => ({ ...prev, filetype: e.target.value as FileType }))
         }
@@ -94,7 +94,7 @@ export default function FileForm({
         label='Is plain version'
         control={
           <Checkbox
-            checked={file.is_plain}
+            checked={file.is_plain ?? false}
             onChange={(e) =>
               setFile((prev) => ({ ...prev, is_plain: e.target.checked }))
             }

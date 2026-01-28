@@ -20,7 +20,7 @@ export default function AuthorForm({ author, setAuthor }: AuthorFormProps) {
       <TextField
         size='small'
         label='username'
-        value={author.username}
+        value={author.username ?? ''}
         onChange={(e) =>
           setAuthor((prev) => ({ ...prev, username: e.target.value }))
         }
@@ -28,14 +28,14 @@ export default function AuthorForm({ author, setAuthor }: AuthorFormProps) {
       <TextField
         size='small'
         label='AO3'
-        value={author.ao3}
+        value={author.ao3 ?? ''}
         onChange={(e) =>
           setAuthor((prev) => ({ ...prev, ao3: e.target.value }))
         }
       />
       <StatusSelect
         type='permission'
-        value={author.permission_status as unknown as PermissionStatus}
+        value={(author.permission_status as unknown as PermissionStatus) ?? ''}
         setValue={(val) =>
           setAuthor((prev) => ({
             ...prev,
@@ -46,22 +46,11 @@ export default function AuthorForm({ author, setAuthor }: AuthorFormProps) {
       <TextField
         size='small'
         label='Primary Social Media'
-        value={author.primary_social_media}
+        value={author.primary_social_media ?? ''}
         onChange={(e) =>
           setAuthor((prev) => ({
             ...prev,
             primary_social_media: e.target.value,
-          }))
-        }
-      />
-      <TextField
-        size='small'
-        label='Permission Ask Link'
-        value={author.permission_ask}
-        onChange={(e) =>
-          setAuthor((prev) => ({
-            ...prev,
-            permission_ask: e.target.value,
           }))
         }
       />

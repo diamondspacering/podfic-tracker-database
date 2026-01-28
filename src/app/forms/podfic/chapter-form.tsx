@@ -50,7 +50,7 @@ export default function ChapterForm({
           await createUpdateChapter(chapterData);
         } else {
           console.log(
-            `Creating new chapter for podfic ${chapter.podfic_id}...`
+            `Creating new chapter for podfic ${chapter.podfic_id}...`,
           );
           const chapter_id = (await createUpdateChapter(chapterData))
             .chapter_id;
@@ -89,13 +89,13 @@ export default function ChapterForm({
           <TextField
             size='small'
             label='Chapter Title'
-            value={chapter.chapter_title}
+            value={chapter.chapter_title ?? ''}
             onChange={(e) => setChapterTitle(e.target.value)}
           />
           <TextField
             size='small'
             label='Link'
-            value={chapter.link}
+            value={chapter.link ?? ''}
             onChange={(e) => setLink(e.target.value)}
           />
           <TextField

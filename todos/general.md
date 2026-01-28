@@ -5,7 +5,7 @@
 - [x] Make metadata pulling actually set number of chapters as well
 - [ ] Make filters update when data is updated (e.g., new author) - prob have more `null` support?
 - [x] Podfic deletion
-- [ ] Actually use giftee_id and designating a podficcer who something is gifted to
+- [x] Actually use giftee_id and designating a podficcer who something is gifted to
 - [x] Generic dialog props that get extended
 - [ ] Individual author permission
   - [ ] Basic feature

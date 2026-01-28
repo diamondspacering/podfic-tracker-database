@@ -915,7 +915,7 @@ export default function PodficForm({
                   width: '200px',
                 }}
                 label={'Type'}
-                value={podfic.type}
+                value={podfic.type ?? null}
                 onChange={(e) =>
                   setPodfic((prev) => ({
                     ...prev,

@@ -122,7 +122,7 @@ export default function PermissionAskForm({
             sx={{
               width: '175px',
             }}
-            value={permissionAsk.permission_status}
+            value={permissionAsk.permission_status ?? null}
             onChange={(e) =>
               setPermissionAsk((prev) => ({
                 ...prev,
@@ -139,7 +139,7 @@ export default function PermissionAskForm({
           </TextField>
 
           <DatePicker
-            value={permissionAsk.asked_date}
+            value={permissionAsk.asked_date ?? ''}
             onChange={(val) =>
               setPermissionAsk((prev) => ({ ...prev, asked_date: val }))
             }
@@ -147,7 +147,7 @@ export default function PermissionAskForm({
           />
           <TextField
             size='small'
-            value={permissionAsk.ask_link}
+            value={permissionAsk.ask_link ?? ''}
             onChange={(e) =>
               setPermissionAsk((prev) => ({
                 ...prev,
@@ -162,7 +162,7 @@ export default function PermissionAskForm({
             sx={{
               width: '130px',
             }}
-            value={permissionAsk.ask_medium}
+            value={permissionAsk.ask_medium ?? ''}
             onChange={(e) =>
               setPermissionAsk((prev) => ({
                 ...prev,
@@ -179,7 +179,7 @@ export default function PermissionAskForm({
           </TextField>
 
           <DatePicker
-            value={permissionAsk.response_date}
+            value={permissionAsk.response_date ?? ''}
             onChange={(val) =>
               setPermissionAsk((prev) => ({ ...prev, response_date: val }))
             }

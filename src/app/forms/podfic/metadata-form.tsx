@@ -24,12 +24,7 @@ import {
   createUpdateAuthorClient,
   createUpdateFandom,
 } from '@/app/lib/updaters';
-import {
-  AuthorPermissionStatus,
-  Category,
-  PermissionStatus,
-  Rating,
-} from '@/app/types';
+import { AuthorPermissionStatus, Category, Rating } from '@/app/types';
 import { LoadingButton } from '@mui/lab';
 import { socialMedia } from '@/app/lib/dataGeneral';
 import StatusBadge from '@/app/ui/StatusBadge';
@@ -53,17 +48,17 @@ export default function MetadataForm({
   const { authors } = useAuthors();
 
   const [mappedFandomList, setMappedFandomList] = useState<ItemMapping>(
-    getMappedItems(metadata.fandomList, tagMappings.fandom_mapping)
+    getMappedItems(metadata.fandomList, tagMappings.fandom_mapping),
   );
   const [mappedRelationshipList, setMappedRelationshipList] =
     useState<ItemMapping>(
       getMappedItems(
         metadata.relationshipList,
-        tagMappings.relationship_mapping
-      )
+        tagMappings.relationship_mapping,
+      ),
     );
   const [mappedCharacterList, setMappedCharacterList] = useState<ItemMapping>(
-    getMappedItems(metadata.characterList, tagMappings.character_mapping)
+    getMappedItems(metadata.characterList, tagMappings.character_mapping),
   );
   const [selectedFandom, setSelectedFandom] = useState('');
   const [submittingFandom, setSubmittingFandom] = useState(false);
@@ -81,14 +76,14 @@ export default function MetadataForm({
     () =>
       fandoms.find((fandom) => fandom.fandom_name === selectedFandom)
         ?.fandom_id ?? '',
-    [fandoms, selectedFandom]
+    [fandoms, selectedFandom],
   );
 
   const selectedAuthorId = useMemo(
     () =>
       authors.find((author) => author.username === metadata.authorsString)
         ?.author_id ?? '',
-    [authors, metadata.authorsString]
+    [authors, metadata.authorsString],
   );
 
   useEffect(() => {
@@ -118,35 +113,35 @@ export default function MetadataForm({
   useEffect(() => {
     const mappedFandoms = getMappedItems(
       metadata.fandomList,
-      tagMappings.fandom_mapping
+      tagMappings.fandom_mapping,
     );
     setMappedFandomList(mappedFandoms);
     setSelectedFandom(
       mappedFandoms[metadata.fandomList?.[0]]?.mappedItem ??
         metadata.fandomList?.[0] ??
-        ''
+        '',
     );
 
     const mappedRelationships = getMappedItems(
       metadata.relationshipList,
-      tagMappings.relationship_mapping
+      tagMappings.relationship_mapping,
     );
     setMappedRelationshipList(mappedRelationships);
     setSelectedRelationship(
       mappedRelationships[metadata?.relationshipList?.[0]]?.mappedItem ??
         metadata.relationshipList?.[0] ??
-        ''
+        '',
     );
 
     const mappedCharacters = getMappedItems(
       metadata.characterList,
-      tagMappings.character_mapping
+      tagMappings.character_mapping,
     );
     setMappedCharacterList(mappedCharacters);
     setSelectedCharacter(
       mappedCharacters[metadata.characterList?.[0]]?.mappedItem ??
         metadata.characterList?.[0] ??
-        ''
+        '',
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -155,7 +150,7 @@ export default function MetadataForm({
     setChaptersLoading(true);
     try {
       const chapterResult = await fetch(
-        `/db/metadata/chapters?work_url=${encodeURIComponent(metadata.link)}`
+        `/db/metadata/chapters?work_url=${encodeURIComponent(metadata.link)}`,
       );
       const chapters = await chapterResult.json();
       setMetadata((prev) => ({
@@ -207,7 +202,7 @@ export default function MetadataForm({
       selectedCharacter,
       selectedFandom,
       selectedRelationship,
-    ]
+    ],
   );
 
   const submitFandom = useCallback(async () => {
@@ -286,7 +281,7 @@ export default function MetadataForm({
                   width: '30px',
                 }}
                 label='Link'
-                value={metadata.authorsLink}
+                value={metadata.authorsLink ?? ''}
                 onChange={(e) =>
                   setMetadata((prev) => ({
                     ...prev,
@@ -301,7 +296,7 @@ export default function MetadataForm({
                   width: '100px',
                 }}
                 label='Primary Social Media'
-                value={newAuthorData.primary_social_media}
+                value={newAuthorData.primary_social_media ?? ''}
                 onChange={(e) =>
                   setNewAuthorData((prev) => ({
                     ...prev,
@@ -322,7 +317,7 @@ export default function MetadataForm({
                   width: '175px',
                 }}
                 label='Permission Status'
-                value={newAuthorData.permission_status}
+                value={newAuthorData.permission_status ?? null}
                 onChange={(e) =>
                   setNewAuthorData((prev) => ({
                     ...prev,
@@ -444,7 +439,7 @@ export default function MetadataForm({
                     <TextField
                       size='small'
                       label='Category Name'
-                      value={categoryName}
+                      value={categoryName ?? ''}
                       onChange={(e) => setCategoryName(e.target.value)}
                     />
                   ) : (
@@ -479,7 +474,7 @@ export default function MetadataForm({
             }}
             select
             label='Rating'
-            value={metadata.rating}
+            value={metadata.rating ?? null}
             onChange={(e) =>
               setMetadata((prev) => ({
                 ...prev,
@@ -530,7 +525,7 @@ export default function MetadataForm({
           <TextField
             size='small'
             label='Wordcount'
-            value={metadata.wordcount?.toString()}
+            value={metadata.wordcount?.toString() ?? ''}
             onChange={(e) =>
               setMetadata((prev) => ({
                 ...prev,
@@ -559,12 +554,12 @@ export default function MetadataForm({
           <TextField
             size='small'
             label='Chapter Title'
-            value={chapter.chapter_title}
+            value={chapter.chapter_title ?? ''}
             onChange={(e) =>
               setMetadata((prev) => ({
                 ...prev,
                 chapters: prev.chapters.map((val, index) =>
-                  index === i ? { ...val, chapter_title: e.target.value } : val
+                  index === i ? { ...val, chapter_title: e.target.value } : val,
                 ),
               }))
             }
