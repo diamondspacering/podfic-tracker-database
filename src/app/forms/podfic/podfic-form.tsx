@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import styles from '@/app/forms/forms.module.css';
 import { Add, Close } from '@mui/icons-material';
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import FandomForm from './fandom-form';
 import AuthorForm from './author-form-inline';
 import {
@@ -80,11 +80,15 @@ export default function PodficForm({
   const [sectionInfo, setSectionInfo] = useState<SectionInfo>({});
 
   const [podficcerDialogOpen, setPodficcerDialogOpen] = useState(false);
+  const [newPodficcerGiftee, setNewPodficcerGiftee] = useState(false);
   const [metadataDialogOpen, setMetadataDialogOpen] = useState(false);
 
   const [authors, setAuthors] = useState<Author[]>([]);
   const [authorsLoading, setAuthorsLoading] = useState(true);
   const [isNewAuthor, setIsNewAuthor] = useState(false);
+
+  const rating = useMemo(() => podfic.rating ?? null, [podfic.rating]);
+  const category = useMemo(() => podfic.category ?? null, [podfic.category]);
 
   const { podficcers, isLoading: podficcersLoading } = usePodficcers();
 
@@ -132,7 +136,7 @@ export default function PodficForm({
   const fetchMetadata = useCallback(async () => {
     setMetadataLoading(true);
     const metadataResult = await fetch(
-      `/db/metadata/work?work_url=${encodeURIComponent(podfic.link)}`
+      `/db/metadata/work?work_url=${encodeURIComponent(podfic.link)}`,
     );
     setMetadata(await metadataResult.json());
     const tagResult = await fetch('/db/metadata/tagmappings');
@@ -210,6 +214,10 @@ export default function PodficForm({
   }, []);
 
   useEffect(() => {
+    setIsMultivoice(podfic.is_multivoice);
+  }, [podfic.is_multivoice]);
+
+  useEffect(() => {
     setWordcount(podfic.wordcount?.toString());
   }, [podfic.wordcount]);
 
@@ -219,7 +227,7 @@ export default function PodficForm({
       events
         ?.find((event) => event.event_id === podfic.event_id)
         ?.parent_name?.includes('Voiceteam'),
-    [podfic.event_id, events]
+    [podfic.event_id, events],
   );
 
   useEffect(() => {
@@ -229,7 +237,7 @@ export default function PodficForm({
   useEffect(() => {
     if (isVoiceteam && podfic.vt_project_id && !challengesLoading) {
       const id = projects.find(
-        (project) => project.vt_project_id === podfic.vt_project_id
+        (project) => project.vt_project_id === podfic.vt_project_id,
       )?.challenge_id;
       setChallengeId(id ?? null);
     }
@@ -241,10 +249,18 @@ export default function PodficForm({
         isOpen={podficcerDialogOpen}
         onClose={() => setPodficcerDialogOpen(false)}
         submitCallback={(podficcer) => {
-          setPodfic((prev) => ({
-            ...prev,
-            podficcers: [...(prev.podficcers ?? []), podficcer],
-          }));
+          if (newPodficcerGiftee) {
+            setPodfic((prev) => ({
+              ...prev,
+              giftee_id: podficcer.podficcer_id,
+            }));
+          } else {
+            setPodfic((prev) => ({
+              ...prev,
+              podficcers: [...(prev.podficcers ?? []), podficcer],
+            }));
+          }
+
           setPodficcerDialogOpen(false);
         }}
       />
@@ -257,13 +273,13 @@ export default function PodficForm({
           submitCallback={async (metadata) => {
             if (metadata.fandom_id) {
               const foundFandom = fandoms.find(
-                (fandom) => fandom.fandom_id === metadata.fandom_id
+                (fandom) => fandom.fandom_id === metadata.fandom_id,
               );
               if (!foundFandom) await fetchFandoms();
             }
             if (metadata.author_id) {
               const foundAuthor = authors.find(
-                (author) => author.author_id === metadata.author_id
+                (author) => author.author_id === metadata.author_id,
               );
               if (!foundAuthor) await fetchAuthors();
             }
@@ -349,7 +365,7 @@ export default function PodficForm({
                       //     : parseInt(newValue.work_id),
                       // title: newValue.title,
                       // fandom_id: newValue.fandom_id,
-                    } as any)
+                    }) as any,
                 );
               }}
               renderInput={(params) => (
@@ -436,7 +452,7 @@ export default function PodficForm({
                 }}
                 value={
                   authors.find(
-                    (author) => author.author_id === podfic.author_id
+                    (author) => author.author_id === podfic.author_id,
                   ) ?? { author_id: 0, username: '' }
                 }
                 sx={{
@@ -483,7 +499,7 @@ export default function PodficForm({
                 options={fandoms}
                 value={
                   fandoms?.find(
-                    (fandom) => fandom.fandom_id === podfic.fandom_id
+                    (fandom) => fandom.fandom_id === podfic.fandom_id,
                   ) ?? { fandom_name: '', fandom_id: 0, category_name: '' }
                 }
                 sx={{
@@ -545,13 +561,18 @@ export default function PodficForm({
                 }}
                 select
                 label='Rating'
-                value={podfic.rating}
-                onChange={(e) =>
+                value={rating}
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
+                onChange={(e) => {
                   setPodfic((prev) => ({
                     ...prev,
                     rating: e.target.value as Rating,
-                  }))
-                }
+                  }));
+                }}
               >
                 {Object.values(Rating).map((rating) => (
                   <MenuItem key={rating} value={rating}>
@@ -566,7 +587,12 @@ export default function PodficForm({
                 }}
                 select
                 label='Category'
-                value={podfic.category}
+                value={category}
+                slotProps={{
+                  inputLabel: {
+                    shrink: true,
+                  },
+                }}
                 onChange={(e) =>
                   setPodfic((prev) => ({ ...prev, category: e.target.value }))
                 }
@@ -633,7 +659,7 @@ export default function PodficForm({
                         setPodfic((prev) => ({
                           ...prev,
                           chapters: prev.chapters.map((chapter, ci) =>
-                            index === ci ? value : chapter
+                            index === ci ? value : chapter,
                           ),
                         }))
                     : null
@@ -788,7 +814,7 @@ export default function PodficForm({
                     getOptionLabel={(option) => option.challenge_name}
                     value={
                       challenges?.find(
-                        (challenge) => challenge.challenge_id === challengeId
+                        (challenge) => challenge.challenge_id === challengeId,
                       ) ??
                       ({ challenge_id: 0, challenge_name: '' } as Challenge)
                     }
@@ -825,7 +851,7 @@ export default function PodficForm({
                     value={
                       projects.find(
                         (project) =>
-                          project.vt_project_id === podfic.vt_project_id
+                          project.vt_project_id === podfic.vt_project_id,
                       ) ?? ({ vt_project_id: 0, name: '' } as Project)
                     }
                     groupBy={(option) => option.challenge_name ?? ''}
@@ -847,6 +873,40 @@ export default function PodficForm({
                 </>
               )}
             </div>
+            <Autocomplete
+              size='small'
+              sx={{
+                minWidth: '200px',
+              }}
+              options={podficcers ?? []}
+              loading={podficcersLoading}
+              getOptionLabel={(option) => option?.username ?? ''}
+              value={
+                podficcers.find((p) => p.podficcer_id === podfic.giftee_id) ??
+                null
+              }
+              isOptionEqualToValue={(option, value) => {
+                return option.podficcer_id === value.podficcer_id;
+              }}
+              onChange={(_, newValue) => {
+                setPodfic((prev) => ({
+                  ...prev,
+                  giftee_id: newValue?.podficcer_id ?? null,
+                }));
+              }}
+              renderInput={(params) => (
+                <TextField {...params} size='small' label='Gifted to' />
+              )}
+            />
+            <Button
+              onClick={() => {
+                setNewPodficcerGiftee(true);
+                setPodficcerDialogOpen(true);
+              }}
+              startIcon={<Add />}
+            >
+              New Podficcer
+            </Button>
             <>
               <TextField
                 size='small'
@@ -855,7 +915,7 @@ export default function PodficForm({
                   width: '200px',
                 }}
                 label={'Type'}
-                value={podfic.type}
+                value={podfic.type ?? null}
                 onChange={(e) =>
                   setPodfic((prev) => ({
                     ...prev,
@@ -869,15 +929,39 @@ export default function PodficForm({
                   </MenuItem>
                 ))}
               </TextField>
-              <FormControlLabel
-                label='Is multivoice?'
-                control={
-                  <Checkbox
-                    checked={isMultivoice}
-                    onChange={(e) => setIsMultivoice(e.target.checked)}
+              <div className={styles.flexRow}>
+                <FormControlLabel
+                  label='Is multivoice?'
+                  control={
+                    <Checkbox
+                      checked={isMultivoice}
+                      onChange={(e) => {
+                        setIsMultivoice(e.target.checked);
+                        setPodfic((prev) => ({
+                          ...prev,
+                          is_multivoice: e.target.checked,
+                        }));
+                      }}
+                    />
+                  }
+                />
+                {isMultivoice && (
+                  <FormControlLabel
+                    label='I am posting this'
+                    control={
+                      <Checkbox
+                        checked={podfic.self_posted}
+                        onChange={(e) =>
+                          setPodfic((prev) => ({
+                            ...prev,
+                            self_posted: e.target.checked,
+                          }))
+                        }
+                      />
+                    }
                   />
-                }
-              />
+                )}
+              </div>
             </>
 
             <TagSelect
@@ -923,7 +1007,10 @@ export default function PodficForm({
               )}
             />
             <Button
-              onClick={() => setPodficcerDialogOpen(true)}
+              onClick={() => {
+                setNewPodficcerGiftee(false);
+                setPodficcerDialogOpen(true);
+              }}
               startIcon={<Add />}
             >
               New Podficcer
@@ -1095,7 +1182,7 @@ export default function PodficForm({
                                     });
                                   }}
                                 />
-                              )
+                              ),
                             )}
                             <Button
                               variant='contained'
@@ -1138,7 +1225,7 @@ export default function PodficForm({
                                 setSectionInfo((prev) => ({
                                   ...prev,
                                   1: prev[1].map((s, i) =>
-                                    i === index ? value : s
+                                    i === index ? value : s,
                                   ),
                                 }))
                               }

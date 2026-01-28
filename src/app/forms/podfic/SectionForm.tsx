@@ -22,14 +22,14 @@ export default function SectionForm({
         <Typography>{section.number}</Typography>
         <TextField
           size='small'
-          value={section.title}
+          value={section.title ?? ''}
           onChange={(e) => setSection({ ...section, title: e.target.value })}
           required
           label='Title'
         />
         <TextField
           size='small'
-          value={section.wordcount}
+          value={section.wordcount ?? null}
           onChange={(e) =>
             setSection({
               ...section,
@@ -41,7 +41,7 @@ export default function SectionForm({
         />
         <TextField
           size='small'
-          value={section.text_link}
+          value={section.text_link ?? ''}
           onChange={(e) =>
             setSection({ ...section, text_link: e.target.value })
           }

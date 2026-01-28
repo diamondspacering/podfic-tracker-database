@@ -9,6 +9,8 @@ interface ExternalLinkProps {
 
 /**
  * Custom link component that always opens in a new tab
+ * @param href Link to follow
+ * @param onClick onClick function, which gets entire click event, that runs separately from link-opening behavior (e.g., stopping propagation)
  */
 export default function ExternalLink({
   href,

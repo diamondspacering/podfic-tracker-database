@@ -37,13 +37,13 @@ export const updateRecordingData = async (data: any) => {
         data.mic ? data.mic : null,
         data.device ? data.device : null,
         data.location ? data.location : null,
-      ]
+      ],
     );
 
     if (data.podficId) {
       const statusResult = await client.query(
         `select status from podfic where podfic_id = $1`,
-        [data.podficId]
+        [data.podficId],
       );
       const status = statusResult.rows[0].status as PodficStatus;
       if (
@@ -52,7 +52,7 @@ export const updateRecordingData = async (data: any) => {
       ) {
         await client.query(
           `update podfic set status = $1 where podfic_id = $2`,
-          [PodficStatus.RECORDED, data.podficId]
+          [PodficStatus.RECORDED, data.podficId],
         );
       } else if (
         !data.completesPodfic &&
@@ -60,7 +60,7 @@ export const updateRecordingData = async (data: any) => {
       ) {
         await client.query(
           `update podfic set status = $1 where podfic_id = $2`,
-          [PodficStatus.RECORDING, data.podficId]
+          [PodficStatus.RECORDING, data.podficId],
         );
       }
     }
@@ -68,7 +68,7 @@ export const updateRecordingData = async (data: any) => {
     if (data.sectionId) {
       const sectionResult = await client.query(
         `select status from section where section_id = $1`,
-        [data.sectionId]
+        [data.sectionId],
       );
       const status = sectionResult.rows[0].status as PodficStatus;
       if (
@@ -77,7 +77,7 @@ export const updateRecordingData = async (data: any) => {
       ) {
         await client.query(
           `update section set status = $1 where section_id = $2`,
-          [PodficStatus.RECORDED, data.sectionId]
+          [PodficStatus.RECORDED, data.sectionId],
         );
       }
 
@@ -87,7 +87,7 @@ export const updateRecordingData = async (data: any) => {
       ) {
         await client.query(
           `update section set status = $1 where section_id = $2`,
-          [PodficStatus.RECORDING, data.sectionId]
+          [PodficStatus.RECORDING, data.sectionId],
         );
       }
     }
@@ -142,7 +142,7 @@ export const createUpdateSection = async (sectionData: Section) => {
         sectionData.text_link,
         sectionData.deadline,
         new Date(),
-      ]
+      ],
     );
     return result.rows[0].section_id;
   } else {
@@ -173,7 +173,7 @@ export const createUpdateSection = async (sectionData: Section) => {
         sectionData.posted_date ? sectionData.posted_date : null,
         new Date(),
         sectionData.section_id,
-      ]
+      ],
     );
     return result.rows[0].section_id;
   }
@@ -207,7 +207,7 @@ export const createUpdateChapter = async (chapterData: Chapter) => {
         chapterData.chapter_number,
         chapterData.chapter_title,
         chapterData.wordcount,
-      ]
+      ],
     );
     return result.rows[0];
   } else {
@@ -226,7 +226,7 @@ export const createUpdateChapter = async (chapterData: Chapter) => {
         chapterData.chapter_title,
         chapterData.wordcount,
         chapterData.chapter_id,
-      ]
+      ],
     );
     return result.rows[0];
   }
@@ -236,7 +236,7 @@ export const setChapterPosted = async (chapterId: number) => {
   const client = await getDBClient();
   const result = await client.query(
     `UPDATE chapter SET status = $1 WHERE chapter_id = $2 RETURNING *`,
-    [PodficStatus.POSTED, chapterId]
+    [PodficStatus.POSTED, chapterId],
   );
   return result.rows[0];
 };
@@ -246,7 +246,7 @@ export const createUpdateChapterClient = async (chapterData: Chapter) => {
 };
 
 export const createUpdateWork = async (
-  workData: Podfic & Work
+  workData: Podfic & Work,
 ): Promise<Work | null> => {
   if (!workData.work_id) {
     console.warn('Creating new work');
@@ -303,7 +303,7 @@ export const createUpdateWork = async (
         workData.category,
         workData.relationship,
         workData.main_character,
-      ]
+      ],
     );
   } else {
     // console.log('updating work');
@@ -339,7 +339,7 @@ export const createUpdateWork = async (
         workData.main_character,
         workData.relationship,
         workData.work_id,
-      ]
+      ],
     );
   }
 
@@ -365,7 +365,7 @@ export const updatePodficMinified = async (data: any) => {
       podficData.status,
       new Date(),
       podficData.podfic_id,
-    ]
+    ],
   );
   // console.log(result.rows[0]);
 
@@ -422,12 +422,12 @@ export const updateSectionMinified = async (data: any) => {
       sectionData.wordcount,
       new Date(),
       sectionData.section_id,
-    ]
+    ],
   );
 };
 
 export const createUpdatePodfic = async (
-  podficData: Podfic & Work
+  podficData: Podfic & Work,
 ): Promise<null | Podfic> => {
   if (!podficData.podfic_id) {
     console.warn('No existing podfic! Hopefully you are meaning to create');
@@ -448,7 +448,7 @@ export const createUpdatePodfic = async (
       await createUpdateWork(podficData);
 
       podficResult = await client.query(
-        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, section_type, posted_date, posted_year, updated_at) VALUES (
+        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, self_posted, section_type, posted_date, posted_year, updated_at) VALUES (
         $1,
         $2,
         $3,
@@ -466,7 +466,8 @@ export const createUpdatePodfic = async (
         $15,
         $16,
         $17,
-        $18
+        $18,
+        $19
       )
       RETURNING *
     `,
@@ -485,11 +486,12 @@ export const createUpdatePodfic = async (
           podficData.vt_project_id,
           podficData.series_id,
           podficData.is_multivoice,
+          podficData.self_posted,
           podficData.section_type,
           podficData.posted_date ? podficData.posted_date : null,
           podficData.posted_year,
           new Date(),
-        ]
+        ],
       );
       const podfic_id = podficResult.rows[0].podfic_id;
       podficData.podfic_id = podfic_id;
@@ -498,7 +500,7 @@ export const createUpdatePodfic = async (
       const work_id = (await createUpdateWork(podficData)).work_id;
 
       podficResult = await client.query(
-        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, section_type, posted_date, posted_year, updated_at) VALUES (
+        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, self_posted, section_type, posted_date, posted_year, updated_at) VALUES (
         $1,
         $2,
         $3,
@@ -516,7 +518,8 @@ export const createUpdatePodfic = async (
         $15,
         $16,
         $17,
-        $18
+        $18,
+        $19
       )
       RETURNING *
     `,
@@ -535,11 +538,12 @@ export const createUpdatePodfic = async (
           podficData.vt_project_id,
           podficData.series_id,
           podficData.is_multivoice,
+          podficData.self_posted,
           podficData.section_type,
           podficData.posted_date ? podficData.posted_date : null,
           podficData.posted_year,
           new Date(),
-        ]
+        ],
       );
       const podfic_id = podficResult.rows[0].podfic_id;
       podficData.podfic_id = podfic_id;
@@ -602,7 +606,8 @@ export const createUpdatePodfic = async (
           const sectionsForChapter =
             podficData.sections?.filter(
               (section) =>
-                section.chapters?.[0]?.chapter_number === chapter.chapter_number
+                section.chapters?.[0]?.chapter_number ===
+                chapter.chapter_number,
             ) ?? [];
           console.log({ sectionsForChapter });
           for (const section of sectionsForChapter) {
@@ -645,17 +650,37 @@ export const createUpdatePodfic = async (
             await linkChapterAndSection(chapter_id, section_id);
           }
         } else {
-          await createUpdateSection({
-            number: 1,
-            wordcount:
-              typeof podficData.wordcount === 'number'
-                ? podficData.wordcount
-                : parseInt(podficData.wordcount),
-            length: podficData.length,
-            ao3_link: podficData.ao3_link,
-            posted_date: podficData.posted_date,
-            podfic_id: podficData.podfic_id,
-          });
+          if (podficData.is_multivoice) {
+            console.log('creating sections for multivoice podfic');
+
+            if (podficData.self_posted) {
+              await createUpdateSection({
+                number: 1,
+                wordcount:
+                  typeof podficData.wordcount === 'number'
+                    ? podficData.wordcount
+                    : parseInt(podficData.wordcount),
+                length: podficData.length,
+                ao3_link: podficData.ao3_link,
+                posted_date: podficData.posted_date,
+                podfic_id: podficData.podfic_id,
+              });
+            } else {
+              // do nothing
+            }
+          } else {
+            await createUpdateSection({
+              number: 1,
+              wordcount:
+                typeof podficData.wordcount === 'number'
+                  ? podficData.wordcount
+                  : parseInt(podficData.wordcount),
+              length: podficData.length,
+              ao3_link: podficData.ao3_link,
+              posted_date: podficData.posted_date,
+              podfic_id: podficData.podfic_id,
+            });
+          }
         }
     }
   } else {
@@ -677,11 +702,12 @@ export const createUpdatePodfic = async (
       vt_project_id = $12,
       series_id = $13,
       is_multivoice = $14,
-      section_type = $15,
-      posted_date = $16,
-      posted_year = $17,
-      updated_at = $18
-    WHERE podfic_id = $19
+      self_posted = $15,
+      section_type = $16,
+      posted_date = $17,
+      posted_year = $18,
+      updated_at = $19
+    WHERE podfic_id = $20
     RETURNING *
     `,
       [
@@ -699,12 +725,13 @@ export const createUpdatePodfic = async (
         podficData.vt_project_id,
         podficData.series_id,
         podficData.is_multivoice,
+        podficData.self_posted,
         podficData.section_type,
         podficData.posted_date ? podficData.posted_date : null,
         podficData.posted_year,
         new Date(),
         podficData.podfic_id,
-      ]
+      ],
     );
   }
   const podficId = podficResult?.rows[0].podfic_id;
@@ -715,7 +742,7 @@ export const createUpdatePodfic = async (
   }
   if (podficData.tags?.length) {
     await Promise.all(
-      podficData.tags.map((tag) => linkTagToPodfic(tag.tag_id, podficId))
+      podficData.tags.map((tag) => linkTagToPodfic(tag.tag_id, podficId)),
     );
   }
   return podficResult?.rows[0];
@@ -731,7 +758,7 @@ export const createUpdatePodficHTML = async (podficId, htmlString) => {
   // return result?
   await client.query(
     `UPDATE podfic SET html_string = $1 WHERE podfic_id = $2`,
-    [htmlString, podficId]
+    [htmlString, podficId],
   );
 };
 
@@ -740,7 +767,7 @@ export const createUpdateSectionHTML = async (sectionId, htmlString) => {
 
   await client.query(
     `UPDATE section SET html_string = $1 where section_id = $2`,
-    [htmlString, sectionId]
+    [htmlString, sectionId],
   );
 };
 
@@ -749,7 +776,7 @@ export const createUpdateFandomCategory = async (categoryData) => {
   // TODO: handle updating categories
   const result = await client.query(
     `insert into fandom_category (name) values ($1) returning *`,
-    [categoryData.category_name]
+    [categoryData.category_name],
   );
 
   return result.rows[0];
@@ -770,7 +797,7 @@ export const createUpdateFandom = async (fandomData): Promise<any> => {
   const client = await getDBClient();
   const result = await client.query(
     `insert into fandom (category_id, name) values ($1, $2) returning *`,
-    [fandomData.category_id, fandomData.fandom_name]
+    [fandomData.category_id, fandomData.fandom_name],
   );
   return result.rows[0];
 };
@@ -797,7 +824,7 @@ export const createUpdateAuthor = async (authorData): Promise<any> => {
         authorData.podficcer_id,
         authorData.asked_date,
         authorData.permission_date,
-      ]
+      ],
     );
   } else {
     const author_id = authorData.author_id;
@@ -816,7 +843,7 @@ export const createUpdateAuthor = async (authorData): Promise<any> => {
         authorData.asked_date,
         authorData.permission_date,
         author_id,
-      ]
+      ],
     );
   }
 
@@ -856,7 +883,7 @@ export const createUpdateResource = async ({
         resourceData.label,
         resourceData.link,
         resourceData.notes,
-      ]
+      ],
     );
     resourceResult = result.rows[0];
     const resourceId = resourceResult.resource_id;
@@ -890,14 +917,14 @@ export const createUpdateResource = async ({
         resourceData.link,
         resourceData.notes,
         resourceData.resource_id,
-      ]
+      ],
     );
     resourceResult = result.rows[0];
 
     if (podfic_id) {
       const podficJoinResult = await client.query(
         `select * from resource_podfic where resource_id = $1 and podfic_id = $2`,
-        [resourceId, podfic_id]
+        [resourceId, podfic_id],
       );
       // console.log({ podficJoinResult });
       if (!podficJoinResult.rows?.length) {
@@ -907,7 +934,7 @@ export const createUpdateResource = async ({
     if (section_id) {
       const sectionJoinResults = await client.query(
         `select * from resource_section where resource_id = $1 and section_id = $2`,
-        [resourceId, section_id]
+        [resourceId, section_id],
       );
       if (!sectionJoinResults.rows?.length) {
         await joinResourceSection(resourceId, section_id, podfic_id, client);
@@ -916,7 +943,7 @@ export const createUpdateResource = async ({
     if (author_id) {
       const authorJoinResult = await client.query(
         `select * from resource_author where resource_id = $1 and author_id = $2`,
-        [resourceId, author_id]
+        [resourceId, author_id],
       );
       // console.log({ authorJoinResult });
       if (!authorJoinResult.rows?.length) {
@@ -926,7 +953,7 @@ export const createUpdateResource = async ({
     if (event_id) {
       const eventJoinResult = await client.query(
         `select * from resource_event where resource_id = $1 and event_id = $2`,
-        [resourceId, event_id]
+        [resourceId, event_id],
       );
       // console.log({ eventJoinResult });
       if (!eventJoinResult.rows?.length) {
@@ -957,7 +984,7 @@ export const createUpdateFile = async (fileData): Promise<any> => {
         fileData.filetype,
         fileData.label,
         fileData.isPlain,
-      ]
+      ],
     );
 
     fileResult = result.rows[0];
@@ -980,7 +1007,7 @@ export const createUpdateFile = async (fileData): Promise<any> => {
         fileData.label,
         fileData.isPlain,
         fileData.file_id,
-      ]
+      ],
     );
     fileResult = result.rows[0];
   }
@@ -1013,7 +1040,7 @@ export const createUpdateFileLink = async (fileLinkData): Promise<any> => {
         fileLinkData.link,
         fileLinkData.is_direct,
         fileLinkData.is_embed,
-      ]
+      ],
     );
     fileLinkResult = result.rows[0];
   } else {
@@ -1035,7 +1062,7 @@ export const createUpdateFileLink = async (fileLinkData): Promise<any> => {
         fileLinkData.is_direct,
         fileLinkData.is_embed,
         fileLinkData.file_link_id,
-      ]
+      ],
     );
     fileLinkResult = result.rows[0];
   }
@@ -1062,7 +1089,7 @@ export const createUpdateNote = async (noteData: Note): Promise<any> => {
         noteData.event_id,
         noteData.label,
         noteData.value,
-      ]
+      ],
     );
     noteResult = result.rows;
   } else {
@@ -1086,7 +1113,7 @@ export const createUpdateNote = async (noteData: Note): Promise<any> => {
         noteData.label,
         noteData.value,
         noteData.note_id,
-      ]
+      ],
     );
 
     noteResult = result.rows;
@@ -1098,28 +1125,28 @@ export const createUpdateNote = async (noteData: Note): Promise<any> => {
 const joinResourcePodfic = async (resourceId, podficId, client) => {
   await client.query(
     `INSERT INTO resource_podfic (resource_id, podfic_id) VALUES ($1, $2)`,
-    [resourceId, podficId]
+    [resourceId, podficId],
   );
 };
 
 const joinResourceSection = async (resourceId, sectionId, podficId, client) => {
   await client.query(
     `INSERT INTO resource_section (resource_id, section_id, podfic_id) VALUES ($1, $2, $3)`,
-    [resourceId, sectionId, podficId]
+    [resourceId, sectionId, podficId],
   );
 };
 
 const joinResourceAuthor = async (resourceId, authorId, client) => {
   await client.query(
     `INSERT INTO resource_author (resource_id, author_id) VALUES ($1, $2)`,
-    [resourceId, authorId]
+    [resourceId, authorId],
   );
 };
 
 const joinResourceEvent = async (resourceId, eventId, client) => {
   await client.query(
     `INSERT INTO resource_event (resource_id, event_id) VALUES ($1, $2)`,
-    [resourceId, eventId]
+    [resourceId, eventId],
   );
 };
 
@@ -1134,7 +1161,7 @@ export const createUpdateEvent = async (eventData: Event): Promise<Event> => {
   if (!eventData.event_id) {
     const result = await client.query(
       `INSERT INTO event (parent_id, name, year) VALUES ($1, $2, $3) RETURNING *`,
-      [eventData.parent_id, eventData.name, eventData.year]
+      [eventData.parent_id, eventData.name, eventData.year],
     );
     eventResult = result.rows[0];
   } else {
@@ -1144,7 +1171,7 @@ export const createUpdateEvent = async (eventData: Event): Promise<Event> => {
         name = $2,
         year = $3
       RETURNING *`,
-      [eventData.parent_id, eventData.name, eventData.year]
+      [eventData.parent_id, eventData.name, eventData.year],
     );
     eventResult = result.rows[0];
   }
@@ -1153,7 +1180,7 @@ export const createUpdateEvent = async (eventData: Event): Promise<Event> => {
 };
 
 export const createUpdateEventParent = async (
-  eventParentData: EventParent
+  eventParentData: EventParent,
 ): Promise<number> => {
   // TODO: implement updating
   if (!!eventParentData.event_parent_id) {
@@ -1163,7 +1190,7 @@ export const createUpdateEventParent = async (
   const client = await getDBClient();
   const result = await client.query(
     `INSERT INTO event_parent (name, description) VALUES ($1, $2) RETURNING *`,
-    [eventParentData.name, eventParentData.description]
+    [eventParentData.name, eventParentData.description],
   );
 
   return result.rows[0].event_parent_id;
@@ -1190,7 +1217,7 @@ export const createUpdateCoverArt = async (coverArtData: any) => {
         coverArtData.podficcer_id,
         coverArtData.image_link,
         coverArtData.cover_art_status,
-      ]
+      ],
     );
     coverArtResult = result.rows[0];
   } else {
@@ -1210,7 +1237,7 @@ export const createUpdateCoverArt = async (coverArtData: any) => {
         coverArtData.image_link,
         coverArtData.cover_art_status,
         coverArtData.cover_art_id,
-      ]
+      ],
     );
     coverArtResult = result.rows[0];
   }
@@ -1225,7 +1252,7 @@ export const createUpdatePodficcer = async (podficcerData: Podficcer) => {
   if (!podficcerData.podficcer_id) {
     const result = await client.query(
       `INSERT INTO podficcer (username, name, profile) VALUES ($1, $2, $3) RETURNING *`,
-      [podficcerData.username, podficcerData.name, podficcerData.profile]
+      [podficcerData.username, podficcerData.name, podficcerData.profile],
     );
     podficcerResult = result.rows[0];
   } else {
@@ -1241,7 +1268,7 @@ export const createUpdatePodficcer = async (podficcerData: Podficcer) => {
         podficcerData.name,
         podficcerData.profile,
         podficcerData.podficcer_id,
-      ]
+      ],
     );
     podficcerResult = result.rows[0];
   }
@@ -1258,7 +1285,7 @@ export const createUpdateSeries = async (seriesData) => {
       `
       INSERT INTO series (name, series_link) VALUES ($1, $2) RETURNING *
     `,
-      [seriesData.name, seriesData.series_link]
+      [seriesData.name, seriesData.series_link],
     );
     seriesResult = result.rows[0];
   } else {
@@ -1269,7 +1296,7 @@ export const createUpdateSeries = async (seriesData) => {
         series_link = $2
       WHERE series_id = $3
     `,
-      [seriesData.name, seriesData.series_link, seriesData.series_id]
+      [seriesData.name, seriesData.series_link, seriesData.series_id],
     );
     seriesResult = result.rows[0];
   }
@@ -1308,7 +1335,7 @@ export const createUpdateRound = async (roundData: Round) => {
         roundData.number,
         roundData.points_break,
         roundData.deadline,
-      ]
+      ],
     );
     roundResult = result.rows[0];
   } else {
@@ -1326,7 +1353,7 @@ export const createUpdateRound = async (roundData: Round) => {
         roundData.points_break,
         roundData.deadline,
         roundData.round_id,
-      ]
+      ],
     );
     roundResult = result.rows[0];
   }
@@ -1355,7 +1382,7 @@ export const createUpdateChallenge = async (challengeData: Challenge) => {
         challengeData.bonus_points,
         challengeData.bonus_is_additional,
         challengeData.created_at,
-      ]
+      ],
     );
   } else {
     await client.query(
@@ -1374,7 +1401,7 @@ export const createUpdateChallenge = async (challengeData: Challenge) => {
         challengeData.bonus_points,
         challengeData.bonus_is_additional,
         challengeData.challenge_id,
-      ]
+      ],
     );
   }
 };
@@ -1404,7 +1431,7 @@ export const createUpdateProject = async (projectData: Project) => {
         projectData.submitted,
         projectData.abandoned,
         projectData.created_at,
-      ]
+      ],
     );
     projectResult = result.rows[0];
   } else {
@@ -1444,7 +1471,7 @@ export const createUpdateProject = async (projectData: Project) => {
         projectData.submitted,
         projectData.abandoned,
         projectData.vt_project_id,
-      ]
+      ],
     );
     projectResult = result.rows[0];
   }
@@ -1457,7 +1484,7 @@ export const saveSectionHTML = async (sectionId, htmlString) => {
 
   await client.query(
     `UPDATE section SET html_string = $1 WHERE section_id = $2`,
-    [htmlString, sectionId]
+    [htmlString, sectionId],
   );
 };
 
@@ -1466,7 +1493,7 @@ export const savePodficHTML = async (podficId, htmlString) => {
 
   await client.query(
     `UPDATE podfic SET html_string = $1 WHERE podfic_id = $2`,
-    [htmlString, podficId]
+    [htmlString, podficId],
   );
 };
 
@@ -1491,7 +1518,7 @@ export const createUpdateScheduleEvents = async (events) => {
           event.start,
           event.end,
           event.allday,
-        ]
+        ],
       );
     } else {
       await client.query(
@@ -1514,7 +1541,7 @@ export const createUpdateScheduleEvents = async (events) => {
           event.end,
           event.allday,
           event.schedule_event_id,
-        ]
+        ],
       );
     }
   }
@@ -1541,7 +1568,7 @@ export const createUpdateScheduleEvent = async (event) => {
         event.start,
         event.end,
         event.allday,
-      ]
+      ],
     );
     return result.rows[0].schedule_event_id;
   } else {
@@ -1566,7 +1593,7 @@ export const createUpdateScheduleEvent = async (event) => {
         event.end,
         event.allday,
         event.schedule_event_id,
-      ]
+      ],
     );
     return result.rows[0].schedule_event_id;
   }
@@ -1594,7 +1621,7 @@ export const createUpdatePartData = async (partData) => {
           partData.status,
           partData.part,
           new Date(),
-        ]
+        ],
       );
     } else {
       if (typeof partData.part_id !== 'number')
@@ -1618,7 +1645,7 @@ export const createUpdatePartData = async (partData) => {
           partData.status,
           partData.part,
           partData.part_id,
-        ]
+        ],
       );
     }
     return partResult.rows[0].part_id;
@@ -1652,17 +1679,20 @@ export const updatePartAndSectionMinified = async (dataString: any) => {
   ];
   await client.query(partUpdateString, partParameterArray);
 
+  // TODO: status as well?
   const sectionUpdateString = `UPDATE section SET
     text_link = $1,
     wordcount = $2,
-    length = $3
-    WHERE section_id = $4
+    length = $3,
+    status = $4
+    WHERE section_id = $5
     RETURNING *
   `;
   const sectionParameterArray = [
     data.text_link,
     data.wordcount,
     data.length,
+    data.status,
     data.section_id,
   ];
   await client.query(sectionUpdateString, sectionParameterArray);
@@ -1670,12 +1700,12 @@ export const updatePartAndSectionMinified = async (dataString: any) => {
 
 export const linkPodficcerToPodfic = async (
   podficcerId: number,
-  podficId: number
+  podficId: number,
 ) => {
   const client = await getDBClient();
   const result = await client.query(
     `INSERT INTO podfic_podficcer (podfic_id, podficcer_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *`,
-    [podficId, podficcerId]
+    [podficId, podficcerId],
   );
   return result.rows[0];
 };
@@ -1684,7 +1714,7 @@ export const linkTagToPodfic = async (tagId: number, podficId: number) => {
   const client = await getDBClient();
   const result = await client.query(
     `INSERT INTO tag_podfic (tag_id, podfic_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *`,
-    [tagId, podficId]
+    [tagId, podficId],
   );
   return result.rows[0];
 };
@@ -1693,7 +1723,7 @@ export const unlinkTagFromPodfic = async (tagId: number, podficId: number) => {
   const client = await getDBClient();
   const result = await client.query(
     'DELETE FROM tag_podfic WHERE tag_id = $1 AND podfic_id = $2',
-    [tagId, podficId]
+    [tagId, podficId],
   );
   return result;
 };
@@ -1703,19 +1733,19 @@ export const updateTag = async (tagId: number, tagText: string) => {
   const client = await getDBClient();
   const result = await client.query(
     'UPDATE tag SET tag = $1 WHERE tag_id = $2 RETURNING *',
-    [tagText, tagId]
+    [tagText, tagId],
   );
   return result.rows[0];
 };
 
 export const linkChapterAndSection = async (
   chapterId: number,
-  sectionId: number
+  sectionId: number,
 ) => {
   const client = await getDBClient();
   const result = await client.query(
     `INSERT INTO chapter_section (chapter_id, section_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *`,
-    [chapterId, sectionId]
+    [chapterId, sectionId],
   );
   return result.rows[0];
 };
@@ -1747,7 +1777,7 @@ export const deletePodfic = async (podficId: number, workId?: number) => {
 
   const fileResult = await client.query(
     'SELECT file_id from file where podfic_id = $1',
-    [podficId]
+    [podficId],
   );
   const files = fileResult.rows;
   for (const file of files) {
@@ -1759,7 +1789,7 @@ export const deletePodfic = async (podficId: number, workId?: number) => {
   await client.query('DELETE FROM part where podfic_id = $1', [podficId]);
   const chapterResult = await client.query(
     'SELECT chapter_id from chapter where podfic_id = $1',
-    [podficId]
+    [podficId],
   );
   const chapters = chapterResult.rows;
   for (const chapter of chapters) {
@@ -1777,7 +1807,7 @@ export const deletePodfic = async (podficId: number, workId?: number) => {
   if (!workId) {
     const workResult = await client.query(
       'SELECT work_id FROM podfic WHERE podfic_id = $1',
-      [podficId]
+      [podficId],
     );
     workId = workResult.rows[0];
   }
@@ -1804,7 +1834,7 @@ export const createUpdatePermissionAsk = async (permissionData: Permission) => {
         permissionData.ask_medium,
         permissionData.work_id,
         permissionData.author_id,
-      ]
+      ],
     );
     permissionResult = result.rows[0];
   } else {
@@ -1828,10 +1858,140 @@ export const createUpdatePermissionAsk = async (permissionData: Permission) => {
         permissionData.ask_link,
         permissionData.ask_medium,
         permissionData.permission_id,
-      ]
+      ],
     );
     permissionResult = result.rows[0];
   }
 
   // return permissionResult;
+};
+
+export const createUpdateBingoCard = async (bingoCard: BingoCard) => {
+  const client = await getDBClient();
+  console.log({ bingoCard });
+
+  // TODO: figure out how to transform headers probably
+  if (!bingoCard.bingo_card_id) {
+    await client.query(
+      `
+      INSERT INTO bingo_card
+        (title, event_id, size, active, headers, created_at)
+      VALUES
+        ($1, $2, $3, $4, $5, $6)
+    `,
+      [
+        bingoCard.title,
+        bingoCard.event_id,
+        bingoCard.size,
+        bingoCard.active,
+        null,
+        new Date(),
+      ],
+    );
+  } else {
+    await client.query(
+      `
+      UPDATE bingo_card SET
+        title = $1,
+        event_id = $2,
+        size = $3,
+        active = $4,
+        headers = $5
+      WHERE bingo_card_id = $6
+    `,
+      [
+        bingoCard.title,
+        bingoCard.event_id,
+        bingoCard.size,
+        bingoCard.active,
+        null,
+        bingoCard.bingo_card_id,
+      ],
+    );
+  }
+};
+
+export const createUpdateBingoSquare = async (bingoSquare: BingoSquare) => {
+  if (
+    !bingoSquare.bingo_card_id ||
+    (!bingoSquare.row && bingoSquare.row !== 0) ||
+    (!bingoSquare.column && bingoSquare.column !== 0)
+  ) {
+    throw new Error('Missing required bingo square elements!');
+  }
+
+  const client = await getDBClient();
+
+  await client.query(
+    `
+    INSERT INTO bingo_square
+      (bingo_card_id, row, "column", title, title_link, description, filled)
+    VALUES
+      ($1, $2, $3, $4, $5, $6, $7)
+    ON CONFLICT (bingo_card_id, row, "column")
+    DO UPDATE SET
+      title = $4,
+      title_link = $5,
+      description = $6,
+      filled = $7
+  `,
+    [
+      bingoSquare.bingo_card_id,
+      bingoSquare.row,
+      bingoSquare.column,
+      bingoSquare.title,
+      bingoSquare.title_link,
+      bingoSquare.description,
+      bingoSquare.filled,
+    ],
+  );
+};
+
+export const createUpdateBingoFill = async (bingoFill: BingoFill) => {
+  const client = await getDBClient();
+
+  console.log({ bingoFill });
+
+  if (!bingoFill.bingo_fill_id) {
+    await client.query(
+      `INSERT INTO bingo_fill
+      (bingo_card_id, row, "column", podfic_id, title, description, completed)
+    VALUES
+      ($1, $2, $3, $4, $5, $6, $7)
+    `,
+      [
+        bingoFill.bingo_card_id,
+        bingoFill.row,
+        bingoFill.column,
+        bingoFill.podfic_id,
+        bingoFill.title,
+        bingoFill.description,
+        bingoFill.completed,
+      ],
+    );
+  } else {
+    await client.query(
+      `UPDATE bingo_fill SET
+      title = $1,
+      description = $2,
+      completed = $3,
+      podfic_id = $4
+    WHERE
+      bingo_fill_id = $5
+    `,
+      [
+        bingoFill.title,
+        bingoFill.description,
+        bingoFill.completed,
+        bingoFill.podfic_id,
+        bingoFill.bingo_fill_id,
+      ],
+    );
+  }
+};
+
+export const deleteBingoFill = async (id: number) => {
+  const client = await getDBClient();
+
+  await client.query('DELETE FROM bingo_fill WHERE bingo_fill_id = $1', [id]);
 };

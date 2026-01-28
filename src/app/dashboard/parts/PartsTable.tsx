@@ -76,6 +76,15 @@ export default function PartsTable() {
         hidden: true,
       },
     }),
+    columnHelper.accessor('section_id', {
+      header: 'Section ID',
+      cell: TableCell,
+      meta: {
+        type: 'number',
+        immutable: true,
+        hidden: true,
+      },
+    }),
     columnHelper.accessor('text_link', {
       header: 'Doc',
       cell: TableCell,
@@ -211,7 +220,7 @@ export default function PartsTable() {
       columns.reduce((acc, column) => {
         acc[column.id] = (column.meta as any)?.hidden;
         return acc;
-      }, {})
+      }, {}),
     );
 
   const [editingRowId, setEditingRowId] = useState(null);

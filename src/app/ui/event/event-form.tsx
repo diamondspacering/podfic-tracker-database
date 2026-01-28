@@ -112,7 +112,7 @@ export default function EventForm({ event, setEvent }: EventFormProps) {
           options={eventParents}
           value={
             eventParents?.find(
-              (parent) => parent.event_parent_id === event.parent_id
+              (parent) => parent.event_parent_id === event.parent_id,
             ) ?? {
               event_parent_id: 0,
               name: '',
@@ -138,7 +138,7 @@ export default function EventForm({ event, setEvent }: EventFormProps) {
       <TextField
         size='small'
         label='Name'
-        value={event.name}
+        value={event.name ?? ''}
         onChange={(e) =>
           setEvent((prev) => ({ ...prev, name: e.target.value }))
         }
@@ -147,7 +147,9 @@ export default function EventForm({ event, setEvent }: EventFormProps) {
         size='small'
         label='Year'
         value={
-          typeof event.year === 'number' ? event.year.toString() : event.year
+          typeof event.year === 'number'
+            ? event.year.toString()
+            : (event.year ?? '')
         }
         onChange={(e) =>
           setEvent((prev) => ({ ...prev, year: e.target.value }))

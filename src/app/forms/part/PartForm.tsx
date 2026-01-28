@@ -95,7 +95,7 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
         <TextField
           size='small'
           label='Doc'
-          value={sectionData.text_link}
+          value={sectionData.text_link ?? ''}
           onChange={(e) =>
             setSectionData((prev) => ({ ...prev, text_link: e.target.value }))
           }
@@ -111,7 +111,7 @@ export default function PartForm({ part_id = null, returnUrl = null }) {
           }}
           value={
             podficcers?.find(
-              (podficcer) => podficcer.podficcer_id === organizerId
+              (podficcer) => podficcer.podficcer_id === organizerId,
             ) ?? { podficcer_id: null, username: '' }
           }
           onChange={(_, newValue) => setOrganizerId(newValue?.podficcer_id)}
