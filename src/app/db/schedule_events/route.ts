@@ -8,18 +8,18 @@ export async function GET(request: NextRequest) {
   const client = await getDBClient();
 
   let queryString = `
-   select schedule_event_id,schedule_event.podfic_id,schedule_event.chapter_id,schedule_event.part_id,schedule_event.round_id,
+   select schedule_event_id,schedule_event.podfic_id,schedule_event.section_id,schedule_event.part_id,schedule_event.round_id,
        start,"end",allday,schedule_event.type,
        work.title,work.wordcount as wordcount,
-       number as round_number,
-       chapter_number, chapter_title, chapter.wordcount as chapter_wordcount, chapter.status as chapter_status,
-       part.part,part.words as part_wordcount,part.status as part_status
+       round.number as round_number,
+       section.number as section_number, section.wordcount as section_wordcount, section.title as section_title, section.status as section_status,
+       part.part,part.status as part_status
     from schedule_event
         left join podfic on schedule_event.podfic_id = podfic.podfic_id left join work on podfic.work_id = work.work_id
         left join round on schedule_event.round_id = round.round_id
-        left join chapter on schedule_event.chapter_id = chapter.chapter_id
+        left join section on schedule_event.section_id = section.section_id
         left join part on schedule_event.part_id = part.part_id
-    where (podfic.status is null or (podfic.status != 'Finished' and podfic.status != 'Posted')) and (part.status is null or (part.status != 'Submitted')) and (chapter.status is null or chapter.status != 'Posted'); 
+    where (podfic.status is null or (podfic.status != 'Finished' and podfic.status != 'Posted')) and (part.status is null or (part.status != 'Submitted')) and (section.status is null or section.status != 'Posted'); 
   `;
   // TODO: more thorough stuff here
   if (min_date) {

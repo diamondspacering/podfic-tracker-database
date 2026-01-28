@@ -117,7 +117,7 @@ export enum StatusType {
 
 export enum ScheduleEventType {
   PODFIC = 'Podfic',
-  CHAPTER = 'Chapter',
+  SECTION = 'Section',
   PART = 'Part',
   ROUND = 'Round',
 }

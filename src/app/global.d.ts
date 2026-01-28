@@ -366,7 +366,7 @@ interface Event {
 
 enum ScheduleEventType {
   PODFIC = 'Podfic',
-  CHAPTER = 'Chapter',
+  SECTION = 'Section',
   PART = 'Part',
   ROUND = 'Round',
 }
@@ -374,7 +374,7 @@ enum ScheduleEventType {
 interface ScheduleEvent {
   scheduled_event_id?: number;
   podfic_id?: number;
-  chapter_id?: number;
+  section_id?: number;
   part_id?: number;
   round_id?: number;
   type?: ScheduleEventType;
@@ -386,13 +386,12 @@ interface ScheduleEvent {
   wordcount?: number;
   status?: PodficStatus;
 
-  chapter_title?: string;
-  chapter_number?: number;
-  chapter_wordcount?: number;
-  chapter_status?: PodficStatus;
+  section_title?: string;
+  section_number?: number;
+  section_wordcount?: number;
+  section_status?: PodficStatus;
 
   part?: string;
-  part_wordcount?: number;
   part_status?: PartStatus;
 
   round_number?: number;

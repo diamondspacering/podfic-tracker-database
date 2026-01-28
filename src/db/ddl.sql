@@ -78,13 +78,13 @@ create sequence public.work_fandom_id_seq
 
 alter sequence public.work_fandom_id_seq owner to "podfic-tracker-db_owner";
 
-create type public.scheduleeventtype as enum ('Podfic', 'Chapter', 'Part', 'Round');
-
-alter type public.scheduleeventtype owner to "podfic-tracker-db_owner";
-
 create type public.sectiontype as enum ('default', 'single-to-multiple', 'multiple-to-single', 'chapters-split', 'chapters-combine');
 
 alter type public.sectiontype owner to "podfic-tracker-db_owner";
+
+create type public.scheduleeventtype as enum ('Podfic', 'Section', 'Part', 'Round');
+
+alter type public.scheduleeventtype owner to "podfic-tracker-db_owner";
 
 create table public.event_parent
 (
@@ -641,37 +641,6 @@ create table public.resource_podfic
 alter table public.resource_podfic
     owner to "podfic-tracker-db_owner";
 
-create table public.schedule_event
-(
-    schedule_event_id serial
-        constraint schedule_event_pk
-            primary key,
-    podfic_id         integer
-        constraint schedule_event_podfic_podfic_id_fk
-            references public.podfic,
-    chapter_id        integer
-        constraint schedule_event_chapter_chapter_id_fk
-            references public.chapter,
-    title             text,
-    start             timestamp with time zone,
-    "end"             timestamp with time zone,
-    allday            boolean not null,
-    part_id           integer
-        constraint schedule_event_part_part_id_fk
-            references public.part,
-    round_id          integer
-        constraint schedule_event_round_round_id_fk
-            references public.round,
-    type              scheduleeventtype
-);
-
-alter table public.schedule_event
-    owner to "podfic-tracker-db_owner";
-
-alter sequence public.schedule_event_chapter_id_seq owned by public.schedule_event.chapter_id;
-
-alter sequence public.schedule_event_podfic_id_seq owned by public.schedule_event.podfic_id;
-
 create table public.section
 (
     section_id   serial
@@ -840,6 +809,40 @@ create table public.resource_section
 
 alter table public.resource_section
     owner to "podfic-tracker-db_owner";
+
+create table public.schedule_event
+(
+    schedule_event_id serial
+        constraint schedule_event_pk
+            primary key,
+    podfic_id         integer
+        constraint schedule_event_podfic_podfic_id_fk
+            references public.podfic,
+    chapter_id        integer
+        constraint schedule_event_chapter_chapter_id_fk
+            references public.chapter,
+    title             text,
+    start             timestamp with time zone,
+    "end"             timestamp with time zone,
+    allday            boolean not null,
+    part_id           integer
+        constraint schedule_event_part_part_id_fk
+            references public.part,
+    round_id          integer
+        constraint schedule_event_round_round_id_fk
+            references public.round,
+    type              scheduleeventtype,
+    section_id        integer
+        constraint schedule_event_section_section_id_fk
+            references public.section
+);
+
+alter table public.schedule_event
+    owner to "podfic-tracker-db_owner";
+
+alter sequence public.schedule_event_chapter_id_seq owned by public.schedule_event.chapter_id;
+
+alter sequence public.schedule_event_podfic_id_seq owned by public.schedule_event.podfic_id;
 
 create table public.tag_podfic
 (
@@ -1107,6 +1110,12 @@ $$;
 
 alter function public.create_round_schedule_event() owner to "podfic-tracker-db_owner";
 
+create trigger on_insert_create_round_schedule_event
+    after insert
+    on public.round
+    for each row
+execute procedure public.create_round_schedule_event();
+
 create procedure public.update_all_raw_lengths_from_recording_sessions()
     language plpgsql
 as
@@ -1351,8 +1360,8 @@ begin
             se_type = 'Round';
         ELSE IF new.part_id is not null THEN
             se_type = 'Part';
-        ELSE IF new.chapter_id is not null THEN
-            se_type = 'Chapter';
+        ELSE IF new.section_id is not null THEN
+            se_type = 'Section';
         ELSE IF new.podfic_id is not null THEN
             se_type = 'Podfic';
         END IF;
@@ -1398,3 +1407,68 @@ END;
 $$;
 
 alter function public.backfill_resource_section_podfic_id() owner to "podfic-tracker-db_owner";
+
+create function public.create_section_schedule_event() returns trigger
+    language plpgsql
+as
+$$
+DECLARE
+BEGIN
+    IF new.deadline is not null AND old.deadline is null THEN
+        RAISE NOTICE 'updating deadline (%) for section (%)', new.deadline, new.section_id;
+        INSERT INTO schedule_event (podfic_id, section_id, part_id, start, "end", allday) VALUES (new.podfic_id, new.section_id, new.part_id, new.deadline, new.deadline, false);
+    ELSE IF new.deadline is not null and old.deadline is not null and new.deadline != old.deadline THEN
+        RAISE NOTICE 'creating new schedule event for section (%), updating old deadline (%) to new deadline (%)', new.section_id, old.deadline, new.deadline;
+        DELETE FROM schedule_event WHERE section_id = new.section_id;
+        INSERT INTO schedule_event (podfic_id, section_id, part_id, start, "end", allday) VALUES (new.podfic_id, new.section_id, new.part_id, new.deadline, new.deadline, false);
+    END IF;
+    END IF;
+    RETURN null;
+END;
+$$;
+
+alter function public.create_section_schedule_event() owner to "podfic-tracker-db_owner";
+
+create trigger on_insert_create_schedule_event
+    after insert
+    on public.section
+    for each row
+execute procedure public.create_section_schedule_event();
+
+create trigger on_update_create_schedule_event
+    after update
+    on public.section
+    for each row
+execute procedure public.create_section_schedule_event();
+
+create function public.create_podfic_schedule_event() returns trigger
+    language plpgsql
+as
+$$
+DECLARE
+BEGIN
+    IF new.deadline is not null AND old.deadline is null THEN
+        RAISE NOTICE 'updating deadline (%) for podfic (%)', new.deadline, new.podfic_id;
+        INSERT INTO schedule_event (podfic_id, start, "end", allday) VALUES (new.podfic_id, new.deadline, new.deadline, false);
+    ELSE IF new.deadline is not null and old.deadline is not null and new.deadline != old.deadline THEN
+        RAISE NOTICE 'creating new schedule event for podfic (%), updating old deadline (%) to new deadline (%)', new.podfic_id, old.deadline, new.deadline;
+        DELETE FROM schedule_event WHERE podfic_id = new.podfic_id AND section_id is null AND part_id is null;
+        INSERT INTO schedule_event (podfic_id, start, "end", allday) VALUES (new.podfic_id, new.deadline, new.deadline, false);
+    END IF;
+    END IF;
+END;
+$$;
+
+alter function public.create_podfic_schedule_event() owner to "podfic-tracker-db_owner";
+
+create trigger on_insert_create_podfic_schedule_event
+    after insert
+    on public.podfic
+    for each row
+execute procedure public.create_podfic_schedule_event();
+
+create trigger on_update_create_podfic_schedule_event
+    after update
+    on public.podfic
+    for each row
+execute procedure public.create_podfic_schedule_event();

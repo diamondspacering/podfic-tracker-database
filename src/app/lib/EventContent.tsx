@@ -13,12 +13,12 @@ export default function EventContent({ scheduleEvent }: EventContentProps) {
     title,
     wordcount,
     status,
-    chapter_title,
-    chapter_number,
-    chapter_wordcount,
-    chapter_status,
+    section_number,
+    section_title,
+    section_wordcount,
+    section_status,
     part,
-    part_wordcount,
+    part_status,
     round_number,
   } = scheduleEvent;
 
@@ -36,7 +36,7 @@ export default function EventContent({ scheduleEvent }: EventContentProps) {
           <br />
         </>
       )}
-      {round_number && (
+      {type === ScheduleEventType.ROUND && (
         <>
           <span>
             Voiceteam Round {round_number} ends,{' '}
@@ -47,16 +47,17 @@ export default function EventContent({ scheduleEvent }: EventContentProps) {
           <br />
         </>
       )}
-      {chapter_number && (
+      {/* TODO: how to correctly convey chapter information w/ sections? */}
+      {type === ScheduleEventType.SECTION && (
         <span>
-          {chapter_number}
-          {chapter_title ? ` - ${chapter_title}` : ''}
-          {`, ${chapter_wordcount}, ${chapter_status}`}
+          {`Section ${section_number}`}
+          {section_title ? ` - ${section_title}` : ''}
+          {`, ${section_wordcount}, ${section_status}`}
         </span>
       )}
-      {part && (
+      {type === ScheduleEventType.PART && (
         <span>
-          {part},&nbsp;{part_wordcount} words
+          {part},&nbsp;{section_wordcount} words
         </span>
       )}
       {type === ScheduleEventType.PODFIC && (

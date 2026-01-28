@@ -65,7 +65,7 @@ export default function SchedulePage() {
         return { style: { backgroundColor: 'purple' } };
       case ScheduleEventType.PART:
         return { style: { backgroundColor: 'blue' } };
-      case ScheduleEventType.CHAPTER:
+      case ScheduleEventType.SECTION:
         return { style: { backgroundColor: 'green' } };
       case ScheduleEventType.PODFIC:
         return { style: { backgroundColor: 'orange' } };
