@@ -1456,6 +1456,7 @@ BEGIN
         INSERT INTO schedule_event (podfic_id, start, "end", allday) VALUES (new.podfic_id, new.deadline, new.deadline, false);
     END IF;
     END IF;
+    RETURN null;
 END;
 $$;
 
