@@ -105,9 +105,9 @@ export default async function YearStats({ year }) {
                   {getLengthText(
                     getLengthFromValue(
                       getLengthValue(
-                        addLengths(worksAvg.avg, chaptersAvg.avg)
-                      ) / 2
-                    )
+                        addLengths(worksAvg.avg, chaptersAvg.avg),
+                      ) / 2,
+                    ),
                   )}
                 </td>
                 <td style={{ textAlign: 'right' }}>
@@ -186,7 +186,7 @@ export default async function YearStats({ year }) {
                   {rawWordCount.wordcount?.toLocaleString()}
                 </td>
                 <td style={{ textAlign: 'right' }}>
-                  {getLengthText(rawLength.sum)}
+                  {getLengthText(rawLength)}
                 </td>
               </tr>
               {/* Multivoice */}

@@ -35,6 +35,8 @@ import {
   dateFilter,
   formatTableDate,
   getIsPostedChaptered,
+  getPodficFinishedSectionCount,
+  getPodficSectionCount,
   getPodficSectionId,
   useFixedColorScale,
 } from '@/app/lib/utils';
@@ -80,7 +82,7 @@ export default function PodficTable() {
       {
         id: 'status',
         value: Object.values(PodficStatus).filter(
-          (status) => status !== PodficStatus.PLANNING
+          (status) => status !== PodficStatus.PLANNING,
         ),
       },
     ]);
@@ -252,7 +254,7 @@ export default function PodficTable() {
           .getFilteredRowModel()
           .rows?.reduce(
             (acc, row) => acc + parseInt(row.getValue('wordcount') ?? '0'),
-            0
+            0,
           );
         return <span>{sum.toLocaleString()}</span>;
       },
@@ -275,7 +277,7 @@ export default function PodficTable() {
           .getFilteredRowModel()
           .rows?.reduce(
             (acc, row) => addLengths(acc, row.getValue('length')),
-            getDefaultLength()
+            getDefaultLength(),
           );
         return <span>{getLengthText(sum)}</span>;
       },
@@ -294,7 +296,7 @@ export default function PodficTable() {
           .getFilteredRowModel()
           .rows?.reduce(
             (acc, row) => addLengths(acc, row.getValue('plain_length')),
-            getDefaultLength()
+            getDefaultLength(),
           );
         return <span>{getLengthText(sum)}</span>;
       },
@@ -313,7 +315,7 @@ export default function PodficTable() {
           .getFilteredRowModel()
           .rows?.reduce(
             (acc, row) => addLengths(acc, row.getValue('raw_length')),
-            getDefaultLength()
+            getDefaultLength(),
           );
         return <span>{getLengthText(sum)}</span>;
       },
@@ -326,7 +328,7 @@ export default function PodficTable() {
         const filteredRows = table
           .getFilteredRowModel()
           .rows?.filter(
-            (row) => !!row.getValue('wordcount') && !!row.getValue('length')
+            (row) => !!row.getValue('wordcount') && !!row.getValue('length'),
           );
         const num = filteredRows?.length ? filteredRows.length : 1;
         const sum = filteredRows?.reduce(
@@ -334,9 +336,9 @@ export default function PodficTable() {
             acc +
             Math.round(
               parseInt(row.getValue('wordcount')) /
-                (getLengthValue(row.getValue('length')) / 60)
+                (getLengthValue(row.getValue('length')) / 60),
             ),
-          0
+          0,
         );
         return <span>{Math.round(sum / num)}</span>;
       },
@@ -352,7 +354,7 @@ export default function PodficTable() {
             (row) =>
               !!row.getValue('wordcount') &&
               !!row.getValue('raw_length') &&
-              row.getValue('status') !== 'Recording'
+              row.getValue('status') !== 'Recording',
           );
         const num = filteredRows?.length ? filteredRows.length : 1;
         const sum = filteredRows?.reduce(
@@ -360,9 +362,9 @@ export default function PodficTable() {
             acc +
             Math.round(
               parseInt(row.getValue('wordcount')) /
-                (getLengthValue(row.getValue('raw_length')) / 60)
+                (getLengthValue(row.getValue('raw_length')) / 60),
             ),
-          0
+          0,
         );
         return <span>{Math.round(sum / num)}</span>;
       },
@@ -442,18 +444,7 @@ export default function PodficTable() {
             href={`/dashboard/chapters/${props.row.id}`}
             onClick={(e) => e.stopPropagation()}
           >
-            {`${
-              props.row.original.sections?.filter((s) => {
-                return (
-                  s.status === PodficStatus.POSTED ||
-                  s.status === PodficStatus.FINISHED ||
-                  s.status === PodficStatus.POSTING ||
-                  (props.row.original.section_type ===
-                    SectionType.MULTIPLE_TO_SINGLE &&
-                    s.number < 0)
-                );
-              }).length ?? '0'
-            }/${props.row.original.sections?.length ?? '?'}`}
+            {`${getPodficFinishedSectionCount(props.row.original)}/${getPodficSectionCount(props.row.original)}`}
             &nbsp;
             <IconButton
               style={{
@@ -580,7 +571,7 @@ export default function PodficTable() {
         acc[(column as any).accessorKey as string] = false;
       }
       return acc;
-    }, {})
+    }, {}),
   );
 
   const updatePodfic = async (podfic: Podfic & Work & Fandom) => {
@@ -591,14 +582,14 @@ export default function PodficTable() {
           posted_date: podfic.posted_date,
           ao3_link: podfic.ao3_link,
           status: podfic.status,
-        })
+        }),
       );
       const isPostedChaptered = getIsPostedChaptered(
         podfic.section_type,
-        podfic.chaptered
+        podfic.chaptered,
       );
       if (!isPostedChaptered) {
-        const section = podfic.sections?.[0];
+        const section = podfic.sections?.filter((s) => s.number > 0)?.[0];
         if (section) {
           await updateSectionMinified(
             JSON.stringify({
@@ -608,7 +599,7 @@ export default function PodficTable() {
               posted_date: podfic.posted_date,
               ao3_link: podfic.ao3_link,
               status: podfic.status,
-            })
+            }),
           );
         }
       }
@@ -665,7 +656,7 @@ export default function PodficTable() {
                   onChange={(e) => {
                     if (e.target.checked) {
                       const filterValue = columnFilters.find(
-                        (filter) => filter?.id === 'type'
+                        (filter) => filter?.id === 'type',
                       )?.value;
                       if (!!filterValue && Array.isArray(filterValue))
                         setColumnFilters((filters) =>
@@ -678,12 +669,12 @@ export default function PodficTable() {
                                     PodficType.MULTIVOICE,
                                   ],
                                 }
-                              : filter
-                          )
+                              : filter,
+                          ),
                         );
                     } else {
                       const filter = columnFilters.find(
-                        (filter) => filter?.id === 'type'
+                        (filter) => filter?.id === 'type',
                       );
                       if (!filter) {
                         setColumnFilters((filters) => [
@@ -692,7 +683,7 @@ export default function PodficTable() {
                             id: 'type',
                             value: [
                               ...Object.values(PodficType).filter(
-                                (type) => type !== PodficType.MULTIVOICE
+                                (type) => type !== PodficType.MULTIVOICE,
                               ),
                               null,
                             ],
@@ -708,13 +699,14 @@ export default function PodficTable() {
                                     id: 'type',
                                     value: [
                                       ...Object.values(PodficType).filter(
-                                        (type) => type !== PodficType.MULTIVOICE
+                                        (type) =>
+                                          type !== PodficType.MULTIVOICE,
                                       ),
                                       null,
                                     ],
                                   }
-                                : filter
-                            )
+                                : filter,
+                            ),
                           );
                         } else {
                           setColumnFilters((filters) =>
@@ -723,11 +715,11 @@ export default function PodficTable() {
                                 ? {
                                     id: 'type',
                                     value: value.filter(
-                                      (type) => type !== PodficType.MULTIVOICE
+                                      (type) => type !== PodficType.MULTIVOICE,
                                     ),
                                   }
-                                : filter
-                            )
+                                : filter,
+                            ),
                           );
                         }
                       }
@@ -743,7 +735,7 @@ export default function PodficTable() {
                 <Checkbox
                   onChange={(e) => {
                     router.push(
-                      `${pathname}?missing_aa_links=${e.target.checked}`
+                      `${pathname}?missing_aa_links=${e.target.checked}`,
                     );
                     // router.refresh();
                     window.location.reload();
@@ -783,12 +775,12 @@ export default function PodficTable() {
                       setRecordingSessionsExpanded((prev) =>
                         prev.includes(row.original.podfic_id)
                           ? prev.filter((id) => id !== row.original.podfic_id)
-                          : [...prev, row.original.podfic_id]
+                          : [...prev, row.original.podfic_id],
                       )
                     }
                   >
                     {recordingSessionsExpanded.includes(
-                      row.original.podfic_id
+                      row.original.podfic_id,
                     ) ? (
                       <KeyboardArrowDown />
                     ) : (

@@ -1,0 +1,71 @@
+.blackout {
+  background-color: #c1daf1 !important;
+}
+
+.bingoCard {
+  width: fit-content;
+}
+
+.bingoRow {
+  display: flex;
+  flex-direction: row;
+}
+
+.bingoSquare {
+  width: 150px;
+  height: 150px;
+  border: 1px solid black;
+
+  position: relative;
+
+  margin: 2.5px;
+  padding: 2.5px;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  .empty {
+    font-style: italic;
+    color: gray;
+  }
+}
+
+.bingoSquareDescription {
+  font-size: 0.75rem;
+  color: gray;
+  font-style: italic;
+}
+
+.bingoTitleLink {
+  color: inherit;
+}
+
+.filled {
+  background-color: lightgrey;
+}
+
+.isBingo {
+  background-color: lightblue;
+}
+
+.editSquare {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.bingoSquareContent {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+
+  text-align: center;
+}
+
+.bingoFills {
+  display: flex;
+  flex-direction: column;
+  color: gray;
+}

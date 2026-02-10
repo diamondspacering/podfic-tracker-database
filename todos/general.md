@@ -5,7 +5,7 @@
 - [x] Make metadata pulling actually set number of chapters as well
 - [ ] Make filters update when data is updated (e.g., new author) - prob have more `null` support?
 - [x] Podfic deletion
-- [ ] Actually use giftee_id and designating a podficcer who something is gifted to
+- [x] Actually use giftee_id and designating a podficcer who something is gifted to
 - [x] Generic dialog props that get extended
 - [ ] Individual author permission
   - [ ] Basic feature
@@ -29,6 +29,8 @@
 - [ ] Use transactions or something so you stop getting extra elements created by processes failing halfway through
   - transaction wrapper? is that a bad idea. Would require some restructuring
 - [ ] await params for other pages that need it
+- [ ] Support multiple categories (and adjust AO3 tags as well)
+- [ ] Fix the assorted component changing from controlled to uncontrolled errors (provide fallback value for missing values)
 
 ## Tables
 
@@ -137,6 +139,15 @@
 - [ ] Make challenge dropdown work correctly
 - [ ] How to conditionally display thing? points_manual?
 - [ ] Custom row at bottom might be best for own functions, render them all in bold?
+
+## Bingos
+
+- [ ] Custom CSS?
+- [x] Allow links in square titles
+- [ ] Background images?
+- [x] Width so that two can go side by side
+- [ ] Make bingo vs. blackout styling clearer
+- [ ] Make it easier to take notes?
 
 ### VoiceteamResourcesTable.tsx
 
