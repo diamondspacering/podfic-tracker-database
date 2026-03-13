@@ -24,13 +24,13 @@ export default function EventPodficTable({ eventId }) {
         podfics?.length
           ? Math.max(
               ...podfics.map((podfic) =>
-                getLengthValue(podfic.length ?? getDefaultLength())
-              )
+                getLengthValue(podfic.length ?? getDefaultLength()),
+              ),
             )
           : 1,
-        ['#ffffff', '#4285f4']
+        ['#ffffff', '#4285f4'],
       ),
-    [podfics]
+    [podfics],
   );
   const wordcountColorScale = useMemo(
     () =>
@@ -41,13 +41,13 @@ export default function EventPodficTable({ eventId }) {
               ...podfics.map((podfic) =>
                 typeof podfic.wordcount === 'string'
                   ? parseInt(podfic.wordcount)
-                  : podfic.wordcount ?? 0
-              )
+                  : (podfic.wordcount ?? 0),
+              ),
             )
           : 1,
-        ['#ffffff', '#4285f4']
+        ['#ffffff', '#4285f4'],
       ),
-    [podfics]
+    [podfics],
   );
 
   const columnHelper = createColumnHelper<Podfic & Work & Author>();

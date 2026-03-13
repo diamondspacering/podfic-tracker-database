@@ -49,9 +49,9 @@ export default function FilterMenu({
   const filteredOptions = useMemo(
     () =>
       options?.filter((o) =>
-        o?.toLowerCase().includes(searchValue.toLowerCase())
+        o?.toLowerCase().includes(searchValue.toLowerCase()),
       ),
-    [options, searchValue]
+    [options, searchValue],
   );
 
   return (
@@ -212,7 +212,7 @@ export default function FilterMenu({
                             setLocalFilter([...localFilter, null]);
                           else
                             setLocalFilter(
-                              localFilter.filter((f) => f !== null)
+                              localFilter.filter((f) => f !== null),
                             );
                         }}
                       />
@@ -230,7 +230,7 @@ export default function FilterMenu({
                               setLocalFilter([...localFilter, option]);
                             else
                               setLocalFilter(
-                                localFilter.filter((f) => f !== option)
+                                localFilter.filter((f) => f !== option),
                               );
                           }}
                         />

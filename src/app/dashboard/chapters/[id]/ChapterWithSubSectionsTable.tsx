@@ -24,7 +24,7 @@ export default function ChapterWithSubSectionsTable() {
   const { mainColumns } = useChapterColumns({ longChapterNumber: true });
 
   const [columnVisibility, setColumnVisibility] = useState(
-    getDefaultColumnVisibility(mainColumns)
+    getDefaultColumnVisibility(mainColumns),
   );
 
   const chapterColumnHelper = createColumnHelper<Chapter>();

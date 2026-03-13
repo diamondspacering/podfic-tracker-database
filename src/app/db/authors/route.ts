@@ -14,19 +14,19 @@ export async function GET() {
       `select * from resource
         inner join resource_author on resource.resource_id = resource_author.resource_id
         where resource_author.author_id = $1`,
-      [author.author_id]
+      [author.author_id],
     );
     author.resources = (resourceResult.rows ?? []) as Resource[];
 
     const noteResult = await client.query(
       `select * from note where author_id = $1`,
-      [author.author_id]
+      [author.author_id],
     );
     author.notes = (noteResult.rows ?? []) as Note[];
 
     const permissionResult = await client.query(
       `select * from permission where author_id = $1`,
-      [author.author_id]
+      [author.author_id],
     );
     author.permission_asks = (permissionResult.rows ?? []) as Permission[];
   }

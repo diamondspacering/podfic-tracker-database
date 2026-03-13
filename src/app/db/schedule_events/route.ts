@@ -32,6 +32,6 @@ export async function GET(request: NextRequest) {
 
   const result = await client.query(queryString);
   return NextResponse.json(
-    result.rows?.map((row) => ({ ...row, allDay: row.allday })) ?? []
+    result.rows?.map((row) => ({ ...row, allDay: row.allday })) ?? [],
   );
 }

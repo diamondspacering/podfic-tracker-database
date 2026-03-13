@@ -62,7 +62,7 @@ export default function HtmlPage() {
 
   const isPostedChaptered = useMemo(
     () => getIsPostedChaptered(sectionType, podfic.chaptered),
-    [podfic.chaptered, sectionType]
+    [podfic.chaptered, sectionType],
   );
 
   // -- Loading State --
@@ -84,7 +84,7 @@ export default function HtmlPage() {
       podficLoading,
       resourcesLoading,
       sectionLoading,
-    ]
+    ],
   );
 
   // -- HTML Generation --
@@ -98,12 +98,12 @@ export default function HtmlPage() {
   const [generatedFilesDialogOpen, setGeneratedFilesDialogOpen] =
     useState(false);
   const [aaDate, setAADate] = useState(
-    generateAADate(formatDateString(new Date()))
+    generateAADate(formatDateString(new Date())),
   );
 
   const { podficcer: defaultPodficcer } = usePodficcer(1);
   const { podficcer: coverArtist } = usePodficcer(
-    podfic?.coverArt?.podficcer_id ?? 1
+    podfic?.coverArt?.podficcer_id ?? 1,
   );
 
   const postingURL = useMemo(() => {
@@ -118,7 +118,7 @@ export default function HtmlPage() {
           podfic.ao3_link.slice(-1) === '/'
             ? podfic.ao3_link
             : `${podfic.ao3_link}/`
-        }chapters/new`
+        }chapters/new`,
       );
       url.search = searchParams.toString();
       return url.toString();
@@ -149,7 +149,7 @@ export default function HtmlPage() {
     setPodficLoading(true);
     if (podficId) {
       const response = await fetch(
-        `/db/podfics/${podficId}?with_cover_art=true&with_author=true&with_podficcers=true&with_section_chapters=true`
+        `/db/podfics/${podficId}?with_cover_art=true&with_author=true&with_podficcers=true&with_section_chapters=true`,
       );
       const data = await response.json();
       setPodfic(data);
@@ -199,11 +199,11 @@ export default function HtmlPage() {
       let response = null;
       if (!sectionId) {
         response = await fetch(
-          `/db/files?podfic_id=${podficId}&with_chapters=true`
+          `/db/files?podfic_id=${podficId}&with_chapters=true`,
         );
       } else {
         response = await fetch(
-          `/db/files?podfic_id=${podficId}&section_id=${sectionId}`
+          `/db/files?podfic_id=${podficId}&section_id=${sectionId}`,
         );
       }
       const data = await response.json();
@@ -219,11 +219,11 @@ export default function HtmlPage() {
       let response = null;
       if (!sectionId)
         response = await fetch(
-          `/db/resources?podfic_id=${podficId}&with_chapters=true`
+          `/db/resources?podfic_id=${podficId}&with_chapters=true`,
         );
       else
         response = await fetch(
-          `/db/resources?podfic_id=${podficId}&section_id=${sectionId}`
+          `/db/resources?podfic_id=${podficId}&section_id=${sectionId}`,
         );
       const data = await response.json();
       setResources(data);
@@ -268,7 +268,7 @@ export default function HtmlPage() {
   const submitGeneratedFiles = useCallback(async () => {
     console.log({ generatedLinks });
     const fileLinkPromises = generatedLinks.map(async (link) =>
-      createUpdateFileLink(link)
+      createUpdateFileLink(link),
     );
     await Promise.all(fileLinkPromises);
     // refetch files & set generated html
@@ -318,7 +318,7 @@ export default function HtmlPage() {
     if (selectedTemplate === 'Audiofic Archive') {
       const aaFiles = files
         .filter((file) =>
-          file.links?.some((link) => link.host === 'audiofic archive')
+          file.links?.some((link) => link.host === 'audiofic archive'),
         )
         .map((file) => ({
           ...file,
@@ -333,7 +333,7 @@ export default function HtmlPage() {
         files,
         filteredResources,
         defaultPodficcer,
-        coverArtist?.profile
+        coverArtist?.profile,
       );
       setGeneratedHTML(beautify.html(generated));
     } else if (selectedTemplate === 'bluedreaming') {
@@ -343,7 +343,7 @@ export default function HtmlPage() {
           podfic,
           section,
           files,
-          resources
+          resources,
         );
         setGeneratedHTML(beautify.html(generated));
       } else {
@@ -427,8 +427,8 @@ export default function HtmlPage() {
                       e.target.checked
                         ? [...filteredResources, resource]
                         : filteredResources.filter(
-                            (res) => res.resource_id !== resource.resource_id
-                          )
+                            (res) => res.resource_id !== resource.resource_id,
+                          ),
                     )
                   }
                 />
@@ -447,7 +447,7 @@ export default function HtmlPage() {
               ? parseInt(podfic.wordcount)
               : podfic.wordcount) /
               130 /
-              60
+              60,
           )}{' '}
           hours
         </p>

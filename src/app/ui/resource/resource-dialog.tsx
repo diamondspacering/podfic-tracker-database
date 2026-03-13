@@ -30,12 +30,12 @@ export default function ResourceDialog({
   submitCallback,
 }: ResourceDialogProps) {
   const [resource, setResource] = useState<Resource>(
-    resourceProp ?? ({} as Resource)
+    resourceProp ?? ({} as Resource),
   );
 
   useEffect(
     () => setResource(resourceProp ?? ({} as Resource)),
-    [resourceProp]
+    [resourceProp],
   );
 
   useEffect(() => {

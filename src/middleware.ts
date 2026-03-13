@@ -10,14 +10,14 @@ export async function middleware(request: NextRequest) {
 
   if (!session && !isPublicRoute) {
     return NextResponse.redirect(
-      new URL(`/login?return_url=${request.nextUrl.pathname}`, request.url)
+      new URL(`/login?return_url=${request.nextUrl.pathname}`, request.url),
     );
   }
 
   const response = NextResponse.next();
   response.headers.set(
     'x-forwarded-host',
-    request.headers.get('origin')?.replace(/(http|https):\/\//, '') || '*'
+    request.headers.get('origin')?.replace(/(http|https):\/\//, '') || '*',
   );
   return response;
 }

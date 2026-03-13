@@ -34,9 +34,9 @@ export default function VoiceteamRoundPage({
         .flatMap((challenge) => challenge.projects)
         .sort(
           (a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
         ),
-    [round]
+    [round],
   );
   useEffect(() => console.log({ projects }), [projects]);
 
@@ -68,7 +68,7 @@ export default function VoiceteamRoundPage({
                 },
               ]),
             }
-          : c
+          : c,
       ),
     });
   };
@@ -93,14 +93,14 @@ export default function VoiceteamRoundPage({
                 projects: c.projects.map((p, i) =>
                   i === origIndex
                     ? { ...p, points_manual: manualPointsValue }
-                    : p
+                    : p,
                 ),
               }
-            : c
+            : c,
         ),
       });
     },
-    [projects, round, setRound]
+    [projects, round, setRound],
   );
 
   const updatePoints = useCallback(
@@ -109,7 +109,7 @@ export default function VoiceteamRoundPage({
       if (!project) return;
       const origIndex = project.origIndex;
       const challenge = round.challenges.find(
-        (c) => c.challenge_id === project.challenge_id
+        (c) => c.challenge_id === project.challenge_id,
       );
       const challenge_points = challenge?.points ?? 0;
       const bonusPoints = challenge?.bonus_points ?? 0;
@@ -154,11 +154,11 @@ export default function VoiceteamRoundPage({
               ? {
                   ...c,
                   projects: c.projects.map((p, i) =>
-                    i === origIndex ? { ...p, points_manual: newPoints } : p
+                    i === origIndex ? { ...p, points_manual: newPoints } : p,
                   ),
                 }
-              : c
-          )
+              : c,
+          ),
         );
         setRound({
           ...round,
@@ -167,10 +167,10 @@ export default function VoiceteamRoundPage({
               ? {
                   ...c,
                   projects: c.projects.map((p, i) =>
-                    i === origIndex ? { ...p, points_manual: newPoints } : p
+                    i === origIndex ? { ...p, points_manual: newPoints } : p,
                   ),
                 }
-              : c
+              : c,
           ),
         });
       }
@@ -182,7 +182,7 @@ export default function VoiceteamRoundPage({
       bonus_values.project_lead,
       length_bonus_options,
       setRound,
-    ]
+    ],
   );
 
   const updateChallengeForProject = useCallback(
@@ -190,7 +190,7 @@ export default function VoiceteamRoundPage({
       const project = projects[projectIndex];
       const origIndex = project.origIndex;
       const challenge = round.challenges.find(
-        (c) => c.name === newChallengeName
+        (c) => c.name === newChallengeName,
       );
       const newChallengeId = challenge?.challenge_id;
 
@@ -209,16 +209,16 @@ export default function VoiceteamRoundPage({
                         challenge_id: newChallengeId,
                         challenge_name: newChallengeName,
                       }
-                    : p
+                    : p,
                 ),
               }
-            : c
+            : c,
         ),
       });
 
       updatePoints(projectIndex);
     },
-    [projects, round, setRound, updatePoints]
+    [projects, round, setRound, updatePoints],
   );
 
   Handsontable.renderers.registerRenderer(
@@ -231,14 +231,14 @@ export default function VoiceteamRoundPage({
         col,
         prop,
         value,
-        cellProperties
+        cellProperties,
       );
       const project = projects[row];
       if (!!project && (project.submitted || project.abandoned)) {
         td.style.textDecoration = 'line-through';
         td.style.color = 'gray';
       }
-    }
+    },
   );
 
   Handsontable.renderers.registerRenderer(
@@ -251,14 +251,14 @@ export default function VoiceteamRoundPage({
         col,
         prop,
         value,
-        cellProperties
+        cellProperties,
       );
       const project = projects[row];
       if (!!project && (project.submitted || project.abandoned)) {
         td.style.textDecoration = 'line-through';
         td.style.color = 'gray';
       }
-    }
+    },
   );
 
   return (
@@ -394,7 +394,7 @@ export default function VoiceteamRoundPage({
                   instance,
                   td,
                   row,
-                  ...rest
+                  ...rest,
                 );
             },
           },
@@ -409,7 +409,7 @@ export default function VoiceteamRoundPage({
                   instance,
                   td,
                   row,
-                  ...rest
+                  ...rest,
                 );
             },
           },
@@ -424,7 +424,7 @@ export default function VoiceteamRoundPage({
                   instance,
                   td,
                   row,
-                  ...rest
+                  ...rest,
                 );
             },
           },
@@ -446,7 +446,7 @@ export default function VoiceteamRoundPage({
                   instance,
                   td,
                   row,
-                  ...rest
+                  ...rest,
                 );
             },
           },
@@ -462,7 +462,7 @@ export default function VoiceteamRoundPage({
                   instance,
                   td,
                   row,
-                  ...rest
+                  ...rest,
                 );
             },
           },
@@ -477,7 +477,7 @@ export default function VoiceteamRoundPage({
                   instance,
                   td,
                   row,
-                  ...rest
+                  ...rest,
                 );
             },
           },
@@ -492,7 +492,7 @@ export default function VoiceteamRoundPage({
                   instance,
                   td,
                   row,
-                  ...rest
+                  ...rest,
                 );
             },
           },
@@ -508,7 +508,7 @@ export default function VoiceteamRoundPage({
                 col,
                 prop,
                 isAbandoned ? 0 : value,
-                cellProperties
+                cellProperties,
               );
               if (value >= points_cap) {
                 console.log({ value, points_cap });
@@ -532,7 +532,7 @@ export default function VoiceteamRoundPage({
                   col,
                   prop,
                   count,
-                  cellProperties
+                  cellProperties,
                 );
                 if (count >= points_cap) {
                   console.log({ count, points_cap });
@@ -546,7 +546,7 @@ export default function VoiceteamRoundPage({
                   col,
                   prop,
                   isSubmitted ? value : 0,
-                  cellProperties
+                  cellProperties,
                 );
                 if (value >= points_cap) {
                   console.log({ value, points_cap });
@@ -568,7 +568,7 @@ export default function VoiceteamRoundPage({
                 ?.filter((p) => !!p?.length)
                 ?.reduce(
                   (acc, proj) => addLengthStringToLength(acc, proj.length),
-                  getEmptyLength()
+                  getEmptyLength(),
                 );
               return getLengthText(count);
             },

@@ -37,10 +37,10 @@ export default function VoiceteamPage({ voiceteamId }) {
       params.set('round', roundNum.toString());
 
       router.replace(
-        `/dashboard/voiceteam/${voiceteamId}?${params.toString()}`
+        `/dashboard/voiceteam/${voiceteamId}?${params.toString()}`,
       );
     },
-    [searchParams, router, voiceteamId]
+    [searchParams, router, voiceteamId],
   );
 
   useEffect(() => {
@@ -117,8 +117,8 @@ export default function VoiceteamPage({ voiceteamId }) {
               setRound={(newRound) =>
                 setRounds((prev) =>
                   prev.map((r) =>
-                    r.round_id === newRound.round_id ? newRound : r
-                  )
+                    r.round_id === newRound.round_id ? newRound : r,
+                  ),
                 )
               }
               points_cap={data.points_cap ?? 0}

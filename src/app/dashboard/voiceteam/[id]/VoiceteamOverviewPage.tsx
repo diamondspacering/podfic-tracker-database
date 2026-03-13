@@ -48,7 +48,7 @@ export default function VoiceteamOverviewPage({
   const [anchorElBtm, setAnchorElBtm] = useState<null | HTMLElement>(null);
   const addChallengeBtmOpen = useMemo(
     () => Boolean(anchorElBtm),
-    [anchorElBtm]
+    [anchorElBtm],
   );
   const handleClickBtm = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -66,7 +66,7 @@ export default function VoiceteamOverviewPage({
         round.challenges?.map((challenge) => ({
           round_number: round.number,
           ...challenge,
-        })) ?? []
+        })) ?? [],
     );
   }, [rounds]);
 
@@ -108,8 +108,8 @@ export default function VoiceteamOverviewPage({
                 } as Challenge,
               ],
             }
-          : round
-      )
+          : round,
+      ),
     );
   };
 
@@ -132,11 +132,11 @@ export default function VoiceteamOverviewPage({
                       ...c,
                       [columnName]: newValue,
                     }
-                  : c
+                  : c,
               ),
             }
-          : r
-      )
+          : r,
+      ),
     );
   };
 

@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   if (partId && partId !== 'null') {
     const result = await client.query(
       `select * from section where part_id = $1 limit 1`,
-      [partId]
+      [partId],
     );
     sections = result.rows;
 

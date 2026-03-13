@@ -27,12 +27,12 @@ export async function GET(request: NextRequest) {
           group by file.file_id
           having string_agg(host, ',') not like '%audiofic archive%'
         `,
-          [podficId]
+          [podficId],
         );
       } else
         fileResult = await client.query(
           'select * from file where file.podfic_id = $1',
-          [podficId]
+          [podficId],
         );
     } else {
       fileResult = await client.query(`

@@ -106,28 +106,28 @@ const EditableCell = ({
                 </MenuItem>
               ))
             : columnMeta?.statusType === StatusType.PERMISSION_ASK
-            ? Object.values(PermissionAskStatus).map((status) => (
-                <MenuItem key={status} value={status}>
-                  <StatusBadge status={status} />
-                </MenuItem>
-              ))
-            : columnMeta?.statusType === StatusType.PERMISSION
-            ? allPermissionStatusValues.map((status) => (
-                <MenuItem key={status} value={status}>
-                  <StatusBadge status={status} />
-                </MenuItem>
-              ))
-            : columnMeta?.statusType === StatusType.PART
-            ? Object.values(PartStatus).map((status) => (
-                <MenuItem key={status} value={status}>
-                  <StatusBadge status={status} />
-                </MenuItem>
-              ))
-            : Object.values(PodficStatus).map((status) => (
-                <MenuItem key={status} value={status}>
-                  <StatusBadge status={status} />
-                </MenuItem>
-              ))}
+              ? Object.values(PermissionAskStatus).map((status) => (
+                  <MenuItem key={status} value={status}>
+                    <StatusBadge status={status} />
+                  </MenuItem>
+                ))
+              : columnMeta?.statusType === StatusType.PERMISSION
+                ? allPermissionStatusValues.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      <StatusBadge status={status} />
+                    </MenuItem>
+                  ))
+                : columnMeta?.statusType === StatusType.PART
+                  ? Object.values(PartStatus).map((status) => (
+                      <MenuItem key={status} value={status}>
+                        <StatusBadge status={status} />
+                      </MenuItem>
+                    ))
+                  : Object.values(PodficStatus).map((status) => (
+                      <MenuItem key={status} value={status}>
+                        <StatusBadge status={status} />
+                      </MenuItem>
+                    ))}
         </TextField>
       );
     case 'length':

@@ -24,7 +24,7 @@ export interface ItemMapping {
 
 export const getMappedItems = (
   items: string[],
-  mapping: Record<string, string>
+  mapping: Record<string, string>,
 ): ItemMapping => {
   const mappedItems = {};
   items?.forEach((item) => {

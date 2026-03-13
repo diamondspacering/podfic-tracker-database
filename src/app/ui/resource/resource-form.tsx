@@ -20,7 +20,7 @@ export default function ResourceForm({
   setResource,
 }: ResourceFormProps) {
   const { resources, isLoading: resourcesLoading } = useResourcesOfType(
-    resource.resource_type
+    resource.resource_type,
   );
 
   const [isNewResource, setIsNewResource] = useState(true);

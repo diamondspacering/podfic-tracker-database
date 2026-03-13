@@ -46,7 +46,7 @@ export default function ChapterOnlyTable() {
       ...mainColumns,
       ...metaColumns,
       ...postingColumns,
-    ])
+    ]),
   );
 
   const lengthColorScale = useLengthColorScale(sections, 'length');
@@ -83,7 +83,7 @@ export default function ChapterOnlyTable() {
         cell: (props) => (
           <Link
             href={`/forms/recording-session/new?section_id=${props.row.getValue(
-              'section_id'
+              'section_id',
             )}&return_url=${pathname}`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -103,7 +103,7 @@ export default function ChapterOnlyTable() {
         cell: (props) => (
           <Link
             href={`/dashboard/html?section_id=${props.row.getValue(
-              'section_id'
+              'section_id',
             )}`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -127,7 +127,7 @@ export default function ChapterOnlyTable() {
       pathname,
       podficTitle,
       postingColumns,
-    ]
+    ],
   );
 
   const defaultProps = getDefaultTableProps(columns);

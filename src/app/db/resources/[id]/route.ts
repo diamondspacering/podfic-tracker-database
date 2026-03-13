@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   _request: NextRequest,
-  context: { params: { id: any } }
+  context: { params: { id: any } },
 ) {
   const id = context.params.id;
 
   const client = await getDBClient();
   const result = await client.query(
-    `select * from resource where resource_id = ${id}`
+    `select * from resource where resource_id = ${id}`,
   );
 
   const resource = result.rows[0];
@@ -19,13 +19,13 @@ export async function GET(
 
 export async function DELETE(
   _request: NextRequest,
-  context: { params: { id: any } }
+  context: { params: { id: any } },
 ) {
   const id = context.params.id;
 
   const client = await getDBClient();
   const result = await client.query(
-    `DELETE FROM resource WHERE resource_id = ${id}`
+    `DELETE FROM resource WHERE resource_id = ${id}`,
   );
 
   return NextResponse.json(result);

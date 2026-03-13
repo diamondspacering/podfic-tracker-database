@@ -16,7 +16,7 @@ export default function loginFetcher() {
     const password = process.env.AO3_PWD;
     const url = getUrl(params[0]);
     const session = (await cookieJar.getCookies(url)).find(
-      (cookie) => cookie.key === AO3_SESSION_COOKIE
+      (cookie) => cookie.key === AO3_SESSION_COOKIE,
     );
     if (!session || (session.expires && session.expires <= new Date()))
       await login(username, password);
@@ -62,8 +62,8 @@ function getUrl(requestInfo: RequestInfo | URL): URL {
   return typeof requestInfo === 'string'
     ? new URL(requestInfo)
     : requestInfo instanceof URL
-    ? requestInfo
-    : new URL(requestInfo.url);
+      ? requestInfo
+      : new URL(requestInfo.url);
 }
 
 const fetchWork = async (workUrl: string) => {
@@ -72,7 +72,7 @@ const fetchWork = async (workUrl: string) => {
   let text = await result.text();
   if (
     text.includes(
-      'This work is only available to registered users of the Archive'
+      'This work is only available to registered users of the Archive',
     )
   ) {
     console.log('Work is locked, logging in...');
@@ -89,7 +89,7 @@ const fetchFullWork = async (workUrl: string) => {
   if (workUrl[workUrl.length - 1] === '/')
     fullWorkUrl = `${workUrl.substring(
       0,
-      workUrl.length - 1
+      workUrl.length - 1,
     )}?view_full_work=true`;
   else fullWorkUrl = `${workUrl}?view_full_work=true`;
 
@@ -105,7 +105,7 @@ export const fetchWorkMetadata = async (workUrl: string, logging = false) => {
   if (
     $('h2.title.heading').length == 0 &&
     text.includes(
-      'This work is part of an ongoing challenge and will be revealed soon!'
+      'This work is part of an ongoing challenge and will be revealed soon!',
     )
   ) {
     console.log('Unrevealed work, returning');
@@ -219,7 +219,7 @@ const getChapterData = (chapterElement, logging = false) => {
 
 export const fetchChapterMetadata = async (
   workUrl: string,
-  logging = false
+  logging = false,
 ) => {
   const text = await fetchFullWork(workUrl);
 

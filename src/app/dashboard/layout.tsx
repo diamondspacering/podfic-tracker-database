@@ -1,5 +1,5 @@
-import TopNav from "./top-nav";
-import styles from "./dashboard.module.css";
+import TopNav from './top-nav';
+import styles from './dashboard.module.css';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (

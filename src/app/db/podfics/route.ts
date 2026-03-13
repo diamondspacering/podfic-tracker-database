@@ -15,14 +15,14 @@ export async function GET(request: NextRequest) {
         left join permission on permission.work_id = podfic.work_id
         left join author on work.author_id = author.author_id
       where event_id = $1 order by added_date`,
-      [eventId]
+      [eventId],
     );
     podfics = result.rows;
 
     for (const podfic of podfics) {
       const noteResult = await client.query(
         `select * from note where podfic_id = $1`,
-        [podfic.podfic_id]
+        [podfic.podfic_id],
       );
       podfic.notes = noteResult.rows ?? [];
     }

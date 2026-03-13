@@ -47,7 +47,7 @@ export default function RecordingSessionTable({
 
   const deleteRecording = useCallback(async () => {
     const recordingObject = recordingSessions?.find(
-      (recording) => recording.recording_id === selectedRecording
+      (recording) => recording.recording_id === selectedRecording,
     );
     await fetch(`/db/recording_sessions/${selectedRecording}`, {
       method: 'DELETE',
@@ -56,7 +56,7 @@ export default function RecordingSessionTable({
       (key) =>
         Array.isArray(key) &&
         key[0] === '/db/recording_sessions' &&
-        key[1] === recordingObject.podfic_id
+        key[1] === recordingObject.podfic_id,
     );
     setDeleteConfirmDialogOpen(false);
   }, [selectedRecording, recordingSessions]);
@@ -69,11 +69,11 @@ export default function RecordingSessionTable({
       recordingSessions?.length
         ? Math.max(
             ...recordingSessions.map((recording) =>
-              getLengthValue(recording.length ?? getDefaultLength())
-            )
+              getLengthValue(recording.length ?? getDefaultLength()),
+            ),
           )
         : 1,
-      ['#ffffff', '#4285f4']
+      ['#ffffff', '#4285f4'],
     );
   }, [recordingSessions]);
 
@@ -121,10 +121,10 @@ export default function RecordingSessionTable({
             props.getValue()
               ? formatDateString(new Date(props.getValue()))
               : props.row.original.month
-              ? `${format2Digits(parseInt(props.row.original.month))}-${
-                  props.row.original.year
-                }`
-              : props.row.original.year
+                ? `${format2Digits(parseInt(props.row.original.month))}-${
+                    props.row.original.year
+                  }`
+                : props.row.original.year
           }
         />
       ),
@@ -137,7 +137,7 @@ export default function RecordingSessionTable({
       cell: (props) => (
         <Link
           href={`/forms/recording-session/${props.row.getValue(
-            'recording_id'
+            'recording_id',
           )}?return_url=${returnUrl}`}
           onClick={(e) => e.stopPropagation()}
         >
@@ -177,13 +177,13 @@ export default function RecordingSessionTable({
           Length:{' '}
           {getLengthText(
             recordingSessions?.find(
-              (recording) => recording.recording_id === selectedRecording
-            )?.length
+              (recording) => recording.recording_id === selectedRecording,
+            )?.length,
           )}
           Date:{' '}
           {
             recordingSessions?.find(
-              (recording) => recording.recording_id === selectedRecording
+              (recording) => recording.recording_id === selectedRecording,
             )?.date
           }
         </DialogContent>

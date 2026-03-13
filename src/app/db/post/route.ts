@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       inner join work on podfic.work_id = work.work_id
     where section_id = $1
     `,
-    [sectionId]
+    [sectionId],
   );
   const section = result.rows[0];
   console.log(result.rows);
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       ? parseInt(section.podfic_wordcount)
       : section.podfic_wordcount) /
       130 /
-      60
+      60,
   );
 
   const chaptered = getIsPostedChaptered(sectionType, section.chaptered);
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     const chapters = (
       await client.query(
         `select chapter_number,chapter_title from chapter inner join chapter_section on chapter_section.chapter_id = chapter.chapter_id where section_id = $1`,
-        [sectionId]
+        [sectionId],
       )
     ).rows;
 

@@ -52,22 +52,22 @@ export default function ToPodficTable() {
     async (tags: Tag[], originalTags: Tag[], rowId: string) => {
       const id = parseInt(rowId);
       const tagsToRemove = originalTags.filter(
-        (ot) => !tags.find((t) => t.tag_id === ot.tag_id)
+        (ot) => !tags.find((t) => t.tag_id === ot.tag_id),
       );
       const tagsToAdd = tags.filter(
-        (t) => !originalTags.find((ot) => ot.tag_id === t.tag_id)
+        (t) => !originalTags.find((ot) => ot.tag_id === t.tag_id),
       );
 
       await Promise.all(
-        tagsToRemove.map((tag) => unlinkTagFromPodfic(tag.tag_id, id))
+        tagsToRemove.map((tag) => unlinkTagFromPodfic(tag.tag_id, id)),
       );
       await Promise.all(
-        tagsToAdd.map((tag) => linkTagToPodfic(tag.tag_id, id))
+        tagsToAdd.map((tag) => linkTagToPodfic(tag.tag_id, id)),
       );
 
       await mutate('/db/topodfic');
     },
-    []
+    [],
   );
 
   const columns = [
@@ -189,7 +189,7 @@ export default function ToPodficTable() {
           .getFilteredRowModel()
           .rows?.reduce(
             (acc, row) => acc + parseInt(row.getValue('wordcount') ?? '0'),
-            0
+            0,
           );
         return <span>{sum.toLocaleString()}</span>;
       },
@@ -209,7 +209,7 @@ export default function ToPodficTable() {
           .getFilteredRowModel()
           .rows?.reduce(
             (acc, row) => addLengths(acc, row.getValue('length')),
-            getDefaultLength()
+            getDefaultLength(),
           );
         return <span>{getLengthText(sum)}</span>;
       },
@@ -229,7 +229,7 @@ export default function ToPodficTable() {
           .getFilteredRowModel()
           .rows?.reduce(
             (acc, row) => addLengths(acc, row.getValue('raw_length')),
-            getDefaultLength()
+            getDefaultLength(),
           );
         return <span>{getLengthText(sum)}</span>;
       },
@@ -342,19 +342,19 @@ export default function ToPodficTable() {
         acc[(column as any).accessorKey as string] = false;
       }
       return acc;
-    }, {})
+    }, {}),
   );
 
   const tagFilterValue = useMemo(
     () => columnFilters.find((filter) => filter.id === 'tags')?.value as Tag[],
-    [columnFilters]
+    [columnFilters],
   );
 
   const excludeTagFilterValue = useMemo(
     () =>
       columnFilters.find((filter) => filter.id === 'exclude_tags')
         ?.value as Tag[],
-    [columnFilters]
+    [columnFilters],
   );
 
   return (
@@ -394,8 +394,8 @@ export default function ToPodficTable() {
                     prev.map((filter) =>
                       filter.id === 'tags'
                         ? { id: 'tags', value: newValue }
-                        : filter
-                    )
+                        : filter,
+                    ),
                   );
                 }}
                 renderTags={(values, getTagProps) => {
@@ -426,8 +426,8 @@ export default function ToPodficTable() {
                     prev.map((filter) =>
                       filter.id === 'exclude_tags'
                         ? { id: 'exclude_tags', value: newValue }
-                        : filter
-                    )
+                        : filter,
+                    ),
                   );
                 }}
                 renderTags={(values, getTagProps) => {
@@ -465,13 +465,13 @@ export default function ToPodficTable() {
                         updateTagCallback={(newTag) =>
                           setEditingTags((prev) =>
                             prev.map((tag) =>
-                              tag.tag_id === newTag.tag_id ? newTag : tag
-                            )
+                              tag.tag_id === newTag.tag_id ? newTag : tag,
+                            ),
                           )
                         }
                         removeCallback={() =>
                           setEditingTags((prev) =>
-                            prev.filter((t) => t.tag_id !== tag.tag_id)
+                            prev.filter((t) => t.tag_id !== tag.tag_id),
                           )
                         }
                       />
@@ -498,7 +498,7 @@ export default function ToPodficTable() {
                         await saveTagsForRow(
                           editingTags,
                           row.original.tags ?? [],
-                          row.id
+                          row.id,
                         );
                         setEditingTags([]);
                         setEditingTagsId(null);

@@ -5,29 +5,29 @@ export const getLengthText = (length: Length | null) => {
   }
 
   const lengthString = `${format2Digits(length.hours ?? 0)}:${format2Digits(
-    length.minutes ?? 0
+    length.minutes ?? 0,
   )}:${format2Digits(length.seconds ?? 0)}`;
   return lengthString;
 };
 
 export const formatDateString = (date: Date) => {
   return `${date.getFullYear()}-${format2Digits(
-    date.getMonth() + 1
+    date.getMonth() + 1,
   )}-${format2Digits(date.getDate())}`;
 };
 
 export const formatDateStringMonthFirst = (date: Date) => {
   return `${format2Digits(date.getMonth() + 1)}-${format2Digits(
-    date.getDate()
+    date.getDate(),
   )}-${date.getFullYear()}`;
 };
 
 export const formatDateTimeString = (date: Date) => {
   const yearPart = `${date.getFullYear()}-${format2Digits(
-    date.getMonth() + 1
+    date.getMonth() + 1,
   )}-${format2Digits(date.getDate())}`;
   const timePart = `${format2Digits(date.getHours())}:${format2Digits(
-    date.getMinutes()
+    date.getMinutes(),
   )}`;
   return `${yearPart}T${timePart}`;
 };
@@ -49,7 +49,7 @@ export const getLengthUpdateString = (length: Length) => {
 export const transformDropboxLink = (link: string) => {
   const transformedLink = link.replace(
     'www.dropbox.com',
-    'dl.dropboxusercontent.com'
+    'dl.dropboxusercontent.com',
   );
   console.log(`original link: ${link}, transformed link: ${link}`);
   return transformedLink;
