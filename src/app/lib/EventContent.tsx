@@ -41,7 +41,7 @@ export default function EventContent({ scheduleEvent }: EventContentProps) {
           <span>
             Voiceteam Round {round_number} ends,{' '}
             {DateTime.fromISO(end as string).toLocaleString(
-              DateTime.TIME_SIMPLE
+              DateTime.TIME_SIMPLE,
             )}
           </span>
           <br />

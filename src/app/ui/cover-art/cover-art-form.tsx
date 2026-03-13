@@ -30,7 +30,7 @@ export default function CoverArtForm({ coverArt, setCoverArt }) {
         }}
         value={
           podficcers?.find(
-            (podficcer) => podficcer.podficcer_id === coverArt.podficcer_id
+            (podficcer) => podficcer.podficcer_id === coverArt.podficcer_id,
           ) ?? { podficcer_id: null, username: '' }
         }
         onChange={(_, newValue) => {

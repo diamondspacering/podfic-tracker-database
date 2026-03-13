@@ -24,16 +24,16 @@ export default function PermissionAskDialog({
   item: permissionProp,
 }: PermissionAskDialogProps) {
   const [permissionAsk, setPermissionAsk] = useState<Permission>(
-    permissionProp ?? ({ author_id: authorId, work_id: workId } as Permission)
+    permissionProp ?? ({ author_id: authorId, work_id: workId } as Permission),
   );
 
   useEffect(
     () =>
       setPermissionAsk(
         permissionProp ??
-          ({ author_id: authorId, work_id: workId } as Permission)
+          ({ author_id: authorId, work_id: workId } as Permission),
       ),
-    [authorId, permissionProp, workId]
+    [authorId, permissionProp, workId],
   );
 
   const submitPermissionAsk = useCallback(async () => {

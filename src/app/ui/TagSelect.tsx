@@ -45,7 +45,7 @@ export default function TagSelect({
         setAddingTag(false);
       }
     },
-    [addToExistingTags]
+    [addToExistingTags],
   );
 
   return (
@@ -57,7 +57,7 @@ export default function TagSelect({
       multiple
       freeSolo
       options={tags.filter(
-        (tag) => !existingTags.find((t) => t.tag_id === tag.tag_id)
+        (tag) => !existingTags.find((t) => t.tag_id === tag.tag_id),
       )}
       loading={tagsLoading || addingTag}
       value={showExistingTags ? existingTags : []}
@@ -66,7 +66,7 @@ export default function TagSelect({
       }
       onChange={(_, newValue) => {
         const newTags = newValue.filter(
-          (value) => typeof value === 'string' || value.tag.match(/Add ".*"/)
+          (value) => typeof value === 'string' || value.tag.match(/Add ".*"/),
         );
 
         if (newTags.length) {

@@ -52,7 +52,7 @@ export default function useChapterColumns({ longChapterNumber = false }) {
         },
       }),
     ],
-    [columnHelper, longChapterNumber]
+    [columnHelper, longChapterNumber],
   );
 
   return { mainColumns };

@@ -22,20 +22,20 @@ export async function GET(request: NextRequest) {
     } else {
       result = await client.query(
         `select * from resource where resource_type = $1`,
-        [resourceType]
+        [resourceType],
       );
     }
     resourceResult = result.rows ?? [];
   } else if (!!sectionId) {
     const sectionResult = await client.query(
       `select * from resource inner join resource_section on resource.resource_id = resource_section.resource_id where resource_section.section_id = $1`,
-      [sectionId]
+      [sectionId],
     );
     resourceResult = sectionResult.rows ?? [];
   } else if (!!podficId) {
     const podficResult = await client.query(
       `select * from resource inner join resource_podfic on resource.resource_id = resource_podfic.resource_id where resource_podfic.podfic_id = $1`,
-      [podficId]
+      [podficId],
     );
     resourceResult = podficResult.rows ?? [];
     // hmm sorting by chap would be nice but then the podfic id on there would be pointless bc we'd be fetching chapter anyway. much to think on.....
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
   } else if (!!eventId) {
     const eventResult = await client.query(
       `select * from resource inner join resource_event on resource.resource_id = resource_event.resource_id where resource_event.event_id = $1`,
-      [eventId]
+      [eventId],
     );
     resourceResult = eventResult.rows ?? [];
   }

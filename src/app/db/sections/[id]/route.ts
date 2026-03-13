@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: any } }
+  context: { params: { id: any } },
 ) {
   const sectionId = context.params.id;
 
@@ -11,7 +11,7 @@ export async function GET(
 
   const result = await client.query(
     'select * from section where section_id = $1',
-    [sectionId]
+    [sectionId],
   );
   const chapterResult = await client.query(
     `select * from chapter
@@ -20,7 +20,7 @@ export async function GET(
     order by chapter_number asc
     limit 1
     `,
-    [sectionId]
+    [sectionId],
   );
   const section = result.rows[0];
   section.chapters = chapterResult.rows;

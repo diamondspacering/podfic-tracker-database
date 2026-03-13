@@ -28,7 +28,7 @@ const NumericFormatCustom = React.forwardRef<NumericFormatProps, CustomProps>(
         valueIsNumericString
       />
     );
-  }
+  },
 );
 
 export default function FormattedNumberField({

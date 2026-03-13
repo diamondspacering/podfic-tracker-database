@@ -3,19 +3,19 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   _request: NextRequest,
-  context: { params: { id: any } }
+  context: { params: { id: any } },
 ) {
   const id = context.params.id;
 
   const client = await getDBClient();
   const fileResult = await client.query(
     'select * from file where file.file_id = $1',
-    [id]
+    [id],
   );
   const file = fileResult.rows[0] as File;
   const fileLinkResult = await client.query(
     'select * from file_link where file_id = $1',
-    [id]
+    [id],
   );
   file.links = fileLinkResult.rows as FileLink[];
   return NextResponse.json(file ?? {});
@@ -23,7 +23,7 @@ export async function GET(
 
 export async function DELETE(
   _request: NextRequest,
-  context: { params: { id: any } }
+  context: { params: { id: any } },
 ) {
   const id = context.params.id;
 
@@ -31,7 +31,7 @@ export async function DELETE(
 
   const links = await client.query(
     `select * from file_link where file_id = $1`,
-    [id]
+    [id],
   );
   // TODO: does this only need to be done once?
   for (let i = 0; i < links.rows.length; i++) {

@@ -42,7 +42,7 @@ export default function useSectionColumns({
         },
       }),
     ],
-    [columnHelper]
+    [columnHelper],
   );
 
   const metaColumns = useMemo(
@@ -117,7 +117,7 @@ export default function useSectionColumns({
         cell: RawWPMCell,
       }),
     ],
-    [columnHelper, lengthColorScale, rawColorScale, wordcountColorScale]
+    [columnHelper, lengthColorScale, rawColorScale, wordcountColorScale],
   );
 
   const postingColumns = useMemo(
@@ -174,7 +174,7 @@ export default function useSectionColumns({
         },
       }),
     ],
-    [columnHelper, editingRowId]
+    [columnHelper, editingRowId],
   );
 
   return { titleColumn, metaColumns, postingColumns };

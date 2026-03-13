@@ -31,7 +31,7 @@ export default function GeneratedLinksDialog({
           <br /> <br />
           {files.map((fileLink, index) => {
             const linkText = fileLink?.link.split(
-              'https://podfic.jinjurly.com/audfiles2/'
+              'https://podfic.jinjurly.com/audfiles2/',
             )?.[1];
             return (
               <div
@@ -53,8 +53,8 @@ export default function GeneratedLinksDialog({
                               ...f,
                               link: `https://podfic.jinjurly.com/audfiles2/${e.target.value}`,
                             }
-                          : f
-                      )
+                          : f,
+                      ),
                     )
                   }
                 />

@@ -13,17 +13,17 @@ export async function GET(request: NextRequest) {
   if (!!sectionId) {
     result = await client.query(
       `select * from recording_session where podfic_id = $1 and section_id = $2`,
-      [podficId, sectionId]
+      [podficId, sectionId],
     );
   } else if (full === 'true') {
     result = await client.query(
       `select * from recording_session where podfic_id = $1`,
-      [podficId]
+      [podficId],
     );
   } else {
     result = await client.query(
       `select * from recording_session where podfic_id = $1 and chapter_id is null`,
-      [podficId]
+      [podficId],
     );
   }
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 
 export const usePersistentState = <T>(
   key: string,
-  defaultValue: T
+  defaultValue: T,
 ): [T, React.Dispatch<React.SetStateAction<T>>] => {
   const [state, setState] = useState<T>(() => {
     let storedValue = null;

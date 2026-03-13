@@ -21,11 +21,11 @@ const DEFAULT_DEFINED_FILTER_TYPES = [
 ];
 
 export const defaultPodficStatusValues = Object.values(PodficStatus).filter(
-  (status) => status !== PodficStatus.PLANNING
+  (status) => status !== PodficStatus.PLANNING,
 );
 
 export const defaultAuthorPermissionStatusValues = Object.values(
-  AuthorPermissionStatus
+  AuthorPermissionStatus,
 );
 export const defaultPermissionAskStatusValues =
   Object.values(PermissionAskStatus);
@@ -34,15 +34,15 @@ export const allPermissionStatusValues = Array.from(
   new Set([
     ...Object.values(AuthorPermissionStatus),
     ...Object.values(PermissionAskStatus),
-  ])
+  ]),
 );
 
 export const defaultPodficTypeValues = Object.values(PodficType).filter(
-  (type) => type !== PodficType.MULTIVOICE
+  (type) => type !== PodficType.MULTIVOICE,
 );
 
 export const getDefaultFilterForColumn = (
-  column: Column<any, any>
+  column: Column<any, any>,
 ): ColumnFilter => {
   const filterType = (column.columnDef.meta as any)?.filterType as FilterType;
   let value: any = [];
@@ -119,8 +119,8 @@ export const getDefaultColumnFilters = (table: Table<any>) => {
     .getAllColumns()
     .filter((c) =>
       DEFAULT_DEFINED_FILTER_TYPES.includes(
-        (c.columnDef.meta as any)?.filterType
-      )
+        (c.columnDef.meta as any)?.filterType,
+      ),
     );
   const columnFilters = columnsToGet.map((c) => getDefaultFilterForColumn(c));
   return columnFilters;
@@ -131,8 +131,8 @@ export const resetAllColumns = (table: Table<any>) => {
   const definedColumnIds = columns
     .filter((c) =>
       DEFAULT_DEFINED_FILTER_TYPES.includes(
-        (c.columnDef.meta as any)?.filterType
-      )
+        (c.columnDef.meta as any)?.filterType,
+      ),
     )
     .map((c) => c.id);
   const columnFilters = columns.reduce((filters, c) => {
@@ -149,8 +149,8 @@ export const resetAllColumnsToDefault = (table: Table<any>) => {
   const definedColumnIds = columns
     .filter((c) =>
       DEFAULT_DEFINED_FILTER_TYPES.includes(
-        (c.columnDef.meta as any)?.filterType
-      )
+        (c.columnDef.meta as any)?.filterType,
+      ),
     )
     .map((c) => c.id);
   const columnFilters = columns.reduce((filters, c) => {

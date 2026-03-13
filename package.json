@@ -9,7 +9,8 @@
     "lint": "next lint",
     "update-metadata": "./src/scripts/run-python-script.sh src/scripts/update_metadata.py",
     "create-compilation": "./src/scripts/run-python-script.sh src/scripts/create_compilation_podfics.py",
-    "setup-data": "./src/scripts/setup-data.sh"
+    "setup-data": "./src/scripts/setup-data.sh",
+    "format": "prettier --write \"**/*.{ts,tsx}\""
   },
   "dependencies": {
     "@codemirror/lang-html": "^6.4.9",
@@ -53,6 +54,7 @@
     "@types/react-dom": "^18",
     "eslint": "^8",
     "eslint-config-next": "14.2.15",
+    "prettier": "^3.8.1",
     "typescript": "^5"
   }
 }

@@ -40,7 +40,7 @@ export default function VoiceteamResourcesTable({ eventId }) {
             (key) =>
               Array.isArray(key) &&
               key[0] === '/db/resources' &&
-              key[1] === eventId
+              key[1] === eventId,
           )
         }
       />

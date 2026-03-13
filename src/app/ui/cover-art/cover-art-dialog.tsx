@@ -27,7 +27,7 @@ export default function CoverArtDialog({
 }: CoverArtDialogProps) {
   // TODO: use cover art prop instead of fetching
   const [coverArt, setCoverArt] = useState(
-    coverArtProp ? coverArtProp : ({ podficcer_id: 1 } as CoverArt)
+    coverArtProp ? coverArtProp : ({ podficcer_id: 1 } as CoverArt),
   );
 
   useEffect(() => {

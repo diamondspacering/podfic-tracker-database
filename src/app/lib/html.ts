@@ -109,8 +109,8 @@ export const generateAALink = ({
     label === 'Without Music'
       ? '_(no_music)'
       : label === `Without Reader's Notes`
-      ? '_(no_notes)'
-      : ''
+        ? '_(no_notes)'
+        : ''
   }.${filetype}`;
   console.log({ fullTitle });
   return fullTitle;
@@ -120,7 +120,7 @@ export const generateAALink = ({
 // TODO: not including chapter names rn
 export const generateHTMLAudioficArchive = (
   podfic: Podfic & Work & CoverArt,
-  files: (File & FileLink)[]
+  files: (File & FileLink)[],
 ) => {
   let htmlString = ``;
   const chaptered = getIsPostedChaptered(podfic.section_type, podfic.chaptered);
@@ -145,13 +145,13 @@ export const generateHTMLAudioficArchive = (
   } else {
     podfic.sections?.forEach((section) => {
       let filteredFiles = files.filter(
-        (file) => file.section_id === section.section_id
+        (file) => file.section_id === section.section_id,
       );
       console.log({ filteredFiles });
       filteredFiles = filteredFiles.sort((a) =>
         !a.label || (a.label.includes('With') && !a.label.includes('Without'))
           ? -1
-          : 1
+          : 1,
       );
       console.log({ filteredFiles });
       if (!filteredFiles.length) return;
@@ -168,7 +168,7 @@ export const generateHTMLAudioficArchive = (
       // }\n`;
       filteredFiles.forEach((file) => {
         const fileLink = file.links.find(
-          (link) => link.host === 'audiofic archive'
+          (link) => link.host === 'audiofic archive',
         )?.link;
         htmlString = `${htmlString}${
           file.label ? `${file.label.toLowerCase()}\n` : ''
@@ -199,7 +199,7 @@ export const generateHTMLAzdaema = (
   files: File[],
   resources: Resource[],
   defaultPodficcer: Podficcer,
-  coverArtistProfile?: string
+  coverArtistProfile?: string,
 ) => {
   let htmlString = ``;
   htmlString += `<div class="podfic">`;
@@ -223,7 +223,7 @@ export const generateHTMLAzdaema = (
       htmlString += `<ul>`;
       htmlString += `<li><b>Length:</b> ${getLengthText(file.length)}</li>`;
       const filetype = Object.entries(FileType).find(
-        ([, value]) => value === file.filetype
+        ([, value]) => value === file.filetype,
       )?.[0];
       htmlString += `<li><b>File type:</b> ${filetype} (${file.size} MB)</li>`;
     } else {
@@ -253,7 +253,7 @@ export const generateHTMLAzdaema = (
             htmlString += `<li><a href="${file.links[0].link}">Download ${
               file.filetype
             } from ${file.links[0].host}</a> (${file.size} MB | ${getLengthText(
-              file.length
+              file.length,
             )})</li>`;
           } else if (directLinks.length > 1) {
             htmlString += `<li>Download ${file.filetype} (${
@@ -302,10 +302,10 @@ export const generateHTMLAzdaema = (
       if (filteredFiles.length === 1) {
         htmlString += `<ul>`;
         htmlString += `<li><b>Length:</b> ${getLengthText(
-          filteredFiles[0].length
+          filteredFiles[0].length,
         )}</li>`;
         const filetype = Object.entries(FileType).find(
-          ([, value]) => value === filteredFiles[0].filetype
+          ([, value]) => value === filteredFiles[0].filetype,
         )?.[0];
         htmlString += `<li><b>File type:</b> ${filetype} (${filteredFiles[0].size} MB)</li>`;
         htmlString += `</ul>`;
@@ -336,7 +336,7 @@ export const generateHTMLAzdaema = (
   }">${
     chaptered
       ? `${podfic.nickname ?? podfic.title} ${sectionName}`
-      : podfic.nickname ?? podfic.title
+      : (podfic.nickname ?? podfic.title)
   }</a></li>`;
   htmlString += `<li><b>Author:</b> <a href="${podfic.ao3}">${podfic.username}</a></li>`;
   const readers = podfic.podficcers ?? [defaultPodficcer];
@@ -376,7 +376,7 @@ export const generateHTMLBluedreamingChapter = (
   podfic: Podfic & Work & Author & CoverArt,
   section: Section,
   files: File[],
-  resources: Resource[]
+  resources: Resource[],
 ) => {
   let htmlString = ``;
   htmlString += `<div class="podfic">`;
@@ -437,7 +437,7 @@ export const generateHTMLBluedreamingChapter = (
 
 export const generateHTMLBluedreaming = (
   podfic: Podfic & Work & Author,
-  files: File[]
+  files: File[],
 ) => {
   let htmlString = ``;
   htmlString += `<div class="podfic">`;
@@ -450,7 +450,7 @@ export const generateHTMLBluedreaming = (
     htmlString += `\n<audio>`;
     if (file.links?.length) {
       file.links.forEach(
-        (link) => (htmlString += `<source src="${link.link}">`)
+        (link) => (htmlString += `<source src="${link.link}">`),
       );
     }
     htmlString += `</audio>`;

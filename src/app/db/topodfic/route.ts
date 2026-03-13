@@ -19,7 +19,7 @@ export async function GET() {
   `);
   // consider making this just permission notes?
   const authorNoteResult = await client.query(
-    'select * from note where author_id is not null'
+    'select * from note where author_id is not null',
   );
   const authorNotes = authorNoteResult.rows;
   // TODO: consider podfic notes as well, and separate them from author notes?
