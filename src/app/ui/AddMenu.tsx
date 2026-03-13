@@ -163,7 +163,7 @@ export default function AddMenu({
                 e.stopPropagation();
                 if (!podficId && !chapterId) {
                   console.error(
-                    'Error: cannot add a file with no podfic or chapter'
+                    'Error: cannot add a file with no podfic or chapter',
                   );
                   return;
                 }

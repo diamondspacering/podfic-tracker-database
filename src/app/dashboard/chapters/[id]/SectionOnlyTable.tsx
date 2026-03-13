@@ -82,7 +82,7 @@ export default function SectionOnlyTable({
       cell: (props) => (
         <Link
           href={`/forms/recording-session/new?section_id=${props.row.getValue(
-            'section_id'
+            'section_id',
           )}&podfic_id=${podficId}&return_url=${pathname}`}
           onClick={(e) => e.stopPropagation()}
         >
@@ -102,7 +102,7 @@ export default function SectionOnlyTable({
       cell: (props) => (
         <Link
           href={`/dashboard/html?section_id=${props.row.getValue(
-            'section_id'
+            'section_id',
           )}`}
           onClick={(e) => e.stopPropagation()}
         >

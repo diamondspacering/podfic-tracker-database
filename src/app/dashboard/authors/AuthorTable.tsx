@@ -175,7 +175,7 @@ export default function AuthorTable() {
                 resource.notes
               );
             },
-            ''
+            '',
           );
           if (resourceText.toLowerCase().includes(filter)) return true;
           return false;

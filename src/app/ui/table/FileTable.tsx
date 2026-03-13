@@ -117,7 +117,7 @@ export default function FileTable({
           type: 'link',
           className: tableStyles.extraPadding,
         },
-      }
+      },
     ),
     columnHelper.accessor(
       (row) =>
@@ -132,7 +132,7 @@ export default function FileTable({
           type: 'link',
           className: tableStyles.extraPadding,
         },
-      }
+      },
     ),
     columnHelper.accessor(
       (row) =>
@@ -146,7 +146,7 @@ export default function FileTable({
           type: 'link',
           className: tableStyles.extraPadding,
         },
-      }
+      },
     ),
     columnHelper.display({
       id: 'edit',
@@ -208,7 +208,7 @@ export default function FileTable({
           <br />
           Length:{' '}
           {getLengthText(
-            files?.find((file) => file.file_id === selectedFile)?.length
+            files?.find((file) => file.file_id === selectedFile)?.length,
           )}
           <br />
           Size: {files?.find((file) => file.file_id === selectedFile)?.size}

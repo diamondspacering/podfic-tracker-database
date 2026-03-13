@@ -117,7 +117,7 @@ export default function CustomTable<T>({
 
   const tableData = useMemo(
     () => (isLoading ? Array(numLoadingRows).fill({} as T) : data),
-    [isLoading, numLoadingRows, data]
+    [isLoading, numLoadingRows, data],
   );
 
   const tableColumns = useMemo(
@@ -128,7 +128,7 @@ export default function CustomTable<T>({
             cell: () => <Skeleton width='100%' />,
           }))
         : columns,
-    [isLoading, columns]
+    [isLoading, columns],
   );
 
   useEffect(() => console.log({ data }), [data]);
@@ -290,7 +290,7 @@ export default function CustomTable<T>({
                     ? null
                     : flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                 </th>
               ))}
@@ -312,7 +312,7 @@ export default function CustomTable<T>({
                     <td key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </td>
                   ))}
@@ -320,7 +320,7 @@ export default function CustomTable<T>({
                 {(row.getIsExpanded() || rowsAlwaysExpanded) &&
                   getExpandedContent(row)}
               </Fragment>
-            )
+            ),
           )}
         </tbody>
         <tfoot>
@@ -331,7 +331,7 @@ export default function CustomTable<T>({
                   <span>
                     {flexRender(
                       header.column.columnDef.footer,
-                      header.getContext()
+                      header.getContext(),
                     )}
                   </span>
                 </th>

@@ -18,7 +18,7 @@ export default function PodficcerDialog({
   item: podficcerProp = null,
 }: DialogProps<Podficcer>) {
   const [podficcer, setPodficcer] = useState<Podficcer>(
-    podficcerProp ?? ({} as Podficcer)
+    podficcerProp ?? ({} as Podficcer),
   );
 
   const submitPodficcer = useCallback(async () => {

@@ -11,7 +11,7 @@ export async function GET() {
       left join podficcer on podficcer.podficcer_id = part.organizer
       left join work on podfic.work_id = work.work_id
       left join event on event.event_id = podfic.event_id
-    order by part.created_at`
+    order by part.created_at`,
   );
 
   return NextResponse.json(result.rows ?? []);

@@ -43,8 +43,8 @@ export default function StatusSelect({
         type === 'permission'
           ? PermissionStatus
           : type === 'part'
-          ? PartStatus
-          : PodficStatus
+            ? PartStatus
+            : PodficStatus,
       ).map((status) => (
         <MenuItem key={status} value={status}>
           <StatusBadge status={status} />

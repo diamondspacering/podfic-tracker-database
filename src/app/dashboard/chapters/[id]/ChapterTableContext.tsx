@@ -23,7 +23,7 @@ interface ChapterTableContextType {
   setEditingRowId: Dispatch<SetStateAction<string | null>>;
   getExpandedContentCellComponent: (
     lengthColorScale: ColorScale,
-    row: Row<any>
+    row: Row<any>,
   ) => ReactNode;
   podficId: string;
   podficTitle: string;
@@ -87,7 +87,7 @@ export const useChapterTableContext = ({
 
   const getExpandedContentCellComponent = (
     lengthColorScale: ColorScale,
-    row: Row<any>
+    row: Row<any>,
   ) => {
     return (
       <>

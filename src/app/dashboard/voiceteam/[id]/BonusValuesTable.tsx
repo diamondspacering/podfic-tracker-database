@@ -10,7 +10,7 @@ export default function BonusValuesTable({ bonusValues }) {
         name: key,
         points: value,
       })),
-    [bonusValues]
+    [bonusValues],
   );
 
   return (

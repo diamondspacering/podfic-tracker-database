@@ -3,7 +3,7 @@ import { getDBClient } from '@/app/lib/db-helpers';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: any } }
+  context: { params: { id: any } },
 ) {
   const id = context.params.id;
   if (id === 'new' || id === 'null') {
@@ -27,22 +27,22 @@ export async function GET(
         left join cover_art on cover_art.podfic_id = podfic.podfic_id
         left join author on work.author_id = author.author_id
       where podfic.podfic_id = $1`,
-      [id]
+      [id],
     );
     podfic = result.rows[0];
     const coverArtResult = await client.query(
       `select *,status as cover_art_status from cover_art where podfic_id = $1`,
-      [id]
+      [id],
     );
     podfic.coverArt = coverArtResult.rows[0];
     const noteResult = await client.query(
       `select * from note where podfic_id = $1`,
-      [id]
+      [id],
     );
     podfic.notes = noteResult.rows ?? [];
   } else {
     const result = await client.query(
-      `select * from podfic inner join work on podfic.work_id = work.work_id where podfic_id = ${id}`
+      `select * from podfic inner join work on podfic.work_id = work.work_id where podfic_id = ${id}`,
     );
     podfic = result.rows[0];
   }
@@ -54,7 +54,7 @@ export async function GET(
         inner join podfic_podficcer on podfic_podficcer.podficcer_id = podficcer.podficcer_id
       where podfic_id = $1
     `,
-      [id]
+      [id],
     );
     podfic.podficcers = podficcerResult.rows ?? [];
   }
@@ -62,16 +62,16 @@ export async function GET(
   if (withTags) {
     const tagResult = await client.query(
       `select * from tag inner join tag_podfic on tag_podfic.tag_id = tag.tag_id where podfic_id = $1`,
-      [id]
+      [id],
     );
     podfic.tags = tagResult.rows ?? [];
   }
 
   const chapterResult = await client.query(
-    `select * from chapter where chapter.podfic_id = ${id} order by chapter_number asc`
+    `select * from chapter where chapter.podfic_id = ${id} order by chapter_number asc`,
   );
   const sectionResult = await client.query(
-    `select * from section where section.podfic_id = ${id} order by number asc`
+    `select * from section where section.podfic_id = ${id} order by number asc`,
   );
   if (podfic) {
     podfic.chapters = chapterResult.rows;
@@ -82,7 +82,7 @@ export async function GET(
     for (const section of podfic.sections) {
       const sectionChapterResult = await client.query(
         `select * from chapter inner join chapter_section on chapter.chapter_id = chapter_section.chapter_id where section_id = $1 order by chapter_number asc limit 1`,
-        [section.section_id]
+        [section.section_id],
       );
       section.chapters = sectionChapterResult.rows;
     }

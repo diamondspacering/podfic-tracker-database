@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: any } }
+  context: { params: { id: any } },
 ) {
   const client = await getDBClient();
   const podficId = context.params.id;
@@ -16,7 +16,7 @@ export async function GET(
     ORDER BY length DESC
     LIMIT 1
   `,
-    [podficId]
+    [podficId],
   );
   let length = getDefaultLength();
   if (lengthResult.rows?.length) {

@@ -8,7 +8,7 @@ export const WPMCell = (props) => {
       parseInt(props.row.getValue('wordcount')) /
         (props.row.getValue('plain_length')
           ? getLengthValue(props.row.getValue('plain_length')) / 60
-          : getLengthValue(props.row.getValue('length')) / 60)
+          : getLengthValue(props.row.getValue('length')) / 60),
     );
   }
   return <span>{value}</span>;
@@ -23,7 +23,7 @@ export const RawWPMCell = (props) => {
   ) {
     value = Math.round(
       parseInt(props.row.getValue('wordcount')) /
-        (getLengthValue(props.row.getValue('raw_length')) / 60)
+        (getLengthValue(props.row.getValue('raw_length')) / 60),
     );
   }
   return <span>{value}</span>;

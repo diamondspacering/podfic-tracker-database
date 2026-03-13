@@ -4,21 +4,21 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   _request: NextRequest,
-  context: { params: { id: any } }
+  context: { params: { id: any } },
 ) {
   const id = context.params.id;
 
   const client = await getDBClient();
   const voiceteamResult = await client.query(
     `select * from voiceteam_event where event_id = $1`,
-    [id]
+    [id],
   );
   const voiceteam = voiceteamResult.rows[0] as VoiceteamEvent;
 
   const voiceteamEventId = voiceteam.voiceteam_event_id;
   const roundResult = await client.query(
     `select * from round where voiceteam_event_id = $1 order by number`,
-    [voiceteamEventId]
+    [voiceteamEventId],
   );
   const rounds = (roundResult.rows ?? []) as Round[];
 
@@ -26,13 +26,13 @@ export async function GET(
     const roundId = round.round_id;
     const challengeResult = await client.query(
       `select * from challenge where round_id = $1 order by created_at`,
-      [roundId]
+      [roundId],
     );
     const challenges = (challengeResult.rows ?? []) as Challenge[];
     for (const challenge of challenges) {
       const projectResult = await client.query(
         `select * from vt_project where challenge_id = $1 order by created_at`,
-        [challenge.challenge_id]
+        [challenge.challenge_id],
       );
       challenge.projects =
         projectResult.rows?.map((row, i) => ({

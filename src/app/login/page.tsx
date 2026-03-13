@@ -27,7 +27,7 @@ export default function Page({ searchParams }) {
           password,
           callbackURL: returnUrl,
         },
-        returnUrl
+        returnUrl,
       );
     } catch (e) {
       console.error('Error signing in:', e);
@@ -47,7 +47,7 @@ export default function Page({ searchParams }) {
           password,
           callbackURL: returnUrl,
         },
-        returnUrl
+        returnUrl,
       );
     } catch (e) {
       console.error('Error signing up', e);

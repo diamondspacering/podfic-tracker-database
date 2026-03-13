@@ -42,7 +42,7 @@ export default function FileDialog({
 
   useEffect(
     () => setFile(fileProp ?? getDefaultFile(existingLength)),
-    [existingLength, fileProp]
+    [existingLength, fileProp],
   );
 
   useEffect(() => {

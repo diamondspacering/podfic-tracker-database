@@ -42,7 +42,7 @@ export default function SchedulePage() {
           start: new Date(event.start),
           end: new Date(event.end),
           title: <EventContent scheduleEvent={event} />,
-        }))
+        })),
       );
     }
   }, [localEvents.length, scheduleEvents, scheduleEventsLoading]);

@@ -57,7 +57,7 @@ export default function AdditionalContentRows({
 
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(
-    null
+    null,
   );
   const [selectedPermissionAsk, setSelectedPermissionAsk] =
     useState<Permission | null>(null);
@@ -69,7 +69,7 @@ export default function AdditionalContentRows({
       `/db/resources?resource_id=${selectedResource?.resource_id}&podfic_id=${podfic_id}&author_id=${author_id}&chapter_id=${chapter_id}&event_id=${event_id}`,
       {
         method: 'DELETE',
-      }
+      },
     );
     await submitCallback?.();
     setDeleteConfirmDialogOpen(false);
@@ -184,7 +184,7 @@ export default function AdditionalContentRows({
         ),
       }),
     ],
-    [columnHelper, editingRowId]
+    [columnHelper, editingRowId],
   );
 
   return (

@@ -12,7 +12,7 @@ export const addLengths = (length1: Length, length2: Length) => {
 
 export const addLengthStringToLength = (
   length: Length,
-  lengthString: string
+  lengthString: string,
 ) => {
   const lengthArray = lengthString.split(':');
   const hours = parseInt(lengthArray[0]);

@@ -12,13 +12,13 @@ const getNotes = async (client: Pool, sectionId: number) => {
 const getResources = async (client: Pool, sectionId: number) => {
   return await client.query(
     'select * from resource inner join resource_section on resource.resource_id = resource_section.resource_id where resource_section.section_id = $1',
-    [sectionId]
+    [sectionId],
   );
 };
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: any } }
+  context: { params: { id: any } },
 ) {
   const podficId = context.params.id;
   const searchParams = request.nextUrl.searchParams;
@@ -36,7 +36,7 @@ export async function GET(
           inner join section on chapter_section.section_id = section.section_id
         where section.podfic_id = $1
         order by chapter_number asc`,
-        [podficId]
+        [podficId],
       );
 
       chapters = result.rows;
@@ -53,7 +53,7 @@ export async function GET(
         `select * from chapter
         where chapter.podfic_id = $1
         order by chapter_number asc`,
-        [podficId]
+        [podficId],
       );
 
       chapters = result.rows;
@@ -63,7 +63,7 @@ export async function GET(
           `select * from section
             inner join chapter_section on chapter_section.section_id = section.section_id
           where chapter_section.chapter_id = $1 and section.podfic_id = $2 order by section.number asc`,
-          [chapter.chapter_id, podficId]
+          [chapter.chapter_id, podficId],
         );
 
         const sections = sectionResult.rows ?? [];
