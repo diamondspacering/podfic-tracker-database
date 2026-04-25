@@ -395,6 +395,7 @@ interface ScheduleEvent {
   part_status?: PartStatus;
 
   round_number?: number;
+  event_id?: number;
 }
 
 interface BingoCard {

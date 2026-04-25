@@ -180,6 +180,7 @@ export default function RecordingSessionTable({
               (recording) => recording.recording_id === selectedRecording,
             )?.length,
           )}
+          <br />
           Date:{' '}
           {
             recordingSessions?.find(

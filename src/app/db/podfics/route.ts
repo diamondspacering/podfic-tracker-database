@@ -6,8 +6,19 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const eventId = searchParams.get('event_id');
   const missingAALinks = searchParams.get('missing_aa_links') === 'true';
+  const withChapterSections =
+    searchParams.get('with_chapter_sections') === 'true';
+  const minimal = searchParams.get('minimal') === 'true';
   let podfics = null;
-  if (eventId) {
+  if (minimal) {
+    const client = await getDBClient();
+    const result = await client.query(`
+      select * from podfic
+        inner join work on podfic.work_id = work.work_id
+      order by added_date
+    `);
+    podfics = result.rows;
+  } else if (eventId) {
     const client = await getDBClient();
     const result = await client.query(
       `select *,permission.permission_status as work_permission_status,author.permission_status as author_permission_status from podfic
@@ -27,7 +38,7 @@ export async function GET(request: NextRequest) {
       podfic.notes = noteResult.rows ?? [];
     }
   } else {
-    podfics = await fetchPodficsFull(missingAALinks);
+    podfics = await fetchPodficsFull(missingAALinks, withChapterSections);
   }
 
   return NextResponse.json(podfics ?? []);

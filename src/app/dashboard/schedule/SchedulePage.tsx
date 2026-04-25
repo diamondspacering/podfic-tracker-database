@@ -11,6 +11,9 @@ import EventContent from '@/app/lib/EventContent';
 import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import { Button, Typography } from '@mui/material';
 import { ScheduleEventType } from '@/app/types';
+import { useRouter } from 'next/navigation';
+import { Add } from '@mui/icons-material';
+import ScheduleEventDialog from '@/app/ui/schedule-event/schedule-event-dialog';
 
 const timezone = DateTime.local().zoneName;
 
@@ -30,7 +33,14 @@ export default function SchedulePage() {
   const [localEvents, setLocalEvents] = useState([]);
 
   const [view, setView] = useState<View>(Views.MONTH);
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>(new Date('2025-05-03'));
+
+  const [scheduleEventDialogOpen, setScheduleEventDialogOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<
+    ScheduleEvent | undefined
+  >();
+
+  const router = useRouter();
 
   // useEffect(() => console.log({ scheduleEvents }), [scheduleEvents]);
 
@@ -74,12 +84,47 @@ export default function SchedulePage() {
     }
   }, []);
 
+  const eventOnClick = useCallback(
+    (event) => {
+      const seType = event.type;
+      console.log({ event });
+      switch (seType) {
+        case ScheduleEventType.ROUND:
+          router.push(
+            `/dashboard/voiceteam/${event.event_id}?round=${event.round_number}`,
+          );
+        case ScheduleEventType.PART:
+          router.push(`/dashboard/parts`);
+        case ScheduleEventType.SECTION:
+          return;
+        case ScheduleEventType.PODFIC:
+          router.push(`/forms/podfic/${event.podfic_id}`);
+      }
+    },
+    [router],
+  );
+
   const DnDCalendar = withDragAndDrop(Calendar);
 
   return (
     <div>
       <Typography variant='h3'>Schedule</Typography>
       <Button onClick={() => console.log(localEvents)}>Log local events</Button>
+      {/* TODO: that's unclear wording try fixing that */}
+      <Button
+        variant='contained'
+        startIcon={<Add />}
+        onClick={() => setScheduleEventDialogOpen(true)}
+      >
+        New Schedule Event
+      </Button>
+      {scheduleEventDialogOpen && (
+        <ScheduleEventDialog
+          item={selectedEvent}
+          isOpen={scheduleEventDialogOpen}
+          onClose={() => setScheduleEventDialogOpen(false)}
+        />
+      )}
       {!scheduleEventsLoading && localEvents.length && (
         <DnDCalendar
           view={view}
@@ -95,11 +140,11 @@ export default function SchedulePage() {
           // dragFromOutsideItem={dragFromOutsideItem}
           // onDropFromOutside={onDropFromOutside}
           // onEventDrop={moveEvent}
-          onDoubleClickEvent={(event) => {
-            console.log('double click event', event);
-          }}
+          onDoubleClickEvent={eventOnClick}
+          // onSelectEvent={eventOnClick}
           selectable
           eventPropGetter={eventPropGetter}
+          onSelectSlot={(slotInfo) => console.log({ slotInfo })}
         />
       )}
     </div>

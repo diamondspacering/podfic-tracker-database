@@ -6,7 +6,7 @@ import { PARTIAL_STATUSES, PodficStatus, SectionType } from '../types';
 
 // TODO: clean this up
 export const updateRecordingData = async (data: any) => {
-  // console.log({ recordingSessionData: data });
+  console.log({ recordingSessionData: data });
 
   try {
     data.length = getLengthUpdateString(data.length);
@@ -23,22 +23,51 @@ export const updateRecordingData = async (data: any) => {
     }
 
     const client = await getDBClient();
-    await client.query(
-      `
+
+    if (data.recordingId) {
+      await client.query(
+        `update recording_session set
+        podfic_id = $1,
+        section_id = $2,
+        date = $3,
+        year = $4,
+        month = $5,
+        length = $6,
+        mic = $7,
+        device = $8,
+        location = $9
+      where recording_id = $10`,
+        [
+          data.podficId,
+          data.sectionId ? data.sectionId : null,
+          data.date ? data.date : null,
+          data.year ? data.year : null,
+          data.month ? data.month : null,
+          data.length,
+          data.mic ? data.mic : null,
+          data.device ? data.device : null,
+          data.location ? data.location : null,
+          data.recordingId,
+        ],
+      );
+    } else {
+      await client.query(
+        `
       insert into recording_session (podfic_id, section_id, date, year, month, length, mic, device, location) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning *;
     `,
-      [
-        data.podficId,
-        data.sectionId ? data.sectionId : null,
-        data.date ? data.date : null,
-        data.year ? data.year : null,
-        data.month ? data.month : null,
-        data.length,
-        data.mic ? data.mic : null,
-        data.device ? data.device : null,
-        data.location ? data.location : null,
-      ],
-    );
+        [
+          data.podficId,
+          data.sectionId ? data.sectionId : null,
+          data.date ? data.date : null,
+          data.year ? data.year : null,
+          data.month ? data.month : null,
+          data.length,
+          data.mic ? data.mic : null,
+          data.device ? data.device : null,
+          data.location ? data.location : null,
+        ],
+      );
+    }
 
     if (data.podficId) {
       const statusResult = await client.query(
@@ -401,6 +430,8 @@ export const updateSectionMinified = async (data: any) => {
     //   await client.query(`UPDATE section SET `)
     // }
   }
+
+  console.log({ sectionData });
 
   await client.query(
     `
@@ -1556,14 +1587,16 @@ export const createUpdateScheduleEvent = async (event) => {
   if (!event.schedule_event_id) {
     const result = await client.query(
       `INSERT INTO schedule_event
-          (podfic_id, chapter_id, title, start, "end", allday)
+          (podfic_id, section_id, part_id, round_id, title, start, "end", allday)
         VALUES
-          ($1, $2, $3, $4, $5, $6)
+          ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
       `,
       [
         event.podfic_id,
-        event.chapter_id,
+        event.section_id,
+        event.part_id,
+        event.round_id,
         event.title,
         event.start,
         event.end,
@@ -1577,17 +1610,21 @@ export const createUpdateScheduleEvent = async (event) => {
       `UPDATE schedule_event
         SET
           podfic_id = $1,
-          chapter_id = $2,
-          title = $3,
-          start = $4,
-          "end" = $5,
-          allday = $6
-        WHERE schedule_event_id = $7
+          section_id = $2,
+          part_id = $3,
+          round_id = $4,
+          title = $5,
+          start = $6,
+          "end" = $7,
+          allday = $8
+        WHERE schedule_event_id = $9
         RETURNING *
       `,
       [
         event.podfic_id,
-        event.chapter_id,
+        event.section_id,
+        event.part_id,
+        event.round_id,
         event.title,
         event.start,
         event.end,

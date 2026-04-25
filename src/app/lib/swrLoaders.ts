@@ -146,6 +146,38 @@ export const useEvents = ({ childrenFirst = false }) => {
   };
 };
 
+export const useVoiceteams = ({ withRounds = false }) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/voiceteam?with_rounds=${withRounds}`,
+    fetcher,
+  );
+
+  const voiceteams = (data ?? []) as VoiceteamEvent[];
+
+  return {
+    voiceteams,
+    error,
+    isLoading,
+  };
+};
+
+export const useRounds = ({ voiceteamId = null }) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/voiceteam/${voiceteamId}/rounds`,
+    voiceteamId === null
+      ? () => ({ data: [], error: null, isLoading: false })
+      : fetcher,
+  );
+
+  const rounds = (data ?? []) as Round[];
+
+  return {
+    rounds,
+    error,
+    isLoading,
+  };
+};
+
 export const useAuthors = () => {
   const { data, error, isLoading } = useSWR('/db/authors', fetcher);
 
@@ -285,6 +317,21 @@ export const usePodficsFull = ({ missingAALinks = false }) => {
   };
 };
 
+export const usePodficsMinimal = () => {
+  const { data, error, isLoading } = useSWR(
+    `/db/podfics?minimal=true`,
+    fetcher,
+  );
+
+  const podfics = (data ?? []) as (Podfic & Work)[];
+
+  return {
+    podfics,
+    error,
+    isLoading,
+  };
+};
+
 export const useFiles = ({ podficId, sectionId, onlyNonAAFiles = false }) => {
   const { data, error, isLoading } = useSWR(
     ['/db/files', podficId, sectionId, onlyNonAAFiles],
@@ -338,7 +385,8 @@ export const useScheduleEvents = ({
   minDate?: string;
   maxDate?: string;
 }) => {
-  const { data, error, isLoading } = useSWR(
+  // TODO: make this array so you can mutate it easier?
+  const { data, error, mutate, isLoading } = useSWR(
     `/db/schedule_events?min_date=${minDate || ''}&max_date=${maxDate || ''}`,
     fetcher,
   );
@@ -348,6 +396,7 @@ export const useScheduleEvents = ({
   return {
     scheduleEvents,
     error,
+    mutate,
     isLoading,
   };
 };
@@ -371,6 +420,21 @@ export const useParts = () => {
   const { data, error, isLoading } = useSWR('/db/parts', fetcher);
 
   const parts = (data ?? []) as PartWithContext[];
+
+  return {
+    parts,
+    error,
+    isLoading,
+  };
+};
+
+export const usePartsForPodfic = ({ podficId = null }) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/parts?podfic_id=${podficId}`,
+    podficId ? fetcher : () => ({ data: [], error: null, isLoading: false }),
+  );
+
+  const parts = (data ?? []) as Part[];
 
   return {
     parts,
