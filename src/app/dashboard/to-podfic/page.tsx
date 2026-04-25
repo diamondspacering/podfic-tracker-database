@@ -29,6 +29,19 @@ export default async function Page() {
       <br />
       <br />
       <ToPodficTable />
+      <br />
+      <br />
+      <Link href='/forms/podfic/new?return_url=/dashboard/to-podfic'>
+        <Button
+          variant='contained'
+          startIcon={<Add />}
+          style={{
+            marginBottom: '2rem',
+          }}
+        >
+          New Podfic
+        </Button>
+      </Link>
     </div>
   );
 }

@@ -83,7 +83,7 @@ export default function RecordingSessionForm({
 
   useEffect(() => {
     const fetchPodfics = async () => {
-      const response = await fetch('/db/podfics');
+      const response = await fetch('/db/podfics?with_chapter_sections=true');
       const data = await response.json();
       setPodficList(data);
     };
@@ -115,6 +115,7 @@ export default function RecordingSessionForm({
       const response = await fetch(`/db/sections/${sectionId}`);
       const data = await response.json();
       setSelectedSection(data);
+      console.log({ selectedSection: data });
     };
 
     if (sectionId) {
@@ -143,6 +144,7 @@ export default function RecordingSessionForm({
         sectionType === SectionType.CHAPTERS_SPLIT ||
         sectionType === SectionType.MULTIPLE_TO_SINGLE)
     ) {
+      console.log('setting chapter id from section');
       const chapterIdFromSection = selectedSection.chapters?.[0].chapter_id;
       setChapterId(chapterIdFromSection);
     }
@@ -186,6 +188,7 @@ export default function RecordingSessionForm({
     const data = await response.json();
     setPodficId(data.podfic_id ?? null);
     setChapterId(data.chapter_id ?? null);
+    setSectionId(data.section_id ?? null);
     if (data.date) {
       setDate(formatDateString(new Date(data.date)));
       console.log(formatDateStringMonthFirst(new Date(data.date)));
@@ -443,6 +446,7 @@ export default function RecordingSessionForm({
                 value={selectedChapter}
                 onChange={(_, newValue) => {
                   setChapterId(newValue.chapter_id);
+                  console.log({ newValue });
                   if (!shouldShowSectionSelect) {
                     setSectionId(newValue.sections?.[0].section_id ?? null);
                   }
@@ -570,6 +574,7 @@ export default function RecordingSessionForm({
               podficId,
               chapterId,
               sectionId,
+              recordingId,
               partId,
               length,
               mic,
