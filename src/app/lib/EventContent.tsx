@@ -1,16 +1,23 @@
 import { DateTime } from 'luxon';
 import { ScheduleEventType } from '../types';
+import { IconButton } from '@mui/material';
+import { Edit } from '@mui/icons-material';
 
 // }
 interface EventContentProps {
   scheduleEvent: ScheduleEvent;
+  editEvent: () => void;
 }
 
-export default function EventContent({ scheduleEvent }: EventContentProps) {
+export default function EventContent({
+  scheduleEvent,
+  editEvent,
+}: EventContentProps) {
   const {
     end,
     type,
     title,
+    work_title,
     wordcount,
     status,
     section_number,
@@ -22,17 +29,27 @@ export default function EventContent({ scheduleEvent }: EventContentProps) {
     round_number,
   } = scheduleEvent;
 
-  console.log('end', end);
   return (
     <div
       style={{
         maxWidth: '350px',
         textWrap: 'wrap',
+        position: 'relative',
       }}
     >
-      {title && (
+      <IconButton
+        style={{ padding: '0px', position: 'absolute', right: '0' }}
+        onClick={(e) => {
+          e.stopPropagation();
+          editEvent();
+        }}
+      >
+        <Edit style={{ width: '75%' }} />
+      </IconButton>
+      {/* TODO: this used to have just title, use that somewhere */}
+      {work_title && (
         <>
-          <span>{title}</span>
+          <span>{work_title}</span>
           <br />
         </>
       )}
@@ -52,12 +69,12 @@ export default function EventContent({ scheduleEvent }: EventContentProps) {
         <span>
           {`Section ${section_number}`}
           {section_title ? ` - ${section_title}` : ''}
-          {`, ${section_wordcount}, ${section_status}`}
+          {`, ${section_wordcount ?? '?'}, ${section_status}`}
         </span>
       )}
       {type === ScheduleEventType.PART && (
         <span>
-          {part},&nbsp;{section_wordcount} words
+          {part},&nbsp;{section_wordcount ?? '?'} words, {section_status}
         </span>
       )}
       {type === ScheduleEventType.PODFIC && (

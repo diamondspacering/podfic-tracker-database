@@ -14,6 +14,7 @@ import { ScheduleEventType } from '@/app/types';
 import { useRouter } from 'next/navigation';
 import { Add } from '@mui/icons-material';
 import ScheduleEventDialog from '@/app/ui/schedule-event/schedule-event-dialog';
+import { createUpdateScheduleEvent } from '@/app/lib/updaters';
 
 const timezone = DateTime.local().zoneName;
 
@@ -27,13 +28,19 @@ const timezone = DateTime.local().zoneName;
   - add changing deadlines on things by dragging?
 */
 export default function SchedulePage() {
+  const [minDate, setMinDate] = useState(
+    DateTime.local().startOf('month').toISO(),
+  );
+  const [maxDate, setMaxDate] = useState(
+    DateTime.local().endOf('month').toISO(),
+  );
   const { scheduleEvents, isLoading: scheduleEventsLoading } =
-    useScheduleEvents({});
+    useScheduleEvents({ minDate, maxDate });
 
   const [localEvents, setLocalEvents] = useState([]);
 
   const [view, setView] = useState<View>(Views.MONTH);
-  const [date, setDate] = useState<Date>(new Date('2025-05-03'));
+  const [date, setDate] = useState<Date>(new Date());
 
   const [scheduleEventDialogOpen, setScheduleEventDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<
@@ -42,7 +49,10 @@ export default function SchedulePage() {
 
   const router = useRouter();
 
-  // useEffect(() => console.log({ scheduleEvents }), [scheduleEvents]);
+  const editEvent = useCallback((event: ScheduleEvent) => {
+    setSelectedEvent(event);
+    setScheduleEventDialogOpen(true);
+  }, []);
 
   useEffect(() => {
     if (!scheduleEventsLoading && !localEvents.length) {
@@ -51,11 +61,16 @@ export default function SchedulePage() {
           ...event,
           start: new Date(event.start),
           end: new Date(event.end),
-          title: <EventContent scheduleEvent={event} />,
+          title: (
+            <EventContent
+              scheduleEvent={event}
+              editEvent={() => editEvent(event)}
+            />
+          ),
         })),
       );
     }
-  }, [localEvents.length, scheduleEvents, scheduleEventsLoading]);
+  }, [editEvent, localEvents.length, scheduleEvents, scheduleEventsLoading]);
 
   const { getNow, localizer, scrollToTime } = useMemo(() => {
     Settings.defaultZone = timezone;
@@ -93,15 +108,51 @@ export default function SchedulePage() {
           router.push(
             `/dashboard/voiceteam/${event.event_id}?round=${event.round_number}`,
           );
+          break;
         case ScheduleEventType.PART:
           router.push(`/dashboard/parts`);
+          break;
         case ScheduleEventType.SECTION:
-          return;
+          break;
         case ScheduleEventType.PODFIC:
           router.push(`/forms/podfic/${event.podfic_id}`);
+          break;
       }
     },
     [router],
+  );
+
+  // causes a router error but is fine
+  const moveEvent = useCallback(
+    ({ event, start, end, isAllDay }) => {
+      setLocalEvents((prev) => {
+        const existing = prev.find(
+          (ev) => ev.schedule_event_id === event.schedule_event_id,
+        );
+        const newEvent = {
+          ...existing,
+          start,
+          end,
+          allday: isAllDay ?? true,
+        };
+        createUpdateScheduleEvent({ ...newEvent, title: '' });
+
+        return prev.map((ev) =>
+          ev.schedule_event_id === event.schedule_event_id
+            ? {
+                ...newEvent,
+                title: (
+                  <EventContent
+                    scheduleEvent={newEvent}
+                    editEvent={() => editEvent(event)}
+                  />
+                ),
+              }
+            : ev,
+        );
+      });
+    },
+    [editEvent],
   );
 
   const DnDCalendar = withDragAndDrop(Calendar);
@@ -125,23 +176,29 @@ export default function SchedulePage() {
           onClose={() => setScheduleEventDialogOpen(false)}
         />
       )}
-      {!scheduleEventsLoading && localEvents.length && (
+      {!scheduleEventsLoading && (
         <DnDCalendar
           view={view}
           date={date}
           onView={(view) => setView(view)}
           onNavigate={(date) => setDate(new Date(date))}
+          onRangeChange={(range) => {
+            if (!Array.isArray(range)) {
+              setMinDate(range.start.toISOString());
+              setMaxDate(range.end.toISOString());
+            }
+          }}
           localizer={localizer}
           events={localEvents}
           getNow={getNow}
           scrollToTime={scrollToTime}
           style={{ height: '90vh' }}
-          // draggableAccessor={() => true}
+          draggableAccessor={() => true}
           // dragFromOutsideItem={dragFromOutsideItem}
           // onDropFromOutside={onDropFromOutside}
-          // onEventDrop={moveEvent}
+          onEventDrop={moveEvent}
           onDoubleClickEvent={eventOnClick}
-          // onSelectEvent={eventOnClick}
+          onSelectEvent={(event) => console.log({ event })}
           selectable
           eventPropGetter={eventPropGetter}
           onSelectSlot={(slotInfo) => console.log({ slotInfo })}

@@ -383,6 +383,7 @@ interface ScheduleEvent {
   allDay?: boolean;
 
   title?: string;
+  work_title?: string;
   wordcount?: number;
   status?: PodficStatus;
 
