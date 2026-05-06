@@ -27,7 +27,6 @@ export default function ScheduleEventDialog({
 
   const submitScheduleEvent = useCallback(async () => {
     try {
-      // TODO: loader
       await createUpdateScheduleEvent(scheduleEvent);
       await submitCallback?.();
     } catch (e) {

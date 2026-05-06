@@ -78,13 +78,13 @@ create sequence public.work_fandom_id_seq
 
 alter sequence public.work_fandom_id_seq owner to "podfic-tracker-db_owner";
 
-create type public.sectiontype as enum ('default', 'single-to-multiple', 'multiple-to-single', 'chapters-split', 'chapters-combine');
-
-alter type public.sectiontype owner to "podfic-tracker-db_owner";
-
 create type public.scheduleeventtype as enum ('Podfic', 'Section', 'Part', 'Round');
 
 alter type public.scheduleeventtype owner to "podfic-tracker-db_owner";
+
+create type public.sectiontype as enum ('default', 'single-to-multiple', 'multiple-to-single', 'chapters-split', 'chapters-combine');
+
+alter type public.sectiontype owner to "podfic-tracker-db_owner";
 
 create table public.event_parent
 (
@@ -111,6 +111,44 @@ create table public.event
 );
 
 alter table public.event
+    owner to "podfic-tracker-db_owner";
+
+create table public.bingo_card
+(
+    bingo_card_id serial
+        constraint bingo_card_pk
+            primary key,
+    title         text,
+    event_id      integer
+        constraint bingo_card_event_event_id_fk
+            references public.event,
+    size          integer not null,
+    active        boolean,
+    headers       text[],
+    created_at    timestamp with time zone
+);
+
+alter table public.bingo_card
+    owner to "podfic-tracker-db_owner";
+
+create table public.bingo_square
+(
+    bingo_card_id integer not null
+        constraint bingo_square_bingo_card_bingo_card_id_fk
+            references public.bingo_card,
+    row           integer not null,
+    "column"      integer not null,
+    title         text,
+    description   text,
+    filled        boolean,
+    title_link    text,
+    constraint bingo_square_pk
+        primary key (bingo_card_id, row, "column"),
+    constraint bingo_square_pk_2
+        unique (bingo_card_id, row, "column")
+);
+
+alter table public.bingo_square
     owner to "podfic-tracker-db_owner";
 
 create unique index event_event_id_uindex
@@ -185,6 +223,57 @@ alter table public.author
 
 create unique index author_author_id_uindex
     on public.author (author_id);
+
+create table public.work
+(
+    work_id        serial
+        constraint work_pk
+            primary key,
+    title          varchar(200) not null,
+    link           varchar(200),
+    author_id      integer
+        constraint work_author_author_id_fk
+            references public.author,
+    fandom_id      integer
+        constraint work_fandom_fandom_id_fk
+            references public.fandom,
+    needs_update   boolean,
+    wordcount      integer,
+    chaptered      boolean,
+    chapter_count  integer,
+    rating         varchar(20),
+    category       varchar(20),
+    relationship   varchar(200),
+    main_character varchar(200),
+    nickname       varchar(200)
+);
+
+alter table public.work
+    owner to "podfic-tracker-db_owner";
+
+create table public.permission
+(
+    permission_id     serial
+        constraint permission_pk
+            primary key,
+    asked_date        date,
+    response_date     date,
+    permission_status varchar(50),
+    ask_link          varchar(200),
+    ask_medium        varchar(200),
+    work_id           integer
+        constraint permission_work_work_id_fk
+            references public.work,
+    author_id         integer not null
+        constraint permission_author_author_id_fk
+            references public.author
+);
+
+alter table public.permission
+    owner to "podfic-tracker-db_owner";
+
+create unique index work_work_id_uindex
+    on public.work (work_id);
 
 create table public.resource
 (
@@ -434,54 +523,6 @@ create table public.vt_project
 alter table public.vt_project
     owner to "podfic-tracker-db_owner";
 
-create table public.work
-(
-    work_id        serial
-        constraint work_pk
-            primary key,
-    title          varchar(200) not null,
-    link           varchar(200),
-    author_id      integer
-        constraint work_author_author_id_fk
-            references public.author,
-    fandom_id      integer
-        constraint work_fandom_fandom_id_fk
-            references public.fandom,
-    needs_update   boolean,
-    wordcount      integer,
-    chaptered      boolean,
-    chapter_count  integer,
-    rating         varchar(20),
-    category       varchar(20),
-    relationship   varchar(200),
-    main_character varchar(200),
-    nickname       varchar(200)
-);
-
-alter table public.work
-    owner to "podfic-tracker-db_owner";
-
-create table public.permission
-(
-    permission_id     serial
-        constraint permission_pk
-            primary key,
-    asked_date        date,
-    response_date     date,
-    permission_status varchar(50),
-    ask_link          varchar(200),
-    ask_medium        varchar(200),
-    work_id           integer
-        constraint permission_work_work_id_fk
-            references public.work,
-    author_id         integer not null
-        constraint permission_author_author_id_fk
-            references public.author
-);
-
-alter table public.permission
-    owner to "podfic-tracker-db_owner";
-
 create table public.podfic
 (
     podfic_id     serial
@@ -528,6 +569,27 @@ alter sequence public.podfic_event_id_seq owned by public.podfic.event_id;
 alter sequence public.podfic_giftee_id_seq owned by public.podfic.giftee_id;
 
 alter sequence public.podfic_work_id_seq owned by public.podfic.work_id;
+
+create table public.bingo_fill
+(
+    bingo_fill_id serial
+        constraint bingo_fill_pk
+            primary key,
+    bingo_card_id integer not null,
+    row           integer not null,
+    "column"      integer not null,
+    title         text,
+    description   text,
+    podfic_id     integer
+        constraint bingo_fill_podfic_podfic_id_fk
+            references public.podfic,
+    completed     boolean,
+    constraint bingo_fill_bingo_square_bingo_card_id_row_column_fk
+        foreign key (bingo_card_id, row, "column") references public.bingo_square
+);
+
+alter table public.bingo_fill
+    owner to "podfic-tracker-db_owner";
 
 create table public.chapter
 (
@@ -619,6 +681,7 @@ create table public.podfic_podficcer
     podficcer_id integer not null
         constraint podfic_podficcer_podficcer_podficcer_id_fk
             references public.podficcer,
+    role         text,
     constraint podfic_podficcer_id
         primary key (podfic_id, podficcer_id)
 );
@@ -859,66 +922,20 @@ create table public.tag_podfic
 alter table public.tag_podfic
     owner to "podfic-tracker-db_owner";
 
-create unique index work_work_id_uindex
-    on public.work (work_id);
-
-create table public.bingo_card
+create table public.recording_preset
 (
-    bingo_card_id serial
-        constraint bingo_card_pk
+    recording_preset_id serial
+        constraint recording_preset_pk
             primary key,
-    title         text,
-    event_id      integer
-        constraint bingo_card_event_event_id_fk
-            references public.event,
-    size          integer not null,
-    active        boolean,
-    headers       text[],
-    created_at    timestamp with time zone
-);
-
-alter table public.bingo_card
-    owner to "podfic-tracker-db_owner";
-
-create table public.bingo_square
-(
-    bingo_card_id integer not null
-        constraint bingo_square_bingo_card_bingo_card_id_fk
-            references public.bingo_card,
-    row           integer not null,
-    "column"      integer not null,
-    title         text,
-    description   text,
-    filled        boolean,
-    title_link    text,
-    constraint bingo_square_pk
-        primary key (bingo_card_id, row, "column"),
-    constraint bingo_square_pk_2
-        unique (bingo_card_id, row, "column")
-);
-
-alter table public.bingo_square
-    owner to "podfic-tracker-db_owner";
-
-create table public.bingo_fill
-(
-    bingo_fill_id serial
-        constraint bingo_fill_pk
-            primary key,
-    bingo_card_id integer not null,
-    row           integer not null,
-    "column"      integer not null,
-    title         text,
-    description   text,
-    podfic_id     integer
-        constraint bingo_fill_podfic_podfic_id_fk
+    podfic_id           integer not null
+        constraint recording_preset_podfic_podfic_id_fk
             references public.podfic,
-    completed     boolean,
-    constraint bingo_fill_bingo_square_bingo_card_id_row_column_fk
-        foreign key (bingo_card_id, row, "column") references public.bingo_square
+    mic                 text,
+    device              text,
+    location            text
 );
 
-alter table public.bingo_fill
+alter table public.recording_preset
     owner to "podfic-tracker-db_owner";
 
 create view public.podfic_work
@@ -975,6 +992,25 @@ END;
 $$;
 
 alter function public.backfill_podfic_sections() owner to "podfic-tracker-db_owner";
+
+create function public.backfill_resource_section_podfic_id() returns void
+    language plpgsql
+as
+$$
+DECLARE
+    record record;
+BEGIN
+    RAISE NOTICE 'backfilling podfic sections';
+
+    FOR record in SELECT resource_section.resource_id,resource_section.section_id,section.podfic_id FROM resource_section INNER JOIN section ON resource_section.section_id = section.section_id LOOP
+        UPDATE resource_section SET podfic_id = record.podfic_id WHERE resource_id = record.resource_id AND section_id = record.section_id;
+        END LOOP;
+
+    RETURN;
+END;
+$$;
+
+alter function public.backfill_resource_section_podfic_id() owner to "podfic-tracker-db_owner";
 
 create function public.create_default_podfic_sections(id integer, chaptered boolean, is_multivoice boolean) returns void
     language plpgsql
@@ -1058,6 +1094,39 @@ create trigger on_update_create_part_schedule_event
     for each row
 execute procedure public.create_part_schedule_event();
 
+create function public.create_podfic_schedule_event() returns trigger
+    language plpgsql
+as
+$$
+DECLARE
+BEGIN
+    IF new.deadline is not null AND old.deadline is null THEN
+        RAISE NOTICE 'updating deadline (%) for podfic (%)', new.deadline, new.podfic_id;
+        INSERT INTO schedule_event (podfic_id, start, "end", allday) VALUES (new.podfic_id, new.deadline, new.deadline, false);
+    ELSE IF new.deadline is not null and old.deadline is not null and new.deadline != old.deadline THEN
+        RAISE NOTICE 'creating new schedule event for podfic (%), updating old deadline (%) to new deadline (%)', new.podfic_id, old.deadline, new.deadline;
+        DELETE FROM schedule_event WHERE podfic_id = new.podfic_id AND section_id is null AND part_id is null;
+        INSERT INTO schedule_event (podfic_id, start, "end", allday) VALUES (new.podfic_id, new.deadline, new.deadline, false);
+    END IF;
+    END IF;
+    RETURN null;
+END;
+$$;
+
+alter function public.create_podfic_schedule_event() owner to "podfic-tracker-db_owner";
+
+create trigger on_insert_create_podfic_schedule_event
+    after insert
+    on public.podfic
+    for each row
+execute procedure public.create_podfic_schedule_event();
+
+create trigger on_update_create_podfic_schedule_event
+    after update
+    on public.podfic
+    for each row
+execute procedure public.create_podfic_schedule_event();
+
 create function public.create_posted_unchaptered_podfic_sections(id integer) returns void
     language plpgsql
 as
@@ -1115,6 +1184,33 @@ create trigger on_insert_create_round_schedule_event
     on public.round
     for each row
 execute procedure public.create_round_schedule_event();
+
+create function public.create_section_schedule_event_on_update() returns trigger
+    language plpgsql
+as
+$$
+DECLARE
+BEGIN
+    IF new.deadline is not null AND old.deadline is null THEN
+        RAISE NOTICE 'updating deadline (%) for section (%)', new.deadline, new.section_id;
+        INSERT INTO schedule_event (podfic_id, section_id, part_id, start, "end", allday) VALUES (new.podfic_id, new.section_id, new.part_id, new.deadline, new.deadline, false);
+    ELSE IF new.deadline is not null and old.deadline is not null and new.deadline != old.deadline THEN
+        RAISE NOTICE 'creating new schedule event for section (%), updating old deadline (%) to new deadline (%)', new.section_id, old.deadline, new.deadline;
+        DELETE FROM schedule_event WHERE section_id = new.section_id;
+        INSERT INTO schedule_event (podfic_id, section_id, part_id, start, "end", allday) VALUES (new.podfic_id, new.section_id, new.part_id, new.deadline, new.deadline, false);
+    END IF;
+    END IF;
+    RETURN null;
+END;
+$$;
+
+alter function public.create_section_schedule_event_on_update() owner to "podfic-tracker-db_owner";
+
+create trigger on_update_create_schedule_event
+    after update
+    on public.section
+    for each row
+execute procedure public.create_section_schedule_event_on_update();
 
 create procedure public.update_all_raw_lengths_from_recording_sessions()
     language plpgsql
@@ -1211,7 +1307,7 @@ BEGIN
 
     -- if length has changed/it just got posted, meaning that the length should go into the podfic
     -- TODO: sections don't have statuses rn.
-    IF (new.length != old.length or old.length is null or new.status = 'Posted' or new.status = 'Finished' or new.status = 'Posting') and new.number > 0 THEN
+    IF (new.length != old.length or old.length is null or new.status = 'Posted' or new.status = 'Finished' or new.status = 'Posting') and (new.number > 0 or new.number is null) THEN
         RAISE NOTICE 'updating podfic length';
         SELECT * INTO podfic_record FROM podfic WHERE podfic.podfic_id = new.podfic_id;
         IF podfic_record.is_multivoice THEN
@@ -1389,87 +1485,24 @@ create trigger update_update_schedule_event_type
     for each row
 execute procedure public.update_schedule_event_type();
 
-create function public.backfill_resource_section_podfic_id() returns void
-    language plpgsql
-as
-$$
-DECLARE
-    record record;
-BEGIN
-    RAISE NOTICE 'backfilling podfic sections';
-
-    FOR record in SELECT resource_section.resource_id,resource_section.section_id,section.podfic_id FROM resource_section INNER JOIN section ON resource_section.section_id = section.section_id LOOP
-        UPDATE resource_section SET podfic_id = record.podfic_id WHERE resource_id = record.resource_id AND section_id = record.section_id;
-        END LOOP;
-
-    RETURN;
-END;
-$$;
-
-alter function public.backfill_resource_section_podfic_id() owner to "podfic-tracker-db_owner";
-
-create function public.create_section_schedule_event() returns trigger
+create function public.create_section_schedule_event_on_insert() returns trigger
     language plpgsql
 as
 $$
 DECLARE
 BEGIN
-    IF new.deadline is not null AND old.deadline is null THEN
-        RAISE NOTICE 'updating deadline (%) for section (%)', new.deadline, new.section_id;
+    IF new.deadline is not null THEN
+        RAISE NOTICE 'creating deadline (%) for section (%)', new.deadline, new.section_id;
         INSERT INTO schedule_event (podfic_id, section_id, part_id, start, "end", allday) VALUES (new.podfic_id, new.section_id, new.part_id, new.deadline, new.deadline, false);
-    ELSE IF new.deadline is not null and old.deadline is not null and new.deadline != old.deadline THEN
-        RAISE NOTICE 'creating new schedule event for section (%), updating old deadline (%) to new deadline (%)', new.section_id, old.deadline, new.deadline;
-        DELETE FROM schedule_event WHERE section_id = new.section_id;
-        INSERT INTO schedule_event (podfic_id, section_id, part_id, start, "end", allday) VALUES (new.podfic_id, new.section_id, new.part_id, new.deadline, new.deadline, false);
-    END IF;
     END IF;
     RETURN null;
 END;
 $$;
 
-alter function public.create_section_schedule_event() owner to "podfic-tracker-db_owner";
+alter function public.create_section_schedule_event_on_insert() owner to "podfic-tracker-db_owner";
 
 create trigger on_insert_create_schedule_event
     after insert
     on public.section
     for each row
-execute procedure public.create_section_schedule_event();
-
-create trigger on_update_create_schedule_event
-    after update
-    on public.section
-    for each row
-execute procedure public.create_section_schedule_event();
-
-create function public.create_podfic_schedule_event() returns trigger
-    language plpgsql
-as
-$$
-DECLARE
-BEGIN
-    IF new.deadline is not null AND old.deadline is null THEN
-        RAISE NOTICE 'updating deadline (%) for podfic (%)', new.deadline, new.podfic_id;
-        INSERT INTO schedule_event (podfic_id, start, "end", allday) VALUES (new.podfic_id, new.deadline, new.deadline, false);
-    ELSE IF new.deadline is not null and old.deadline is not null and new.deadline != old.deadline THEN
-        RAISE NOTICE 'creating new schedule event for podfic (%), updating old deadline (%) to new deadline (%)', new.podfic_id, old.deadline, new.deadline;
-        DELETE FROM schedule_event WHERE podfic_id = new.podfic_id AND section_id is null AND part_id is null;
-        INSERT INTO schedule_event (podfic_id, start, "end", allday) VALUES (new.podfic_id, new.deadline, new.deadline, false);
-    END IF;
-    END IF;
-    RETURN null;
-END;
-$$;
-
-alter function public.create_podfic_schedule_event() owner to "podfic-tracker-db_owner";
-
-create trigger on_insert_create_podfic_schedule_event
-    after insert
-    on public.podfic
-    for each row
-execute procedure public.create_podfic_schedule_event();
-
-create trigger on_update_create_podfic_schedule_event
-    after update
-    on public.podfic
-    for each row
-execute procedure public.create_podfic_schedule_event();
+execute procedure public.create_section_schedule_event_on_insert();
