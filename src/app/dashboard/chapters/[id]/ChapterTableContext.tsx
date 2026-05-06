@@ -13,11 +13,15 @@ import { KeyboardArrowDown, KeyboardArrowRight } from '@mui/icons-material';
 import { IconButton } from '@mui/material';
 import { CellContext, Row } from '@tanstack/react-table';
 import ColorScale from 'color-scales';
+import RecordingSessionTable from '@/app/ui/table/RecordingSessionTable';
+import { usePathname } from 'next/navigation';
 
 interface ChapterTableContextType {
   getDefaultTableProps: (columns: any[]) => Partial<CustomTableProps<any>>;
   filesExpanded: boolean;
   setFilesExpanded: Dispatch<SetStateAction<boolean>>;
+  recordingSessionsExpanded: boolean;
+  setRecordingSessionsExpanded: Dispatch<SetStateAction<boolean>>;
   expandCellComponent: (props: CellContext<any, any>) => ReactNode;
   editingRowId: string | null;
   setEditingRowId: Dispatch<SetStateAction<string | null>>;
@@ -35,6 +39,8 @@ export const ChapterTableContext = createContext<ChapterTableContextType>({
   },
   filesExpanded: false,
   setFilesExpanded: () => {},
+  recordingSessionsExpanded: false,
+  setRecordingSessionsExpanded: () => {},
   expandCellComponent: () => {
     return <></>;
   },
@@ -52,7 +58,11 @@ export const useChapterTableContext = ({
   podficTitle,
 }): ChapterTableContextType => {
   const [filesExpanded, setFilesExpanded] = useState(false);
+  const [recordingSessionsExpanded, setRecordingSessionsExpanded] =
+    useState(false);
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
+
+  const pathname = usePathname();
 
   const getDefaultTableProps = useCallback((): Partial<
     CustomTableProps<any>
@@ -130,6 +140,48 @@ export const useChapterTableContext = ({
             </td>
           </tr>
         )}
+        <tr key='recording-sessions-expand'>
+          <td
+            key='1'
+            colSpan={row.getAllCells().length}
+            style={{
+              paddingLeft: '30px',
+            }}
+          >
+            <span>
+              <IconButton
+                style={{
+                  padding: '0px',
+                }}
+                onClick={() => setRecordingSessionsExpanded((prev) => !prev)}
+              >
+                {recordingSessionsExpanded ? (
+                  <KeyboardArrowDown />
+                ) : (
+                  <KeyboardArrowRight />
+                )}
+              </IconButton>
+              Recording Sessions
+            </span>
+          </td>
+        </tr>
+        {recordingSessionsExpanded && (
+          <tr key='recording-sessions-expanded'>
+            <td
+              key='2'
+              colSpan={row.getAllCells().length}
+              style={{
+                paddingLeft: '60px',
+              }}
+            >
+              <RecordingSessionTable
+                podficId={row.getValue('podfic_id')}
+                sectionId={row.getValue('section_id')}
+                returnUrl={pathname}
+              />
+            </td>
+          </tr>
+        )}
         <AdditionalContentRows
           width={row.getVisibleCells().length}
           notes={row.original.notes ?? []}
@@ -145,6 +197,8 @@ export const useChapterTableContext = ({
     getDefaultTableProps,
     filesExpanded,
     setFilesExpanded,
+    recordingSessionsExpanded,
+    setRecordingSessionsExpanded,
     expandCellComponent,
     editingRowId,
     setEditingRowId,

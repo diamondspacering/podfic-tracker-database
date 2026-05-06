@@ -2,6 +2,7 @@ import { SectionType } from '@/app/types';
 import { TextField, Typography } from '@mui/material';
 import { useMemo } from 'react';
 import styles from '@/app/forms/forms.module.css';
+import DatePicker from '@/app/ui/DatePicker';
 
 interface SectionFormProps {
   sectionType: SectionType;
@@ -46,6 +47,11 @@ export default function SectionForm({
             setSection({ ...section, text_link: e.target.value })
           }
           label='Doc/Text link'
+        />
+        <DatePicker
+          value={section.deadline ?? ''}
+          onChange={(value) => setSection({ ...section, deadline: value })}
+          label='Deadline'
         />
       </>
     );

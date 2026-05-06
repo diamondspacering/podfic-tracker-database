@@ -12,7 +12,10 @@ export const fetchChapters = async (podficId) => {
   return chapters as Chapter[];
 };
 
-export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
+export const fetchPodficsFull = async (
+  onlyNonAAPodfics = false,
+  withChapterSections = false,
+) => {
   const client = await getDBClient();
   const result = await client.query(
     `select *,fandom.name as fandom_name,event.name as event_name,event_parent.name as parent_name,author.permission_status as author_permission_status from podfic
@@ -29,7 +32,11 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
   const sectionResult = await client.query(
     'select * from section order by number asc',
   );
-  const chapterResult = await client.query('select * from chapter');
+  const chapterResult = await client.query(
+    withChapterSections
+      ? `select *, (select to_json(array_agg(row_to_json(s))) from (select section.section_id,title from section inner join chapter_section on section.section_id = chapter_section.section_id where chapter_id = chapter.chapter_id order by number asc limit 1) s) as sections from chapter`
+      : 'select * from chapter',
+  );
   const partResult = await client.query('select * from part');
   // console.log('parts', partResult.rows);
   const noteResult = await client.query(
@@ -53,6 +60,17 @@ export const fetchPodficsFull = async (onlyNonAAPodfics = false) => {
     let permissionStatus = null;
     if (permissionAsks.length)
       permissionStatus = permissionAsks[0].permission_status;
+    let chapters = chapterResult.rows.filter(
+      (chapter) => chapter.podfic_id === podfic.podfic_id,
+    );
+    if (withChapterSections) {
+      chapters = chapters.map((chapter) => ({
+        ...chapter,
+        sections: sectionResult.rows.filter(
+          (section) => section.podfic_id === podfic.podfic_id,
+        ),
+      }));
+    }
     return {
       ...podfic,
       sections: sectionResult.rows.filter(
@@ -207,4 +225,15 @@ export const fetchRecordedToday = async () => {
     select sum(length), count(length), date from recording_session where date > current_date - interval '2 days' group by date order by date desc;
   `);
   return result.rows[0];
+};
+
+export const fetchRecordingPreset = async (podficId: number) => {
+  const client = await getDBClient();
+
+  const result = await client.query(
+    'select * from recording_preset where podfic_id = $1',
+    [podficId],
+  );
+
+  return result.rows[0] as RecordingPreset;
 };

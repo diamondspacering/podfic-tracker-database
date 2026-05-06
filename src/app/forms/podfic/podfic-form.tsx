@@ -87,6 +87,7 @@ export default function PodficForm({
   const [authorsLoading, setAuthorsLoading] = useState(true);
   const [isNewAuthor, setIsNewAuthor] = useState(false);
 
+  // TODO: do this for isMultivoice as well?
   const rating = useMemo(() => podfic.rating ?? null, [podfic.rating]);
   const category = useMemo(() => podfic.category ?? null, [podfic.category]);
 
@@ -135,13 +136,18 @@ export default function PodficForm({
 
   const fetchMetadata = useCallback(async () => {
     setMetadataLoading(true);
+    // try {
     const metadataResult = await fetch(
       `/db/metadata/work?work_url=${encodeURIComponent(podfic.link)}`,
     );
     setMetadata(await metadataResult.json());
     const tagResult = await fetch('/db/metadata/tagmappings');
     setTagMappings(await tagResult.json());
+    // } catch (e) {
+    //   console.error('Error fetching metadata:', e);
+    // } finally {
     setMetadataLoading(false);
+    // }
   }, [podfic.link]);
 
   const fetchAuthors = useCallback(async () => {
@@ -543,7 +549,7 @@ export default function PodficForm({
             <TextField
               size='small'
               label='Wordcount'
-              value={wordcount}
+              value={wordcount ?? ''}
               onChange={(e) => {
                 setWordcount(e.target.value);
                 setPodfic((prev) => ({
@@ -878,7 +884,7 @@ export default function PodficForm({
               sx={{
                 minWidth: '200px',
               }}
-              options={podficcers ?? []}
+              options={podficcers}
               loading={podficcersLoading}
               getOptionLabel={(option) => option?.username ?? ''}
               value={
@@ -987,7 +993,7 @@ export default function PodficForm({
               sx={{
                 minWidth: '200px',
               }}
-              options={podficcers ?? []}
+              options={podficcers}
               loading={podficcersLoading}
               getOptionLabel={(option) => option?.username ?? ''}
               multiple
@@ -1044,6 +1050,14 @@ export default function PodficForm({
               />
             )}
           </div>
+
+          <DatePicker
+            value={podfic.deadline ?? ''}
+            onChange={(value) =>
+              setPodfic((prev) => ({ ...prev, deadline: value }))
+            }
+            label='Deadline'
+          />
         </>
       </DetailsWrapper>
 
@@ -1115,7 +1129,7 @@ export default function PodficForm({
               {/* radio w/ options non-chaptered in multiple parts, posting all chapters together, posting chapters in multiple parts, posting multiple chapters together */}
               <RadioGroup
                 name='section-type'
-                value={podfic.section_type}
+                value={podfic.section_type ?? ''}
                 onChange={(e) =>
                   setPodfic((prev) => ({
                     ...prev,

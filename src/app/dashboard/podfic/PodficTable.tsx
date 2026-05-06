@@ -576,6 +576,7 @@ export default function PodficTable() {
 
   const updatePodfic = async (podfic: Podfic & Work & Fandom) => {
     try {
+      console.log('updating podfic');
       await updatePodficMinified(
         JSON.stringify({
           podfic_id: podfic.podfic_id,
@@ -589,8 +590,13 @@ export default function PodficTable() {
         podfic.chaptered,
       );
       if (!isPostedChaptered) {
-        const section = podfic.sections?.filter((s) => s.number > 0)?.[0];
+        console.log({ sections: podfic.sections });
+        const section = podfic.sections?.filter(
+          (s) => s.number > 0 || s.number === null,
+        )?.[0];
+        console.log({ section });
         if (section) {
+          console.log('updating section');
           await updateSectionMinified(
             JSON.stringify({
               section_id: section.section_id,

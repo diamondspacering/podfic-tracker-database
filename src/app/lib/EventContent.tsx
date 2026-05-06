@@ -1,42 +1,59 @@
 import { DateTime } from 'luxon';
 import { ScheduleEventType } from '../types';
+import { IconButton } from '@mui/material';
+import { Edit } from '@mui/icons-material';
 
 // }
 interface EventContentProps {
   scheduleEvent: ScheduleEvent;
+  editEvent: () => void;
 }
 
-export default function EventContent({ scheduleEvent }: EventContentProps) {
+export default function EventContent({
+  scheduleEvent,
+  editEvent,
+}: EventContentProps) {
   const {
     end,
     type,
     title,
+    work_title,
     wordcount,
     status,
-    chapter_title,
-    chapter_number,
-    chapter_wordcount,
-    chapter_status,
+    section_number,
+    section_title,
+    section_wordcount,
+    section_status,
     part,
-    part_wordcount,
+    part_status,
     round_number,
   } = scheduleEvent;
 
-  console.log('end', end);
   return (
     <div
       style={{
         maxWidth: '350px',
         textWrap: 'wrap',
+        position: 'relative',
       }}
     >
-      {title && (
+      <IconButton
+        style={{ padding: '0px', position: 'absolute', right: '0' }}
+        onClick={(e) => {
+          e.stopPropagation();
+          editEvent();
+        }}
+      >
+        <Edit style={{ width: '75%' }} />
+      </IconButton>
+      {/* TODO: this used to have just title, use that somewhere */}
+      {work_title && (
         <>
-          <span>{title}</span>
+          <span>{work_title}</span>
           <br />
         </>
       )}
-      {round_number && (
+      {type === ScheduleEventType.ROUND && (
         <>
           <span>
             Voiceteam Round {round_number} ends,{' '}
@@ -47,16 +64,17 @@ export default function EventContent({ scheduleEvent }: EventContentProps) {
           <br />
         </>
       )}
-      {chapter_number && (
+      {/* TODO: how to correctly convey chapter information w/ sections? */}
+      {type === ScheduleEventType.SECTION && (
         <span>
-          {chapter_number}
-          {chapter_title ? ` - ${chapter_title}` : ''}
-          {`, ${chapter_wordcount}, ${chapter_status}`}
+          {`Section ${section_number}`}
+          {section_title ? ` - ${section_title}` : ''}
+          {`, ${section_wordcount ?? '?'}, ${section_status}`}
         </span>
       )}
-      {part && (
+      {type === ScheduleEventType.PART && (
         <span>
-          {part},&nbsp;{part_wordcount} words
+          {part},&nbsp;{section_wordcount ?? '?'} words, {section_status}
         </span>
       )}
       {type === ScheduleEventType.PODFIC && (

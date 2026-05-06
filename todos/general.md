@@ -31,6 +31,14 @@
 - [ ] await params for other pages that need it
 - [ ] Support multiple categories (and adjust AO3 tags as well)
 - [ ] Fix the assorted component changing from controlled to uncontrolled errors (provide fallback value for missing values)
+- [ ] Fix adding tags not working in hosted version?
+- [ ] Support multiple events per podfic
+  - list in tables? still filterable, shows comma-separated, expands later?
+- [ ] Support links for events and data that allows for adding collections when posting a work
+- [ ] Improve database posting helper, has some consistent errors
+- [ ] Fix uncontrolled components errors
+- [ ] Increase session length for logging in
+- [ ] Support name of role for podficcer_podfic
 
 ## Tables
 
@@ -38,6 +46,9 @@
 - [ ] General chapter table for all chapters?
 - [ ] Custom meta type for tables
 - [ ] Figure out the errors on custom tables
+- [ ] To podfic: Pin "New Podfic" to top of page
+- [ ] Update facet filters when values update
+- [ ] preset filters
 
 ### ChapterTable
 
@@ -45,7 +56,7 @@
 - [ ] global color scale for wordcount?
 - [x] column show/hide like podfic table
 - [x] chapter columns defined in separate file
-- [ ] Show section recording sessions
+- [x] Show section recording sessions
 
 ### Parts
 
@@ -81,6 +92,8 @@
 ## HTML
 
 - [ ] Generated links dialog keeps its own state
+- [ ] Word wrap on code box
+- [ ] Preview (check out how the skins preview works maybe?)
 
 ### HTMLPage.tsx
 
@@ -104,7 +117,7 @@
 
 ## SchedulePage
 
-- [ ] Set up automatic triggers to create schedule events for deadlines (partially implemented)
+- [x] Set up automatic triggers to create schedule events for deadlines (partially implemented)
   - make sure you know how date is being sent
 - [ ] Actually implement deadlines for all things that support it
 - [ ] Make query that automatically pulls in info for the podfic/chapter/part/round that it's linked to so the info is already there and you don't have to find it or whatever
@@ -114,6 +127,7 @@
 - [ ] Add changing deadlines on things by dragging?
 - [ ] Height flexing based on items?
 - [ ] Switch statement in `onDoubleClickEvent` for appropriate action based on event type
+- [x] Creatable events
 
 ## Stats
 

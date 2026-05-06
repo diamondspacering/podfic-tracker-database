@@ -290,7 +290,7 @@ export default function ToPodficTable() {
       id: 'edit-full',
       cell: (props) => (
         <Link
-          href={`/forms/podfic/${props.row.id}`}
+          href={`/forms/podfic/${props.row.id}?return_url=${'/dashboard/to-podfic'}`}
           onClick={(e) => e.stopPropagation()}
         >
           <IconButton
