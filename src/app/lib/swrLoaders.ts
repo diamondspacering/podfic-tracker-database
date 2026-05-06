@@ -164,9 +164,7 @@ export const useVoiceteams = ({ withRounds = false }) => {
 export const useRounds = ({ voiceteamId = null }) => {
   const { data, error, isLoading } = useSWR(
     `/db/voiceteam/${voiceteamId}/rounds`,
-    voiceteamId === null
-      ? () => ({ data: [], error: null, isLoading: false })
-      : fetcher,
+    voiceteamId === null ? () => [] : fetcher,
   );
 
   const rounds = (data ?? []) as Round[];
@@ -431,7 +429,7 @@ export const useParts = () => {
 export const usePartsForPodfic = ({ podficId = null }) => {
   const { data, error, isLoading } = useSWR(
     `/db/parts?podfic_id=${podficId}`,
-    podficId ? fetcher : () => ({ data: [], error: null, isLoading: false }),
+    podficId ? fetcher : () => [],
   );
 
   const parts = (data ?? []) as Part[];

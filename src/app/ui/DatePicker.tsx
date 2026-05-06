@@ -8,6 +8,7 @@ interface DatePickerProps {
   label?: string;
   onBlur?: () => void;
   forceUpdate?: (val: any) => void;
+  showTime?: boolean;
 }
 
 export default function DatePicker({
@@ -16,11 +17,12 @@ export default function DatePicker({
   label,
   onBlur,
   forceUpdate,
+  showTime = false,
 }: DatePickerProps) {
   return (
     <TextField
       size='small'
-      type='date'
+      type={showTime ? 'datetime-local' : 'date'}
       value={value}
       onChange={(e) => {
         onChange(e.target.value);

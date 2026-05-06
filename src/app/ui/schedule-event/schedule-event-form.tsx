@@ -1,5 +1,6 @@
 import {
   Autocomplete,
+  Checkbox,
   FormControlLabel,
   Radio,
   RadioGroup,
@@ -15,6 +16,7 @@ import {
   useRounds,
   useVoiceteams,
 } from '@/app/lib/swrLoaders';
+import DatePicker from '../DatePicker';
 
 interface ScheduleEventFormProps {
   scheduleEvent: ScheduleEvent;
@@ -28,6 +30,8 @@ export default function ScheduleEventForm({
   const [selectedVoiceteamId, setSelectedVoiceteamId] = useState<null | number>(
     null,
   );
+  // TODO: use smart determination to see if it's just end of day or not
+  const [showTime, setShowTime] = useState(false);
 
   const { voiceteams, isLoading: voiceteamsLoading } = useVoiceteams({});
   const { rounds, isLoading: roundsLoading } = useRounds({
@@ -69,6 +73,7 @@ export default function ScheduleEventForm({
           setScheduleEvent((prev) => ({ ...prev, title: e.target.value }))
         }
       />
+      {/* label that says this is type - legend? */}
       <RadioGroup
         name='type'
         value={scheduleEvent.type}
@@ -193,6 +198,31 @@ export default function ScheduleEventForm({
             )}
           />
         )}
+
+      <FormControlLabel
+        label='Specify time of day?'
+        control={
+          <Checkbox
+            checked={showTime}
+            onChange={(e) => setShowTime(e.target.checked)}
+          />
+        }
+      />
+      {/* timezones? */}
+      <DatePicker
+        label='Due date'
+        value={
+          scheduleEvent.end
+            ? typeof scheduleEvent.end === 'string'
+              ? scheduleEvent.end
+              : scheduleEvent.end.toISOString()
+            : ''
+        }
+        showTime={showTime}
+        onChange={(value) =>
+          setScheduleEvent((prev) => ({ ...prev, end: value }))
+        }
+      />
     </div>
   );
 }
