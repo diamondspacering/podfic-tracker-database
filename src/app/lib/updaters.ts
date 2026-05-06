@@ -1669,16 +1669,14 @@ export const createUpdatePartData = async (partData) => {
           chapter_id = $2,
           organizer = $3,
           status = $4,
-          part = $5,
+          part = $5
         where part_id = $6
         returning *
       `,
         [
           partData.podfic_id,
           partData.chapter_id,
-          partData.doc,
           partData.organizer,
-          partData.words,
           partData.status,
           partData.part,
           partData.part_id,
@@ -2031,4 +2029,34 @@ export const deleteBingoFill = async (id: number) => {
   const client = await getDBClient();
 
   await client.query('DELETE FROM bingo_fill WHERE bingo_fill_id = $1', [id]);
+};
+
+export const createUpdateRecordingPreset = async (preset: RecordingPreset) => {
+  const client = await getDBClient();
+
+  if (preset.recording_preset_id) {
+    await client.query(
+      `UPDATE recording_preset SET
+      mic = $1,
+      device = $2,
+      location = $3
+    WHERE recording_preset_id = $4 AND podfic_id = $5`,
+      [
+        preset.mic,
+        preset.device,
+        preset.location,
+        preset.recording_preset_id,
+        preset.podfic_id,
+      ],
+    );
+  } else {
+    await client.query(
+      `INSERT INTO recording_preset
+      (podfic_id, mic, device, location)
+    VALUES
+      ($1, $2, $3, $4)
+    `,
+      [preset.podfic_id, preset.mic, preset.device, preset.location],
+    );
+  }
 };

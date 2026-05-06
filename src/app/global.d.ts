@@ -54,6 +54,14 @@ interface RecordingSession {
   location?: string;
 }
 
+interface RecordingPreset {
+  recording_preset_id: number | null;
+  podfic_id: number;
+  mic: string | null;
+  device: string | null;
+  location: string | null;
+}
+
 enum SectionType {
   DEFAULT = 'default',
   SINGLE_TO_MULTIPLE = 'single-to-multiple',

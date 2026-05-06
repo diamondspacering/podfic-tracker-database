@@ -226,3 +226,14 @@ export const fetchRecordedToday = async () => {
   `);
   return result.rows[0];
 };
+
+export const fetchRecordingPreset = async (podficId: number) => {
+  const client = await getDBClient();
+
+  const result = await client.query(
+    'select * from recording_preset where podfic_id = $1',
+    [podficId],
+  );
+
+  return result.rows[0] as RecordingPreset;
+};

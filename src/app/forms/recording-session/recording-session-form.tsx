@@ -1,6 +1,9 @@
 'use client';
 
-import { updateRecordingData } from '@/app/lib/updaters';
+import {
+  createUpdateRecordingPreset,
+  updateRecordingData,
+} from '@/app/lib/updaters';
 import {
   Autocomplete,
   Button,
@@ -20,10 +23,11 @@ import { locations } from '@/app/lib/dataPersonal';
 import { devices } from '@/app/lib/dataPersonal';
 import { mics } from '@/app/lib/dataPersonal';
 import DurationPicker from '@/app/ui/DurationPicker';
-import { Close } from '@mui/icons-material';
+import { Close, Save } from '@mui/icons-material';
 import { mutate } from 'swr';
 import { formatDateString, formatDateStringMonthFirst } from '@/app/lib/format';
 import { PodficType, SectionType } from '@/app/types';
+import { LoadingButton } from '@mui/lab';
 
 export default function RecordingSessionForm({
   podfic_id = null,
@@ -68,6 +72,8 @@ export default function RecordingSessionForm({
   const [recordingId] = useState<number | null>(recording_id);
   const [partId, setPartId] = useState<number | null>(part_id);
   const [selectedPodficParts, setSelectedPodficParts] = useState<Part[]>([]);
+  const [preset, setPreset] = useState<RecordingPreset | null>(null);
+  const [isSavingPreset, setIsSavingPreset] = useState(false);
 
   useEffect(() => {
     const today = new Date();
@@ -91,14 +97,25 @@ export default function RecordingSessionForm({
     fetchPodfics();
   }, []);
 
+  const fetchPodficPreset = useCallback(async (podficId: number) => {
+    const result = await fetch(`/db/recording_sessions/presets/${podficId}`);
+    const data = await result.json();
+    setPreset(data);
+    if (!mic) setMic(data.mic);
+    if (!device) setDevice(data.device);
+    if (!location) setLocation(data.location);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (podficId) {
       setSelectedPodfic(
         podficList.find((podfic) => podfic.podfic_id === podficId) ??
           ({ type: PodficType.PODFIC } as Podfic & Work),
       );
+      fetchPodficPreset(podficId);
     }
-  }, [podficId, podficList]);
+  }, [fetchPodficPreset, podficId, podficList]);
 
   useEffect(() => {
     if (chapterId) {
@@ -236,6 +253,18 @@ export default function RecordingSessionForm({
       setSelectedPodficSections(selectedPodfic.sections);
     }
   }, [selectedPodfic]);
+
+  const savePreset = useCallback(async () => {
+    setIsSavingPreset(true);
+    await createUpdateRecordingPreset({
+      recording_preset_id: preset?.recording_preset_id,
+      podfic_id: podficId,
+      mic,
+      device,
+      location,
+    });
+    setIsSavingPreset(false);
+  }, [device, location, mic, podficId, preset?.recording_preset_id]);
 
   return (
     <>
@@ -378,6 +407,14 @@ export default function RecordingSessionForm({
             </MenuItem>
           ))}
         </TextField>
+        <LoadingButton
+          variant='outlined'
+          startIcon={<Save />}
+          loading={isSavingPreset}
+          onClick={savePreset}
+        >
+          Save as preset for this podfic
+        </LoadingButton>
       </div>
 
       <FormControlLabel

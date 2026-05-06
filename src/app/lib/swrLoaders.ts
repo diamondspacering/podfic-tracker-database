@@ -391,7 +391,7 @@ export const useScheduleEvents = ({
     fetcher,
   );
 
-  const scheduleEvents = data ?? [];
+  const scheduleEvents = (data ?? []) as ScheduleEvent[];
 
   return {
     scheduleEvents,
