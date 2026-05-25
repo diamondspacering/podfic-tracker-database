@@ -1,6 +1,6 @@
 import useSWR from 'swr';
 import { WorkMetadata } from '../forms/podfic/metadataHelpers';
-import { getDefaultLength, SectionType } from '../types';
+import { Category, getDefaultLength, Rating, SectionType } from '../types';
 import { getLengthValue } from './lengthHelpers';
 export const fetcher = (url) => fetch(url).then((res) => res.json());
 
@@ -564,6 +564,105 @@ export const useFandomCategories = () => {
 
   return {
     categories,
+    error,
+    isLoading,
+  };
+};
+
+interface StatsType {
+  totalLen: Length;
+  podficLen: Length;
+  chapterLen: Length;
+
+  totalAvg: Length;
+  worksAvg: Length;
+  chaptersAvg: Length;
+
+  longestPodfic: { length: Length };
+  longestSinglePodfic: { length: Length };
+  longestChapter: { length: Length };
+
+  shortestPodfic: { length: Length };
+  shortestChapter: { length: Length };
+
+  worksCount: { total: number; works: number; chapters: number };
+
+  totalWords: number;
+  podficWords: number;
+  chapterWords: number;
+
+  rawWordcount: { wordcount: number; length: Length };
+  rawLength: Length;
+
+  multivoiceCount: number;
+  multivoiceInfo: { count: number; length: Length };
+
+  withCoverArt: number;
+  withMusic: number;
+
+  ratings: Record<Rating, number>;
+  categories: Record<Category, number>;
+  events: { event_name: string; year: string | number; count: number }[];
+
+  topFandomsCount: { fandom_name: string; fandom_count: number }[];
+  topFandomsLen: { fandom_name: string; fandom_len: Length }[];
+}
+
+const EMPTY_STATS = {
+  totalLen: getDefaultLength(),
+  podficLen: getDefaultLength(),
+  chapterLen: getDefaultLength(),
+
+  totalAvg: getDefaultLength(),
+  worksAvg: getDefaultLength(),
+  chaptersAvg: getDefaultLength(),
+
+  longestPodfic: { length: getDefaultLength() },
+  longestSinglePodfic: { length: getDefaultLength() },
+  longestChapter: { length: getDefaultLength() },
+
+  shortestPodfic: { length: getDefaultLength() },
+  shortestChapter: { length: getDefaultLength() },
+
+  worksCount: { total: 0, works: 0, chapters: 0 },
+
+  totalWords: 0,
+  podficWords: 0,
+  chapterWords: 0,
+
+  rawWordcount: { wordcount: 0, length: getDefaultLength() },
+  rawLength: getDefaultLength(),
+
+  multivoiceCount: 0,
+  multivoiceInfo: { count: 0, length: getDefaultLength() },
+
+  withCoverArt: 0,
+  withMusic: 0,
+
+  ratings: {},
+  categories: {},
+  events: [],
+
+  topFandomsCount: [],
+  topFandomsLen: [],
+};
+
+export const useYearStats = ({
+  year,
+  includeMultivoices,
+}: {
+  year: number;
+  includeMultivoices: boolean;
+}) => {
+  const { data, error, isLoading } = useSWR(
+    `/db/stats?year=${year}&include_multivoices=${includeMultivoices}`,
+    fetcher,
+  );
+
+  const stats = (data ?? EMPTY_STATS) as StatsType;
+
+  return {
+    stats,
     error,
     isLoading,
   };

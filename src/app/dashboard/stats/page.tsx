@@ -25,6 +25,7 @@ import YearStats from './YearStats';
 import { Metadata } from 'next';
 import { statsYears } from '@/app/lib/dataPersonal';
 import { getDefaultLength } from '@/app/types';
+import YearStatsClient from './YearStatsClient';
 
 export const metadata: Metadata = {
   title: 'Stats',
@@ -133,7 +134,7 @@ export default async function Page() {
                       <i>average</i>
                     </b>
                   </td>
-                  <td>{getLengthText(avgLength.avg)}</td>
+                  <td>{getLengthText(avgLength)}</td>
                 </tr>
                 <tr>
                   <td>
@@ -333,6 +334,7 @@ export default async function Page() {
         </div>
       </div>
 
+      <YearStatsClient year={2026} />
       {/* Yearly stats */}
       {years.map((year, i) => (
         <YearStats key={i} year={year} />

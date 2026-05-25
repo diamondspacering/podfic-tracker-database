@@ -39,6 +39,7 @@
 - [ ] Fix uncontrolled components errors
 - [ ] Increase session length for logging in
 - [ ] Support name of role for podficcer_podfic
+- [ ] Metadata is not doing fandom mapping correctly (is not mapping)
 
 ## Tables
 
@@ -94,6 +95,7 @@
 - [ ] Generated links dialog keeps its own state
 - [ ] Word wrap on code box
 - [ ] Preview (check out how the skins preview works maybe?)
+- [ ] Dreamwidth template for posting there (and maybe posting code too?)
 
 ### HTMLPage.tsx
 

@@ -10,7 +10,7 @@ import {
   getLongestChapter,
   getLongestPodfic,
   getLongestSingleWorkPodfic,
-  getMultivoice,
+  getMultivoiceCount,
   getPodficLength,
   getPostedChapterWords,
   getPostedSinglePodficWords,
@@ -56,7 +56,7 @@ export default async function YearStats({ year }) {
   const rawLength = await getTotalRawLength(year);
   const rawWordCount = await getRawWordcount(year);
 
-  const multivoice = await getMultivoice(year);
+  const multivoice = await getMultivoiceCount(year);
   const withCoverArt = await getWithCoverArt(year);
   const withMusic = await getWithMusic(year);
 
@@ -90,10 +90,10 @@ export default async function YearStats({ year }) {
                   {getLengthText(totalLen)}
                 </td>
                 <td style={{ textAlign: 'right' }}>
-                  {getLengthText(podficLen.sum)}
+                  {getLengthText(podficLen)}
                 </td>
                 <td style={{ textAlign: 'right' }}>
-                  {getLengthText(chapterLen.sum)}
+                  {getLengthText(chapterLen)}
                 </td>
               </tr>
               {/* Average length */}
@@ -104,17 +104,15 @@ export default async function YearStats({ year }) {
                 <td style={{ textAlign: 'right' }}>
                   {getLengthText(
                     getLengthFromValue(
-                      getLengthValue(
-                        addLengths(worksAvg.avg, chaptersAvg.avg),
-                      ) / 2,
+                      getLengthValue(addLengths(worksAvg, chaptersAvg)) / 2,
                     ),
                   )}
                 </td>
                 <td style={{ textAlign: 'right' }}>
-                  {getLengthText(worksAvg.avg)}
+                  {getLengthText(worksAvg)}
                 </td>
                 <td style={{ textAlign: 'right' }}>
-                  {getLengthText(chaptersAvg.avg)}
+                  {getLengthText(chaptersAvg)}
                 </td>
               </tr>
               {/* Longest */}
@@ -171,10 +169,10 @@ export default async function YearStats({ year }) {
                   {totalWords.toLocaleString()}
                 </td>
                 <td style={{ textAlign: 'right' }}>
-                  {parseInt(podficWords.sum).toLocaleString()}
+                  {podficWords.toLocaleString()}
                 </td>
                 <td style={{ textAlign: 'right' }}>
-                  {parseInt(chapterWords.sum).toLocaleString()}
+                  {chapterWords.toLocaleString()}
                 </td>
               </tr>
               {/* Recorded */}
