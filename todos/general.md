@@ -140,6 +140,7 @@
 - [ ] Have a single getstats hook (it's not a hook whatever) for each combo of things? and do mapping? maybe for individual years manually doing it but it's fine
 - [ ] Something is weird about recorded stats. They're ALMOST right. But something is very weird. Figure that out.
 - [ ] Backfill data and update multivoices
+- [ ] Dropdown select for top? like select top fandoms vs. authors?
 
 ## Voiceteam
 

@@ -604,8 +604,8 @@ interface StatsType {
   categories: Record<Category, number>;
   events: { event_name: string; year: string | number; count: number }[];
 
-  topFandomsCount: { fandom_name: string; fandom_count: number }[];
-  topFandomsLen: { fandom_name: string; fandom_len: Length }[];
+  topCount: { name: string; count: number }[];
+  topLen: { name: string; len: Length }[];
 }
 
 const EMPTY_STATS = {
@@ -643,19 +643,23 @@ const EMPTY_STATS = {
   categories: {},
   events: [],
 
-  topFandomsCount: [],
-  topFandomsLen: [],
+  topCount: [],
+  topLen: [],
 };
 
 export const useYearStats = ({
   year,
   includeMultivoices,
+  includeUnposted,
+  selectedTop,
 }: {
   year: number;
   includeMultivoices: boolean;
+  includeUnposted: boolean;
+  selectedTop: 'fandom' | 'author';
 }) => {
   const { data, error, isLoading } = useSWR(
-    `/db/stats?year=${year}&include_multivoices=${includeMultivoices}`,
+    `/db/stats?year=${year}&include_multivoices=${includeMultivoices}&include_unposted=${includeUnposted}&top=${selectedTop}`,
     fetcher,
   );
 

@@ -1,4 +1,4 @@
-import { Typography } from '@mui/material';
+import { MenuItem, TextField, Typography } from '@mui/material';
 import dashboardStyles from '@/app/dashboard/dashboard.module.css';
 import styles from './stats.module.css';
 import { sourceCodePro } from '@/app/fonts/fonts';
@@ -223,9 +223,9 @@ export default async function Page() {
                       <b>{i + 1}</b>
                     </td>
                     <td>
-                      <i>{fandom.fandom_name}</i>
+                      <i>{fandom.name}</i>
                     </td>
-                    <td>{getLengthText(fandom.fandom_len)}</td>
+                    <td>{getLengthText(fandom.len)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -238,9 +238,9 @@ export default async function Page() {
                       <b>{i + 6}</b>
                     </td>
                     <td>
-                      <i>{fandom.fandom_name}</i>
+                      <i>{fandom.name}</i>
                     </td>
-                    <td>{getLengthText(fandom.fandom_len)}</td>
+                    <td>{getLengthText(fandom.len)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -332,6 +332,28 @@ export default async function Page() {
             </table>
           </div>
         </div>
+        {/* TODO: like a client component that does something? passing values is evil */}
+        {/* <div>
+          <TextField
+            size='small'
+            sx={{
+              width: '120px',
+              font: `${sourceCodePro.variable}`,
+            }}
+            select
+            label='Top'
+            value={selectedTop}
+            slotProps={{
+              inputLabel: {
+                shrink: true
+              }
+            }}
+            onChange={(e) => setSelectedTop(e.target.value as 'fandom' | 'author')}
+          >
+            <MenuItem value='fandom'>fandom</MenuItem>
+            <MenuItem value='author'>author</MenuItem>
+          </TextField>
+        </div> */}
       </div>
 
       <YearStatsClient year={2026} />
