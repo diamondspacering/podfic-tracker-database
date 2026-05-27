@@ -356,10 +356,9 @@ export default async function Page() {
         </div> */}
       </div>
 
-      <YearStatsClient year={2026} />
       {/* Yearly stats */}
       {years.map((year, i) => (
-        <YearStats key={i} year={year} />
+        <YearStatsClient key={i} year={year} />
       ))}
     </div>
   );
