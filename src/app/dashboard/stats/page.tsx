@@ -1,4 +1,4 @@
-import { Typography } from '@mui/material';
+import { MenuItem, TextField, Typography } from '@mui/material';
 import dashboardStyles from '@/app/dashboard/dashboard.module.css';
 import styles from './stats.module.css';
 import { sourceCodePro } from '@/app/fonts/fonts';
@@ -25,6 +25,7 @@ import YearStats from './YearStats';
 import { Metadata } from 'next';
 import { statsYears } from '@/app/lib/dataPersonal';
 import { getDefaultLength } from '@/app/types';
+import YearStatsClient from './YearStatsClient';
 
 export const metadata: Metadata = {
   title: 'Stats',
@@ -133,7 +134,7 @@ export default async function Page() {
                       <i>average</i>
                     </b>
                   </td>
-                  <td>{getLengthText(avgLength.avg)}</td>
+                  <td>{getLengthText(avgLength)}</td>
                 </tr>
                 <tr>
                   <td>
@@ -222,9 +223,9 @@ export default async function Page() {
                       <b>{i + 1}</b>
                     </td>
                     <td>
-                      <i>{fandom.fandom_name}</i>
+                      <i>{fandom.name}</i>
                     </td>
-                    <td>{getLengthText(fandom.fandom_len)}</td>
+                    <td>{getLengthText(fandom.len)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -237,9 +238,9 @@ export default async function Page() {
                       <b>{i + 6}</b>
                     </td>
                     <td>
-                      <i>{fandom.fandom_name}</i>
+                      <i>{fandom.name}</i>
                     </td>
-                    <td>{getLengthText(fandom.fandom_len)}</td>
+                    <td>{getLengthText(fandom.len)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -331,11 +332,33 @@ export default async function Page() {
             </table>
           </div>
         </div>
+        {/* TODO: like a client component that does something? passing values is evil */}
+        {/* <div>
+          <TextField
+            size='small'
+            sx={{
+              width: '120px',
+              font: `${sourceCodePro.variable}`,
+            }}
+            select
+            label='Top'
+            value={selectedTop}
+            slotProps={{
+              inputLabel: {
+                shrink: true
+              }
+            }}
+            onChange={(e) => setSelectedTop(e.target.value as 'fandom' | 'author')}
+          >
+            <MenuItem value='fandom'>fandom</MenuItem>
+            <MenuItem value='author'>author</MenuItem>
+          </TextField>
+        </div> */}
       </div>
 
       {/* Yearly stats */}
       {years.map((year, i) => (
-        <YearStats key={i} year={year} />
+        <YearStatsClient key={i} year={year} />
       ))}
     </div>
   );
