@@ -73,7 +73,7 @@ export default async function Page() {
             gap: '5px',
           }}
         >
-          <div>{`${podfic.title} - `}</div>
+          <div>{`${podfic.nickname ?? podfic.title} - `}</div>
           <StatusBadge
             status={podfic.status}
             clickable
