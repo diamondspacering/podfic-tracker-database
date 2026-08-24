@@ -26,7 +26,10 @@ import {
   generateAADate,
   getLengthText,
 } from '@/app/lib/format';
-import { generateHTMLBluedreaming } from '@/app/lib/html';
+import {
+  generateHTMLBluedreaming,
+  generateHTMLDreamwidth,
+} from '@/app/lib/html';
 import { generateHTMLBluedreamingChapter } from '@/app/lib/html';
 import { generateHTMLAzdaema } from '@/app/lib/html';
 import { generateHTMLAudioficArchive } from '@/app/lib/html';
@@ -43,6 +46,7 @@ import ExternalLink from '@/app/ui/ExternalLink';
 import { SectionType } from '@/app/types';
 import { getLengthValue } from '@/app/lib/lengthHelpers';
 import { getIsPostedChaptered } from '@/app/lib/utils';
+import { LoadingButton } from '@mui/lab';
 
 export default function HtmlPage() {
   const searchParams = useSearchParams();
@@ -101,6 +105,11 @@ export default function HtmlPage() {
     generateAADate(formatDateString(new Date())),
   );
 
+  const isDreamwidth = useMemo(
+    () => selectedTemplate === 'Dreamwidth',
+    [selectedTemplate],
+  );
+
   const { podficcer: defaultPodficcer } = usePodficcer(1);
   const { podficcer: coverArtist } = usePodficcer(
     podfic?.coverArt?.podficcer_id ?? 1,
@@ -112,7 +121,11 @@ export default function HtmlPage() {
     searchParams.set('podfic_id', podficId ? podficId.toString() : 'null');
     searchParams.set('chapter_id', chapterId ? chapterId.toString() : 'null');
 
-    if (isPostedChaptered && !!podfic.ao3_link) {
+    if (isDreamwidth) {
+      const url = new URL(`https://www.dreamwidth.org/update`);
+      url.search = searchParams.toString();
+      return url.toString();
+    } else if (isPostedChaptered && !!podfic.ao3_link) {
       const url = new URL(
         `${
           podfic.ao3_link.slice(-1) === '/'
@@ -132,6 +145,7 @@ export default function HtmlPage() {
     sectionId,
     podficId,
     chapterId,
+    isDreamwidth,
     isPostedChaptered,
     podfic.ao3_link,
     podfic.link,
@@ -350,6 +364,17 @@ export default function HtmlPage() {
         const generated = generateHTMLBluedreaming(podfic, files);
         setGeneratedHTML(beautify.html(generated));
       }
+    } else if (isDreamwidth) {
+      console.log('dw');
+      const generated = generateHTMLDreamwidth(
+        podfic,
+        section,
+        files,
+        resources,
+        defaultPodficcer,
+        coverArtist?.profile,
+      );
+      setGeneratedHTML(beautify.html(generated));
     }
     // TODO: investigate if this is needed
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -499,6 +524,18 @@ export default function HtmlPage() {
             }
           />
         </>
+      )}
+
+      {isDreamwidth && (
+        <div>
+          <LoadingButton
+            variant='contained'
+            loading={isFetchingDreamwidthMetadata}
+            onClick={fetchDreamwithMetadata}
+          >
+            Fetch extra DW data
+          </LoadingButton>
+        </div>
       )}
 
       <CodeMirror

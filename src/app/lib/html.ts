@@ -190,6 +190,101 @@ export const generateHTMLAudioficArchive = (
   return htmlString;
 };
 
+// TODO: fix this up according to your used template
+export const generateHTMLDreamwidth = (
+  podfic: Podfic & Work & Author & CoverArt,
+  section: Section,
+  files: File[],
+  resources: Resource[],
+  defaultPodficcer: Podficcer,
+  coverArtistProfile?: string,
+) => {
+  let htmlString = ``;
+
+  htmlString += `<h2>Info</h2>`;
+  htmlString += `<div>`;
+  htmlString += `<p><strong>Title:</strong> <a href="${podfic.link}" target="_blank">${podfic.title}</a></p>`;
+  htmlString += `<p><strong>Author:</strong> <a href="${podfic.ao3}" target="_blank">${podfic.username}</a></p>`;
+  if (podfic.rating) {
+    htmlString += `<p><strong>Rating:</strong> ${podfic.rating}</p>`;
+  }
+  // TODO: fetch fandom
+  htmlString += `<p><strong>Fandom:</strong> <span id="fandom"></span></p>`;
+  if (podfic.relationship) {
+    htmlString += `<p><strong>Relationship:</strong> ${podfic.relationship}</p>`;
+  }
+  // TODO: fetch warnings
+  htmlString += `<p><strong>Selected additional tags:</strong> <span id="selected-freeforms"></span></p>`;
+  htmlString += `<p><strong>Summary:</strong> <blockquote id="summary"></blockquote></p>`;
+  htmlString += `<p><strong>Length:</strong> ${getLengthText(podfic.length)}</p>`;
+  htmlString += `</div>`;
+
+  if (podfic.image_link) {
+    htmlString += `<div class="cover">`;
+    htmlString += `<center><img src="${podfic.image_link}" /></center>`;
+    htmlString += `</div>`;
+
+    if (
+      podfic.cover_artist_name &&
+      podfic.cover_artist_name !== defaultPodficcer.username
+    ) {
+      htmlString += `<strong>Cover artist:</strong> <a href="${coverArtistProfile ?? `https://archiveofourown.org/users/${podfic.cover_artist_name}`}">${podfic.cover_artist_name}</a><br />`;
+    }
+  }
+
+  // TODO: length here?
+
+  const filteredFiles = files.filter((file) => Boolean(file));
+
+  if (filteredFiles.length) {
+    htmlString += `<h2>Streaming & Download</h2><br />`;
+    htmlString += `<cut>`;
+    filteredFiles.forEach((file) => {
+      if (file.label) htmlString += `<h4>${file.label}</h4>`;
+
+      const embedLinks = file.links?.filter((link) => link.is_embed) ?? [];
+      embedLinks.forEach(
+        (link) => (htmlString += `<p>${getEmbedCode(link.link)}</p><br />`),
+      );
+
+      const directLinks = file.links?.filter((link) => link.is_direct) ?? [];
+      if (directLinks.length) {
+        htmlString += `<audio>`;
+        directLinks.forEach(
+          (link) => (htmlString += `<source src="${link.link}">`),
+        );
+        htmlString += `</audio><br />`;
+
+        htmlString += `<ul>`;
+        if (directLinks.length === 1) {
+          htmlString += `<li><a href="${directLinks[0].link}">Download ${file.filetype} from ${directLinks[0].host}</a> (${file.size} MB | ${getLengthText(file.length)})</li>`;
+        } else {
+          htmlString += `<li>Download ${file.filetype} (${file.size} MB | ${getLengthText(file.length)}):`;
+          directLinks.forEach((link, i) => {
+            if (i === 0)
+              htmlString += ` <a href="${link.link}">${link.host}</a>`;
+            else htmlString += ` | <a href="${link.link}">${link.host}</a>`;
+          });
+          htmlString += `</li>`;
+        }
+        htmlString += `</ul>`;
+      }
+    });
+
+    htmlString += `</cut>`;
+  }
+
+  resources.forEach((resource) => {
+    if (resource.notes) {
+      htmlString += `<li><b>${resource.label}:</b> <a href="${resource.link}">${resource.notes}</a></li>`;
+    } else {
+      htmlString += `<li><b>${resource.resource_type}:</b> <a href="${resource.link}">${resource.label}</a></li>`;
+    }
+  });
+
+  return htmlString;
+};
+
 // hmm yeah chapters also
 // hmmm may need to change order of things if there's multiple authors. but its fiiine
 // TODO: rework for sections

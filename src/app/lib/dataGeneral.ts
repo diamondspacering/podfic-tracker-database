@@ -17,4 +17,9 @@ export const resourceTypes = [
 
 export const socialMedia = ['AO3', 'Twitter', 'Tumblr', 'Bluesky'];
 
-export const htmlTemplates = ['Audiofic Archive', 'Azdaema', 'bluedreaming'];
+export const htmlTemplates = [
+  'Audiofic Archive',
+  'Azdaema',
+  'bluedreaming',
+  'Dreamwidth',
+];
