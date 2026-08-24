@@ -62,7 +62,6 @@ export default function useSectionColumns({
         meta: {
           type: 'number',
           immutable: true,
-          hidden: true,
         },
       }),
       columnHelper.accessor('text_link', {

@@ -1,4 +1,5 @@
 import {
+  Column,
   ColumnFiltersState,
   FilterFnOption,
   flexRender,
@@ -41,6 +42,7 @@ import {
   resetAllColumnsToDefault,
 } from '@/app/lib/defaultColumnFilters';
 import { filterActivated } from '@/app/lib/utils';
+import ColumnVisibilityToggleContainer from './ColumnVisibilityToggleContainer';
 
 export interface CustomTableProps<T> {
   isLoading: boolean;
@@ -71,6 +73,8 @@ export interface CustomTableProps<T> {
   showColumnVisibility?: boolean;
   columnVisibility?: VisibilityState;
   setColumnVisibility?: Dispatch<SetStateAction<VisibilityState>>;
+  /** Callback that sets table.getAllColumns(), for external column visibility displaying */
+  setAllColumns?: (columns: Column<T, unknown>[], index?: number) => void;
 
   // row expansion
   rowCanExpand?: boolean;
@@ -81,6 +85,7 @@ export interface CustomTableProps<T> {
   extraParams?: any;
 }
 
+// declared outside of function and not as default values so they're stable
 const DEFAULT_COLUMN_FILTERS = [];
 const DEFAULT_SET_COLUMN_FILTERS = () => {};
 
@@ -104,6 +109,7 @@ export default function CustomTable<T>({
   showColumnVisibility = false,
   columnVisibility = {},
   setColumnVisibility = () => {},
+  setAllColumns = () => {},
   updateItemInline = async () => {},
   showRowCount = false,
   getExpandedContent = () => <></>,
@@ -182,49 +188,13 @@ export default function CustomTable<T>({
     },
   });
 
+  useEffect(() => setAllColumns(table.getAllColumns()), [setAllColumns, table]);
+
   return (
     <div>
       {showColumnVisibility && (
         <>
-          <div className={tableStyles.visibilityToggleContainer}>
-            <span>
-              <IconButton
-                style={{ padding: '0px' }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setColumnVisibilityExpanded((prev) => !prev);
-                }}
-              >
-                {columnVisibilityExpanded ? (
-                  <KeyboardArrowDown />
-                ) : (
-                  <KeyboardArrowRight />
-                )}
-              </IconButton>
-              <b>Column Visibility</b>
-            </span>
-            <br />
-            <div className={tableStyles.flexRow}>
-              {columnVisibilityExpanded &&
-                table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => (
-                    <FormControlLabel
-                      key={column.id}
-                      label={
-                        (column.columnDef.meta as any)?.columnName ?? column.id
-                      }
-                      control={
-                        <Switch
-                          checked={column.getIsVisible()}
-                          onChange={column.getToggleVisibilityHandler()}
-                        />
-                      }
-                    />
-                  ))}
-            </div>
-          </div>
+          <ColumnVisibilityToggleContainer columns={table.getAllColumns()} />
           <br />
         </>
       )}

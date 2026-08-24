@@ -1,9 +1,15 @@
-import { useContext } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useContext,
+  useState,
+} from 'react';
 import { ChapterTableContext } from './ChapterTableContext';
 import useSectionColumns from './useSectionColumns';
 import CustomTable from '@/app/ui/table/CustomTable';
 import ColorScale from 'color-scales';
-import { createColumnHelper } from '@tanstack/react-table';
+import { Column, createColumnHelper } from '@tanstack/react-table';
 import { EditCell } from '@/app/ui/table/EditCell';
 import AddMenu from '@/app/ui/AddMenu';
 import Link from 'next/link';
@@ -19,6 +25,11 @@ interface SectionOnlyTableProps {
   isLoading: boolean;
   submitCallback: () => Promise<void>;
   lengthColorScale: ColorScale;
+  setAllColumns?: (
+    columns: Column<Section, unknown>[],
+    rowIndex: number,
+  ) => void;
+  rowIndex?: number;
 }
 
 export default function SectionOnlyTable({
@@ -26,6 +37,8 @@ export default function SectionOnlyTable({
   isLoading,
   submitCallback,
   lengthColorScale,
+  setAllColumns,
+  rowIndex,
 }: SectionOnlyTableProps) {
   const {
     podficId,
@@ -65,18 +78,18 @@ export default function SectionOnlyTable({
       id: 'edit',
       cell: EditCell,
     }),
-    columnHelper.display({
-      id: 'add-related',
-      cell: (props) => (
-        <AddMenu
-          podficTitle={podficTitle}
-          podficId={props.row.getValue('podfic_id')}
-          sectionId={props.row.getValue('section_id')}
-          length={props.row.getValue('length')}
-          options={['file', 'resource', 'note']}
-        />
-      ),
-    }),
+    // columnHelper.display({
+    //   id: 'add-related',
+    //   cell: (props) => (
+    //     <AddMenu
+    //       podficTitle={podficTitle}
+    //       podficId={props.row.getValue('podfic_id')}
+    //       sectionId={props.row.getValue('section_id')}
+    //       length={props.row.getValue('length')}
+    //       options={['file', 'resource', 'note']}
+    //     />
+    //   ),
+    // }),
     columnHelper.display({
       id: 'add-recording-session',
       cell: (props) => (
@@ -119,7 +132,16 @@ export default function SectionOnlyTable({
     }),
   ];
 
+  const [columnVisibility, setColumnVisibility] = useState(
+    getDefaultColumnVisibility(columns),
+  );
+
   const defaultProps = getDefaultTableProps(columns);
+
+  const setAllColumnsSetter = useCallback(
+    (columns) => setAllColumns(columns, rowIndex),
+    [rowIndex],
+  );
 
   return (
     <CustomTable
@@ -130,7 +152,9 @@ export default function SectionOnlyTable({
       rowKey='section_id'
       showRowCount={false}
       showColumnVisibility={false}
-      columnVisibility={getDefaultColumnVisibility(columns)}
+      columnVisibility={columnVisibility}
+      setColumnVisibility={setColumnVisibility}
+      setAllColumns={setAllColumnsSetter}
       updateItemInline={async (section) => {
         await updateSectionMinified(JSON.stringify(section));
         await submitCallback();

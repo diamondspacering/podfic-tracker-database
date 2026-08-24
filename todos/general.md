@@ -50,6 +50,9 @@
 - [ ] To podfic: Pin "New Podfic" to top of page
 - [ ] Update facet filters when values update
 - [ ] preset filters
+- [ ] Be able to set column visibility on subtables as well (for sections)
+  - In progress: currently working except for first subtable and for some reason shows 9 rows instead of 4 - something is messed up
+  - Also very messy
 
 ### ChapterTable
 
@@ -89,6 +92,7 @@
 - [ ] Actually show notes & stuff
 - [ ] Number filtering on chapters column
 - [ ] Just custom enum types and filters for rating/statuses/etc.
+- [ ] Appears to be fixed or something on deployed version? Investigate that
 
 ## HTML
 
