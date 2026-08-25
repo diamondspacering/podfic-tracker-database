@@ -227,6 +227,7 @@ const DisplayCell = ({ value, meta, isExpanded }) => {
             isExpanded ? '' : tableStyles.longTextCell
           }`}
           style={{
+            minWidth: meta?.minWidth ?? '150px',
             maxWidth: meta?.maxWidth ?? '500px',
           }}
         >

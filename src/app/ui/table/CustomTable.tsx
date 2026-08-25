@@ -24,18 +24,12 @@ import {
 import tableStyles from '@/app/ui/table/table.module.css';
 import {
   Button,
-  FormControlLabel,
   IconButton,
   InputAdornment,
   Skeleton,
-  Switch,
   TextField,
 } from '@mui/material';
-import {
-  Close,
-  KeyboardArrowDown,
-  KeyboardArrowRight,
-} from '@mui/icons-material';
+import { Close } from '@mui/icons-material';
 import styles from '@/app/dashboard/dashboard.module.css';
 import {
   resetAllColumns,
@@ -118,8 +112,6 @@ export default function CustomTable<T>({
   extraParams = {},
 }: CustomTableProps<T>) {
   const [editingRow, setEditingRow] = useState<T>({} as T);
-  const [columnVisibilityExpanded, setColumnVisibilityExpanded] =
-    useState(false);
 
   const tableData = useMemo(
     () => (isLoading ? Array(numLoadingRows).fill({} as T) : data),

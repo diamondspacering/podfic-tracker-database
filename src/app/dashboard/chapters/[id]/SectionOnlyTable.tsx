@@ -1,10 +1,4 @@
-import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useContext,
-  useState,
-} from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { ChapterTableContext } from './ChapterTableContext';
 import useSectionColumns from './useSectionColumns';
 import CustomTable from '@/app/ui/table/CustomTable';
@@ -51,7 +45,7 @@ export default function SectionOnlyTable({
 
   const pathname = usePathname();
 
-  const { titleColumn, metaColumns, postingColumns } = useSectionColumns({
+  const { titleColumns, metaColumns, postingColumns } = useSectionColumns({
     sections,
     editingRowId,
   });
@@ -71,25 +65,25 @@ export default function SectionOnlyTable({
         hidden: true,
       },
     }),
-    ...titleColumn,
+    ...titleColumns,
     ...metaColumns,
     ...postingColumns,
     columnHelper.display({
       id: 'edit',
       cell: EditCell,
     }),
-    // columnHelper.display({
-    //   id: 'add-related',
-    //   cell: (props) => (
-    //     <AddMenu
-    //       podficTitle={podficTitle}
-    //       podficId={props.row.getValue('podfic_id')}
-    //       sectionId={props.row.getValue('section_id')}
-    //       length={props.row.getValue('length')}
-    //       options={['file', 'resource', 'note']}
-    //     />
-    //   ),
-    // }),
+    columnHelper.display({
+      id: 'add-related',
+      cell: (props) => (
+        <AddMenu
+          podficTitle={podficTitle}
+          podficId={props.row.getValue('podfic_id')}
+          sectionId={props.row.getValue('section_id')}
+          length={props.row.getValue('length')}
+          options={['file', 'resource', 'note']}
+        />
+      ),
+    }),
     columnHelper.display({
       id: 'add-recording-session',
       cell: (props) => (
@@ -139,8 +133,10 @@ export default function SectionOnlyTable({
   const defaultProps = getDefaultTableProps(columns);
 
   const setAllColumnsSetter = useCallback(
-    (columns) => setAllColumns(columns, rowIndex),
-    [rowIndex],
+    (columns) => {
+      setAllColumns(columns, rowIndex);
+    },
+    [rowIndex, setAllColumns],
   );
 
   return (
