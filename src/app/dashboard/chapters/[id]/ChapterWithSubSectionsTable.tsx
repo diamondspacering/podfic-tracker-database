@@ -3,7 +3,7 @@ import {
   useMaxSectionLengthValues,
   usePodficChaptersWithSubSections,
 } from '@/app/lib/swrLoaders';
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 import {
   getDefaultColumnVisibility,
   useFixedColorScale,
@@ -17,7 +17,7 @@ import { createUpdateChapterClient } from '@/app/lib/updaters';
 import ColumnVisibilityToggleContainer from '@/app/ui/table/ColumnVisibilityToggleContainer';
 
 interface SectionTableColumns<T> {
-  [x: number]: Column<T, unknown>[];
+  [rowIndex: number]: Column<T, unknown>[];
 }
 
 export default function ChapterWithSubSectionsTable() {
@@ -46,7 +46,6 @@ export default function ChapterWithSubSectionsTable() {
 
   const sectionColumnSetter = useCallback(
     (columns: Column<Section, unknown>[], rowIndex: number) => {
-      console.log('setting section columns', columns, rowIndex);
       if (isLoading || !chapters.length) return;
       setSectionTableColumns((prev) => ({
         ...prev,
@@ -64,8 +63,6 @@ export default function ChapterWithSubSectionsTable() {
     ] as unknown as Column<any, unknown>[];
     return columns;
   }, [chapterTableColumns, sectionTableColumns]);
-
-  useEffect(() => console.log({ sectionTableColumns }), [sectionTableColumns]);
 
   const chapterColumnHelper = createColumnHelper<Chapter>();
 
