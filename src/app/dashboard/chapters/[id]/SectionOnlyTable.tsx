@@ -1,9 +1,9 @@
-import { useContext } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { ChapterTableContext } from './ChapterTableContext';
 import useSectionColumns from './useSectionColumns';
 import CustomTable from '@/app/ui/table/CustomTable';
 import ColorScale from 'color-scales';
-import { createColumnHelper } from '@tanstack/react-table';
+import { Column, createColumnHelper } from '@tanstack/react-table';
 import { EditCell } from '@/app/ui/table/EditCell';
 import AddMenu from '@/app/ui/AddMenu';
 import Link from 'next/link';
@@ -19,6 +19,11 @@ interface SectionOnlyTableProps {
   isLoading: boolean;
   submitCallback: () => Promise<void>;
   lengthColorScale: ColorScale;
+  setAllColumns?: (
+    columns: Column<Section, unknown>[],
+    rowIndex: number,
+  ) => void;
+  rowIndex?: number;
 }
 
 export default function SectionOnlyTable({
@@ -26,6 +31,8 @@ export default function SectionOnlyTable({
   isLoading,
   submitCallback,
   lengthColorScale,
+  setAllColumns,
+  rowIndex,
 }: SectionOnlyTableProps) {
   const {
     podficId,
@@ -38,7 +45,7 @@ export default function SectionOnlyTable({
 
   const pathname = usePathname();
 
-  const { titleColumn, metaColumns, postingColumns } = useSectionColumns({
+  const { titleColumns, metaColumns, postingColumns } = useSectionColumns({
     sections,
     editingRowId,
   });
@@ -58,7 +65,7 @@ export default function SectionOnlyTable({
         hidden: true,
       },
     }),
-    ...titleColumn,
+    ...titleColumns,
     ...metaColumns,
     ...postingColumns,
     columnHelper.display({
@@ -119,7 +126,18 @@ export default function SectionOnlyTable({
     }),
   ];
 
+  const [columnVisibility, setColumnVisibility] = useState(
+    getDefaultColumnVisibility(columns),
+  );
+
   const defaultProps = getDefaultTableProps(columns);
+
+  const setAllColumnsSetter = useCallback(
+    (columns) => {
+      setAllColumns(columns, rowIndex);
+    },
+    [rowIndex, setAllColumns],
+  );
 
   return (
     <CustomTable
@@ -130,7 +148,9 @@ export default function SectionOnlyTable({
       rowKey='section_id'
       showRowCount={false}
       showColumnVisibility={false}
-      columnVisibility={getDefaultColumnVisibility(columns)}
+      columnVisibility={columnVisibility}
+      setColumnVisibility={setColumnVisibility}
+      setAllColumns={setAllColumnsSetter}
       updateItemInline={async (section) => {
         await updateSectionMinified(JSON.stringify(section));
         await submitCallback();
