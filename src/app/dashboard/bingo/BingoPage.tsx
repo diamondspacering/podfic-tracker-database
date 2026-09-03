@@ -95,7 +95,7 @@ export default function BingoPage() {
         Add Bingo Card
       </Button>
 
-      <div className={styles.flexRow} style={{ gap: '30px' }}>
+      <div className={styles.flexRow} style={{ gap: '30px', flexWrap: 'wrap' }}>
         {bingoCards.map((bingoCard) => (
           <BingoCard
             key={bingoCard.bingo_card_id}
