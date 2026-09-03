@@ -367,7 +367,7 @@ export default function HtmlPage() {
     } else if (isDreamwidth) {
       console.log('dw');
       const generated = generateHTMLDreamwidth(
-        podfic,
+        podfic as Podfic & Work & Fandom & Author & CoverArt,
         section,
         files,
         resources,
@@ -524,18 +524,6 @@ export default function HtmlPage() {
             }
           />
         </>
-      )}
-
-      {isDreamwidth && (
-        <div>
-          <LoadingButton
-            variant='contained'
-            loading={isFetchingDreamwidthMetadata}
-            onClick={fetchDreamwithMetadata}
-          >
-            Fetch extra DW data
-          </LoadingButton>
-        </div>
       )}
 
       <CodeMirror

@@ -190,9 +190,8 @@ export const generateHTMLAudioficArchive = (
   return htmlString;
 };
 
-// TODO: fix this up according to your used template
 export const generateHTMLDreamwidth = (
-  podfic: Podfic & Work & Author & CoverArt,
+  podfic: Podfic & Work & Fandom & Author & CoverArt,
   section: Section,
   files: File[],
   resources: Resource[],
@@ -203,20 +202,19 @@ export const generateHTMLDreamwidth = (
 
   htmlString += `<h2>Info</h2>`;
   htmlString += `<div>`;
-  htmlString += `<p><strong>Title:</strong> <a href="${podfic.link}" target="_blank">${podfic.title}</a></p>`;
-  htmlString += `<p><strong>Author:</strong> <a href="${podfic.ao3}" target="_blank">${podfic.username}</a></p>`;
+  htmlString += `<span><strong>Title:</strong> <a href="${podfic.link}" target="_blank">${podfic.title}</a></span><br />`;
+  htmlString += `<span><strong>Author:</strong> ${podfic.ao3 ? `<a href="${podfic.ao3}" target="_blank">${podfic.username}</a>` : podfic.username}</span><br />`;
   if (podfic.rating) {
-    htmlString += `<p><strong>Rating:</strong> ${podfic.rating}</p>`;
+    htmlString += `<span><strong>Rating:</strong> ${podfic.rating}</span><br />`;
   }
-  // TODO: fetch fandom
-  htmlString += `<p><strong>Fandom:</strong> <span id="fandom"></span></p>`;
+  htmlString += `<span><strong>Fandom:</strong> <span id="fandom">${podfic.fandom_name}</span></span><br />`;
   if (podfic.relationship) {
-    htmlString += `<p><strong>Relationship:</strong> ${podfic.relationship}</p>`;
+    htmlString += `<span><strong>Relationship:</strong> ${podfic.relationship}</span><br />`;
   }
-  // TODO: fetch warnings
-  htmlString += `<p><strong>Selected additional tags:</strong> <span id="selected-freeforms"></span></p>`;
-  htmlString += `<p><strong>Summary:</strong> <blockquote id="summary"></blockquote></p>`;
-  htmlString += `<p><strong>Length:</strong> ${getLengthText(podfic.length)}</p>`;
+  htmlString += `<span id="warnings-wrapper"><strong>Warnings:</strong> <span id="warnings"></span><br /></span>`;
+  htmlString += `<span><strong>Selected additional tags:</strong> <span id="selected-freeforms"></span></span><br />`;
+  htmlString += `<span><strong>Summary:</strong> <blockquote id="summary"></blockquote></span><br />`;
+  htmlString += `<span><strong>Length:</strong> ${getLengthText(podfic.length)}</span><br />`;
   htmlString += `</div>`;
 
   if (podfic.image_link) {
@@ -231,8 +229,6 @@ export const generateHTMLDreamwidth = (
       htmlString += `<strong>Cover artist:</strong> <a href="${coverArtistProfile ?? `https://archiveofourown.org/users/${podfic.cover_artist_name}`}">${podfic.cover_artist_name}</a><br />`;
     }
   }
-
-  // TODO: length here?
 
   const filteredFiles = files.filter((file) => Boolean(file));
 
@@ -249,25 +245,23 @@ export const generateHTMLDreamwidth = (
 
       const directLinks = file.links?.filter((link) => link.is_direct) ?? [];
       if (directLinks.length) {
-        htmlString += `<audio>`;
+        htmlString += `<audio crossorigin="anonymous" preload="metadata" controls="controls">`;
         directLinks.forEach(
           (link) => (htmlString += `<source src="${link.link}">`),
         );
         htmlString += `</audio><br />`;
 
-        htmlString += `<ul>`;
         if (directLinks.length === 1) {
-          htmlString += `<li><a href="${directLinks[0].link}">Download ${file.filetype} from ${directLinks[0].host}</a> (${file.size} MB | ${getLengthText(file.length)})</li>`;
+          htmlString += `<p><a href="${directLinks[0].link}">Download ${file.filetype} from ${directLinks[0].host}</a> (${file.size} MB | ${getLengthText(file.length)})</p>`;
         } else {
-          htmlString += `<li>Download ${file.filetype} (${file.size} MB | ${getLengthText(file.length)}):`;
+          htmlString += `<p>Download ${file.filetype} (${file.size} MB | ${getLengthText(file.length)}):`;
           directLinks.forEach((link, i) => {
             if (i === 0)
               htmlString += ` <a href="${link.link}">${link.host}</a>`;
             else htmlString += ` | <a href="${link.link}">${link.host}</a>`;
           });
-          htmlString += `</li>`;
+          htmlString += `</p>`;
         }
-        htmlString += `</ul>`;
       }
     });
 

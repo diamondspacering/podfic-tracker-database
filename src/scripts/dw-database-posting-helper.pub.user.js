@@ -10,6 +10,7 @@
 // ==/UserScript==
 
 const APP_URL = 'localhost:3001';
+const PODFIC_TAG = 'podfic';
 
 (() => {
   const url = new URL(window.location.href);
@@ -17,9 +18,6 @@ const APP_URL = 'localhost:3001';
   const section_id = search_params.get('section_id');
   const podfic_id = search_params.get('podfic_id');
   const chapter_id = search_params.get('chapter_id');
-  const work_link = search_params.get('work_link');
-
-  console.log({ podfic_id, section_id, chapter_id, work_link });
 
   async function fetchDatabaseData() {
     console.log('fetching from db');
@@ -32,6 +30,40 @@ const APP_URL = 'localhost:3001';
     return parsedData;
   }
 
+  function setPostContent(html_string) {
+    $('textarea#draft').val(html_string);
+  }
+
+  function updatePostContent(callback) {
+    const existingPostContent = $('textarea#draft').val();
+
+    const dummyElement = document.createElement('div');
+    dummyElement.innerHTML = existingPostContent;
+
+    callback(dummyElement);
+
+    setPostContent(dummyElement.innerHTML);
+  }
+
+  function fillPostElement(elementId, text) {
+    updatePostContent((dummyElement) =>
+      $($(dummyElement).find(`#${elementId}`)).text(text),
+    );
+  }
+
+  function addWarnings(warnings) {
+    updatePostContent((dummyElement) => {
+      const filteredWarnings = warnings.filter(
+        (warning) => warning !== 'No Archive Warnings Apply',
+      );
+      if (!filteredWarnings.length) {
+        $($(dummyElement).find('#warnings-wrapper')).remove();
+      } else {
+        $($(dummyElement).find('#warnings')).text(filteredWarnings.join(', '));
+      }
+    });
+  }
+
   function getSelectedFreeforms() {
     const checkboxes = $('#tag-selector input:checked')
       .toArray()
@@ -40,10 +72,8 @@ const APP_URL = 'localhost:3001';
   }
 
   function addFreeformTags() {
-    // console.log(selectedFreeforms);
     const selectedFreeforms = getSelectedFreeforms();
-    console.log({ selectedFreeforms });
-    $('#selected-freeforms').text(selectedFreeforms.join(', '));
+    fillPostElement('selected-freeforms', selectedFreeforms.join(', '));
   }
 
   function createTagSelector(freeforms) {
@@ -67,6 +97,7 @@ const APP_URL = 'localhost:3001';
 
       $(tagSelectorDiv).append(checkbox);
       $(tagSelectorDiv).append(label);
+      $(tagSelectorDiv).append(document.createElement('br'));
     });
 
     $(tagSelectorDiv).append(document.createElement('br'));
@@ -88,14 +119,18 @@ const APP_URL = 'localhost:3001';
   async function prefillPostingForm() {
     console.log('filling posting form');
 
-    // TODO: fetch db data
     const dbData = await fetchDatabaseData();
     console.log({ dbData });
-    const { freeforms, html_string } = dbData;
+    const { title, fandom_name, warnings, summary, freeforms, html_string } =
+      dbData;
 
-    $('textarea#draft').val(html_string);
+    setPostContent(html_string);
+    $('input#subject').val(`[Podfic] ${title}`);
+    $('input#prop_taglist').val(`${PODFIC_TAG}, fandom:${fandom_name}`);
+    fillPostElement('summary', summary);
+    addWarnings(warnings);
 
-    createTagSelector(freeforms);
+    createTagSelector(freeforms, html_string);
   }
 
   // TODO: add css & classes for labels that make them font-weight: normal

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   if (format === 'dw') {
     const result = await client.query(
-      `select work.title as work_title,work.link as work_link,html_string from section inner join podfic on section.podfic_id = podfic.podfic_id inner join work on podfic.work_id = work.work_id where section_id = $1`,
+      `select work.title as work_title,work.link as work_link,html_string,fandom.name as fandom_name from section inner join podfic on section.podfic_id = podfic.podfic_id inner join work on podfic.work_id = work.work_id left join fandom on work.fandom_id = fandom.fandom_id where section_id = $1`,
       [sectionId],
     );
 
@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
 
     const data = {
       title: section.work_title,
+      fandom_name: section.fandom_name.toLowerCase(),
       html_string: section.html_string,
       warnings,
       summary,
