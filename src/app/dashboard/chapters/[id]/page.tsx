@@ -1,19 +1,29 @@
 import { fetchPodfic } from '@/app/lib/loaders';
 import ChapterTable from './ChapterTable';
 import { Metadata } from 'next';
+import { cache } from 'react';
 
-export const metadata: Metadata = {
-  title: 'Podfic Chapters',
-};
+const getPodfic = cache(async (id: string) => {
+  return await fetchPodfic(id);
+});
+
+export async function generateMetadata({ params }): Promise<Metadata> {
+  const { id } = await params;
+
+  const { title } = await getPodfic(id);
+
+  return {
+    title: `${title ?? 'Podfic'} Chapters`,
+  };
+}
 
 export default async function Page({ params }) {
-  const loadedParams = await params;
-  const { id } = loadedParams;
-  const podfic = await fetchPodfic(id);
+  const { id } = await params;
+  const podfic = await getPodfic(id);
 
   return (
     <ChapterTable
-      podficId={params.id}
+      podficId={id}
       podficTitle={podfic.title}
       sectionType={podfic.section_type}
     />
