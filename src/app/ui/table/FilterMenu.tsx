@@ -11,7 +11,7 @@ import {
   MenuItem,
   TextField,
 } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import styles from './table.module.css';
 import DatePicker from '../DatePicker';
 
@@ -52,6 +52,15 @@ export default function FilterMenu({
         o?.toLowerCase().includes(searchValue.toLowerCase()),
       ),
     [options, searchValue],
+  );
+
+  const removeFromLocalFilter = useCallback(
+    (option) => {
+      if (localFilter.includes('ALL'))
+        setLocalFilter(options.filter((f) => f !== option));
+      else setLocalFilter(localFilter.filter((f) => f !== option));
+    },
+    [localFilter, options],
   );
 
   return (
@@ -171,7 +180,7 @@ export default function FilterMenu({
                 <Button
                   size='small'
                   onClick={() => {
-                    setLocalFilter(options);
+                    setLocalFilter(['ALL']);
                   }}
                 >
                   {`Select all ${options?.length}`}
@@ -206,14 +215,14 @@ export default function FilterMenu({
                     label='(blanks)'
                     control={
                       <Checkbox
-                        checked={localFilter.includes(null)}
+                        checked={
+                          localFilter.includes('ALL') ||
+                          localFilter.includes(null)
+                        }
                         onChange={(e) => {
                           if (e.target.checked)
                             setLocalFilter([...localFilter, null]);
-                          else
-                            setLocalFilter(
-                              localFilter.filter((f) => f !== null),
-                            );
+                          else removeFromLocalFilter(null);
                         }}
                       />
                     }
@@ -224,14 +233,14 @@ export default function FilterMenu({
                     <FormControlLabel
                       control={
                         <Checkbox
-                          checked={localFilter.includes(option)}
+                          checked={
+                            localFilter.includes('ALL') ||
+                            localFilter.includes(option)
+                          }
                           onChange={(e) => {
                             if (e.target.checked)
                               setLocalFilter([...localFilter, option]);
-                            else
-                              setLocalFilter(
-                                localFilter.filter((f) => f !== option),
-                              );
+                            else removeFromLocalFilter(option);
                           }}
                         />
                       }

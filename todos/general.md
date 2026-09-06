@@ -1,9 +1,9 @@
 # General Todos
 
-- [ ] Variable titles per page
+- [x] Variable titles per page
 - [ ] Snackbar/toasts for relevant things
 - [x] Make metadata pulling actually set number of chapters as well
-- [ ] Make filters update when data is updated (e.g., new author) - prob have more `null` support?
+- [x] Make filters update when data is updated (e.g., new author) - prob have more `null` support?
 - [x] Podfic deletion
 - [x] Actually use giftee_id and designating a podficcer who something is gifted to
 - [x] Generic dialog props that get extended
@@ -17,9 +17,9 @@
       - preferably still with inline editing
     - [x] Figure out pulling correct permission ask when grabbing for works - consider like an archived field or something?
     - [x] Permission asks for works
-    - [ ] lighter grey for unknown/inactive
+    - [x] lighter grey for unknown/inactive
     - [ ] filtering authors on child permission statuses as well? Like I may want to see authors with open permission asks/ones I still need to ask
-      - this may be complicated
+      - this may be complicated; may need adding like additional filters?
     - [ ] Filter authors based on provided work id as well as works based on authors/set author manually
     - [ ] In permission ask form, render authors w/ color of status? or display that somewhere? pull their links?
   - [ ] Consider doing the events method of combined headers? it's very sloppy but. useful.
@@ -40,6 +40,8 @@
 - [ ] Increase session length for logging in
 - [ ] Support name of role for podficcer_podfic
 - [ ] Metadata is not doing fandom mapping correctly (is not mapping)
+- [ ] Remove assorted uses of `any`, correctly type more table things
+  - [ ] Custom table meta type
 
 ## Tables
 

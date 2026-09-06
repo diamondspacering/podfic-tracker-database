@@ -66,7 +66,7 @@ export const getDefaultFilterForColumn = (
       value = [];
       break;
     default:
-      value = Array.from(column.getFacetedUniqueValues().keys()).sort();
+      value = ['ALL'];
   }
   return {
     id: column.id,

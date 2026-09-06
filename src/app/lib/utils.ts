@@ -33,7 +33,9 @@ export const formatTableDate = (date: any, isEditingRow: boolean) => {
 };
 
 export const arrayIncludesFilter = (row, columnId, filterValue) => {
-  return filterValue.includes(row.getValue(columnId));
+  return (
+    filterValue.includes('ALL') || filterValue.includes(row.getValue(columnId))
+  );
 };
 
 export const tagFilter = (row, columnId, filterValue, exclude = false) => {
@@ -52,6 +54,17 @@ export const tagFilter = (row, columnId, filterValue, exclude = false) => {
 };
 
 export const filterActivated = (column, filterType: FilterType) => {
+  // so should list as activated if there's non-truthy keys in there
+  if (filterType === FilterType.DATE) {
+    return !!column.getFilterValue() &&
+      !!Object.keys(column.getFilterValue()).length &&
+      !!Object.values(column.getFilterValue()).some((f) => !!f) &&
+      column.getFilterValue().range
+      ? !!Object.keys(column.getFilterValue().range).length &&
+          !!Object.values(column.getFilterValue().range).some((f) => !!f)
+      : true;
+  }
+  if ((column.getFilterValue() ?? []).includes('ALL')) return false;
   if (filterType === FilterType.STATUS) {
     return !Object.values(PodficStatus).every((f) =>
       (column.getFilterValue() ?? []).includes(f),
@@ -86,16 +99,6 @@ export const filterActivated = (column, filterType: FilterType) => {
     return !Array.from(column.getFacetedUniqueValues().keys()).every((f) =>
       (column.getFilterValue() ?? []).includes(f),
     );
-  }
-  // so should list as activated if there's non-truthy keys in there
-  if (filterType === FilterType.DATE) {
-    return !!column.getFilterValue() &&
-      !!Object.keys(column.getFilterValue()).length &&
-      !!Object.values(column.getFilterValue()).some((f) => !!f) &&
-      column.getFilterValue().range
-      ? !!Object.keys(column.getFilterValue().range).length &&
-          !!Object.values(column.getFilterValue().range).some((f) => !!f)
-      : true;
   }
 };
 
@@ -257,7 +260,7 @@ export const getPodficFinishedSectionCount = (podfic: Podfic & Work) => {
         (s) =>
           s.status === PodficStatus.FINISHED ||
           s.status === PodficStatus.POSTED ||
-          status === PodficStatus.POSTING,
+          s.status === PodficStatus.POSTING,
       )?.length ?? '?'
     );
   }
