@@ -50,17 +50,14 @@
 - [ ] Custom meta type for tables
 - [ ] Figure out the errors on custom tables
 - [ ] To podfic: Pin "New Podfic" to top of page
-- [ ] Update facet filters when values update
 - [ ] preset filters
 - [x] Be able to set column visibility on subtables as well (for sections)
+- [ ] Fix date filter
 
 ### ChapterTable
 
 - [ ] individual files and resources expanded per chapter
 - [ ] global color scale for wordcount?
-- [x] column show/hide like podfic table
-- [x] chapter columns defined in separate file
-- [x] Show section recording sessions
 
 ### Parts
 
@@ -113,7 +110,7 @@
 - [ ] Only include chapter resources per chapter
   - and don't include chapter resources on whole-podfic posting
 - [ ] Be able to collapse resources - DetailsWrapper from podfic form?
-- [ ] Saving state for HTML save button
+- [ ] Toast for HTML saving
 - [ ] Select podfic/chapter if not already selected
 - [ ] Proper chaptered support
   - is_chapter state variable?
@@ -165,9 +162,7 @@
 ## Bingos
 
 - [ ] Custom CSS?
-- [x] Allow links in square titles
 - [ ] Background images?
-- [x] Width so that two can go side by side
 - [ ] Make bingo vs. blackout styling clearer
 - [ ] Make it easier to take notes?
 
