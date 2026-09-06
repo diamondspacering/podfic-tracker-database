@@ -45,12 +45,6 @@ const PODFIC_TAG = 'podfic';
     setPostContent(dummyElement.innerHTML);
   }
 
-  function fillPostElement(elementId, text) {
-    updatePostContent((dummyElement) =>
-      $($(dummyElement).find(`#${elementId}`)).text(text),
-    );
-  }
-
   function addWarnings(warnings) {
     updatePostContent((dummyElement) => {
       const filteredWarnings = warnings.filter(
@@ -73,7 +67,11 @@ const PODFIC_TAG = 'podfic';
 
   function addFreeformTags() {
     const selectedFreeforms = getSelectedFreeforms();
-    fillPostElement('selected-freeforms', selectedFreeforms.join(', '));
+    updatePostContent((dummyElement) =>
+      $($(dummyElement).find(`#selected-freeforms`)).text(
+        selectedFreeforms.join(', '),
+      ),
+    );
   }
 
   function createTagSelector(freeforms) {
@@ -127,15 +125,17 @@ const PODFIC_TAG = 'podfic';
     setPostContent(html_string);
     $('input#subject').val(`[Podfic] ${title}`);
     $('input#prop_taglist').val(`${PODFIC_TAG}, fandom:${fandom_name}`);
-    fillPostElement('summary', summary);
+    updatePostContent((dummyElement) =>
+      $($(dummyElement).find(`#summary`)).html(summary),
+    );
     addWarnings(warnings);
 
     createTagSelector(freeforms, html_string);
   }
 
-  // TODO: add css & classes for labels that make them font-weight: normal
   $(document).ready(() => {
-    // TODO: button to do this instead? maybe options as well...?
+    if (!section_id && !podfic_id && !chapter_id) return;
+
     console.log('filling data');
 
     prefillPostingForm();
