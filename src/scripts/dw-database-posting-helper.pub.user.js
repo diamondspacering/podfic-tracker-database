@@ -75,8 +75,6 @@ const PODFIC_TAG = 'podfic';
   }
 
   function createTagSelector(freeforms) {
-    console.log(freeforms);
-
     const tagSelectorDiv = document.createElement('div');
     tagSelectorDiv.id = `tag-selector`;
     tagSelectorDiv.style = `clear:both;margin-bottom:1em;`;
@@ -109,7 +107,6 @@ const PODFIC_TAG = 'podfic';
     $(tagSelectorDiv).append(button);
 
     const composerDiv = $.find('#compose-entry')[0];
-    console.log(tagSelectorDiv);
     composerDiv.before(document.createElement('br'));
     composerDiv.before(tagSelectorDiv);
   }

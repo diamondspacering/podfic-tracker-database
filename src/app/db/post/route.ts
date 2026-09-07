@@ -15,12 +15,20 @@ export async function GET(request: NextRequest) {
 
   if (format === 'dw') {
     const result = await client.query(
-      `select work.title as work_title,work.link as work_link,html_string,fandom.name as fandom_name from section inner join podfic on section.podfic_id = podfic.podfic_id inner join work on podfic.work_id = work.work_id left join fandom on work.fandom_id = fandom.fandom_id where section_id = $1`,
+      `select
+        work.title as work_title,
+        work.link as work_link,
+        html_string,
+        fandom.name as fandom_name
+      from section
+        inner join podfic on section.podfic_id = podfic.podfic_id
+        inner join work on podfic.work_id = work.work_id
+        left join fandom on work.fandom_id = fandom.fandom_id
+      where section_id = $1`,
       [sectionId],
     );
 
     const section = result.rows[0];
-    console.log(section);
 
     // TODO: more section-specific stuff?
 
@@ -38,8 +46,6 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json(data);
-
-    // return data;
   } else {
     const result = await client.query(
       `select number,section.title as section_title,section_type,chaptered,chapter_count,work.wordcount as podfic_wordcount,is_multivoice,section.length,html_string from section
@@ -50,7 +56,6 @@ export async function GET(request: NextRequest) {
       [sectionId],
     );
     const section = result.rows[0];
-    console.log(result.rows);
 
     const sectionType = section.section_type;
 

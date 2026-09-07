@@ -98,7 +98,6 @@ const fetchFullWork = async (workUrl: string) => {
   return text;
 };
 
-// things we need: warnings, summary,
 export const fetchDWMetadata = async (workUrl: string, logging = false) => {
   console.log('fetching dw metadata');
   const text = await fetchWork(workUrl);
@@ -114,15 +113,12 @@ export const fetchDWMetadata = async (workUrl: string, logging = false) => {
       return text;
     })
     .toArray();
-  console.log({ warnings });
   const freeforms = $(metaGroup)
     .find('dd.freeform.tags a')
     .toArray()
     .map((tag) => $(tag).text());
-  console.log({ freeforms });
 
   const summary = $('div.summary.module .userstuff').html();
-  console.log({ summary });
 
   return { warnings, summary, freeforms };
 };
