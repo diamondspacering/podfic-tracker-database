@@ -97,7 +97,8 @@
 - [ ] Generated links dialog keeps its own state
 - [ ] Word wrap on code box
 - [ ] Preview (check out how the skins preview works maybe?)
-- [ ] Dreamwidth template for posting there (and maybe posting code too?)
+- [x] Dreamwidth template for posting there (and maybe posting code too?)
+- [ ] Fix posting userscript (doesn't update some bits)
 
 ### HTMLPage.tsx
 

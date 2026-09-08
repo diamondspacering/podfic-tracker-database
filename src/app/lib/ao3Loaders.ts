@@ -98,6 +98,31 @@ const fetchFullWork = async (workUrl: string) => {
   return text;
 };
 
+export const fetchDWMetadata = async (workUrl: string, logging = false) => {
+  console.log('fetching dw metadata');
+  const text = await fetchWork(workUrl);
+
+  const $ = load(text);
+
+  const metaGroup = $('dl.meta');
+  console.log({ metaGroup });
+  const warnings = $(metaGroup)
+    .find('dd.warning.tags a')
+    .map((_i, el) => {
+      const text = $(el).text().trim();
+      return text;
+    })
+    .toArray();
+  const freeforms = $(metaGroup)
+    .find('dd.freeform.tags a')
+    .toArray()
+    .map((tag) => $(tag).text());
+
+  const summary = $('div.summary.module .userstuff').html();
+
+  return { warnings, summary, freeforms };
+};
+
 export const fetchWorkMetadata = async (workUrl: string, logging = false) => {
   const text = await fetchWork(workUrl);
 

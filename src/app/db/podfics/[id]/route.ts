@@ -22,8 +22,9 @@ export async function GET(
   let podfic = null;
   if (withCoverArt && withAuthor) {
     const result = await client.query(
-      `select *,cover_art.status as cover_art_status from podfic
+      `select *,cover_art.status as cover_art_status,fandom.name as fandom_name from podfic
         inner join work on podfic.work_id = work.work_id
+        left join fandom on work.fandom_id = fandom.fandom_id
         left join cover_art on cover_art.podfic_id = podfic.podfic_id
         left join author on work.author_id = author.author_id
       where podfic.podfic_id = $1`,
