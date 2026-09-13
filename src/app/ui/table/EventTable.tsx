@@ -94,6 +94,20 @@ export default function EventTable() {
         type: 'date',
       },
     }),
+    columnHelper.accessor('link', {
+      header: 'Link',
+      cell: TableCell,
+      meta: {
+        type: 'link',
+      },
+    }),
+    columnHelper.accessor('collection', {
+      header: 'Collection',
+      cell: TableCell,
+      meta: {
+        type: 'link',
+      },
+    }),
     // TODO: display this conditionally and make it point to the right thing
     columnHelper.display({
       id: 'voiceteam-link',

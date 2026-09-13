@@ -155,6 +155,22 @@ export default function EventForm({ event, setEvent }: EventFormProps) {
           setEvent((prev) => ({ ...prev, year: e.target.value }))
         }
       />
+      <TextField
+        size='small'
+        label='Collection link'
+        value={event.collection ?? ''}
+        onChange={(e) =>
+          setEvent((prev) => ({ ...prev, collection: e.target.value }))
+        }
+      />
+      <TextField
+        size='small'
+        label='Link'
+        value={event.link ?? ''}
+        onChange={(e) =>
+          setEvent((prev) => ({ ...prev, link: e.target.value }))
+        }
+      />
     </div>
   );
 }

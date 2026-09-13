@@ -370,6 +370,8 @@ interface Event {
   name?: string;
   event_name?: string;
   year?: string | number;
+  link?: string;
+  collection?: string;
 }
 
 enum ScheduleEventType {
