@@ -107,6 +107,16 @@ export default function useSectionColumns({
           immutable: true,
         },
       }),
+      columnHelper.accessor('plain_length', {
+        header: 'Plain Length',
+        cell: TableCell,
+        meta: {
+          type: 'length',
+          colorScale: lengthColorScale,
+          columnName: 'Plain Length',
+          hidden: true,
+        },
+      }),
       columnHelper.display({
         id: 'wpm',
         header: 'WPM',

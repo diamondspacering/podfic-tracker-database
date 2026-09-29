@@ -119,7 +119,7 @@ const APP_URL = '';
   async function fetchDatabaseData() {
     console.log('fetching from db');
     const data = await fetch(
-      `http://${APP_URL}/db/post?section_id=${section_id}&podfic_id=${podfic_id}&chapter_id=${chapter_id}`
+      `http://${APP_URL}/db/post?section_id=${section_id}&podfic_id=${podfic_id}&chapter_id=${chapter_id}`,
     );
 
     const parsedData = await data.json();
@@ -141,7 +141,7 @@ const APP_URL = '';
     $(
       `select[id$="author_attributes_ids"] option:contains(${
         is_multivoice ? MULTIVOICE_PSEUD : DEFAULT_PSEUD
-      })`
+      })`,
     ).prop('selected', true);
 
     $('.mce-editor').val(html_string);
@@ -149,12 +149,12 @@ const APP_URL = '';
     // TODO: posting date as well (in case of drafts that automatically backdate things)
   }
 
-  function fillAddChapterForm(dbData) {
-    const { chapter_title: chapterTitle, html_string } = dbData;
+  function fillAddChapterForm(chapterData, htmlString) {
+    const { chapter_title: chapterTitle } = chapterData;
 
     $('#chapter_title').val(chapterTitle);
 
-    fillSharedPostingFormElements(html_string);
+    fillSharedPostingFormElements(htmlString);
   }
 
   async function fillNewWorkForm(dbData) {
@@ -249,7 +249,7 @@ const APP_URL = '';
 
     // TODO: probably needs more processing & cleanup
     const transformedSummary = `<blockquote>${summary}</blockquote>Podfic of <a href="${work_link}">${title}</a> by ${authorLinks.join(
-      ', '
+      ', ',
     )}.`;
     $('dd.summary textarea').val(transformedSummary);
 
@@ -271,11 +271,16 @@ const APP_URL = '';
 
     // OOOHHHH pull config options from db as well??? like name, workskin, etc.?
 
-    $(
-      `select#work_work_skin_id option:contains('${DEFAULT_WORKSKIN_NAME}')`
-    ).prop('selected', true);
+    // TODO: fix this so you don't need workskin id
+    // $(
+    //   `select#work_work_skin_id option:contains('${DEFAULT_WORKSKIN_NAME}')`,
+    // ).prop('selected', true);
+    $('select#work_work_skin_id').val(DEFAULT_WORKSKIN_ID);
 
-    $('dd.permissions.comments input[value="enable_all"]').click();
+    // OPTIONAL - privacy options
+    // $('#work_restricted').click();
+    // $('#work_moderated_commenting_enabled').click();
+    // $('dd.permissions.comments input[value="enable_all"]').click();
 
     fillSharedPostingFormElements(html_string, is_multivoice);
   }
@@ -289,11 +294,11 @@ const APP_URL = '';
 
     if (
       window.location.href.match(
-        /https:\/\/archiveofourown\.org\/works\/\d+\/chapters\/new/
+        /https:\/\/archiveofourown\.org\/works\/\d+\/chapters\/new/,
       )
     ) {
       console.log('adding new chapter');
-      fillAddChapterForm(dbData);
+      fillAddChapterForm(dbData.chapters?.[0], dbData.html_string);
       return;
     } else {
       await fillNewWorkForm(dbData);

@@ -34,12 +34,14 @@ export const getEmbedCode = (link: string) => {
 // TODO: chapter_combine support
 // change as needed
 export const getSectionName = ({
+  title = '',
   section,
   sectionType,
   chapter: chapterProp = null,
   includeChapterTitle = true,
   forAA = false,
 }: {
+  title: string;
   section: Section;
   sectionType: SectionType;
   chapter?: Chapter;
@@ -48,15 +50,17 @@ export const getSectionName = ({
 }) => {
   const chapter = chapterProp ?? section.chapters?.[0];
   console.log({ section, chapter });
+  // don't capitalize "part" or "chapter" if the title has no capital letters
+  const shouldBeLapslock = !!title && !title.match(/[A-Z]/);
   if (!chapter) {
     return section.title
       ? section.title
-      : `Part ${forAA ? format2Digits(section.number) : section.number}`;
+      : `${shouldBeLapslock ? 'p' : 'P'}art ${forAA ? format2Digits(section.number) : section.number}`;
   } else {
     const chapterNumber = forAA
       ? format2Digits(chapter.chapter_number)
       : chapter.chapter_number;
-    const chapterName = `Chapter ${chapterNumber}${
+    const chapterName = `${shouldBeLapslock ? 'c' : 'C'}hapter ${chapterNumber}${
       chapter.chapter_title && includeChapterTitle
         ? `${forAA ? ' -' : ':'} ${chapter.chapter_title}`
         : ''
@@ -65,7 +69,7 @@ export const getSectionName = ({
     if (sectionType === SectionType.CHAPTERS_SPLIT) {
       return section.title
         ? `${section.title} - ${chapterName}`
-        : `${chapterName} - Part ${section.number}`;
+        : `${chapterName} - ${shouldBeLapslock ? 'p' : 'P'}art ${section.number}`;
     } else {
       return chapterName;
     }
@@ -94,8 +98,8 @@ export const generateAALink = ({
     const chapter = section.chapters?.[0];
     if (!!chapter) {
       const chapterName = chapter.chapter_title
-        ? getSectionName({ section, sectionType, forAA: true })
-        : `${title} ${getSectionName({ section, sectionType, forAA: true })}`;
+        ? getSectionName({ title, section, sectionType, forAA: true })
+        : `${title} ${getSectionName({ title, section, sectionType, forAA: true })}`;
       safeTitle = chapterName
         .replaceAll(/\s/g, '_')
         // .replaceAll('-', '')
@@ -156,6 +160,7 @@ export const generateHTMLAudioficArchive = (
       console.log({ filteredFiles });
       if (!filteredFiles.length) return;
       const sectionName = getSectionName({
+        title: podfic.title,
         section,
         sectionType: podfic.section_type,
         forAA: true,
@@ -279,6 +284,63 @@ export const generateHTMLDreamwidth = (
   return htmlString;
 };
 
+export const getFileHTMLAzdaema = (files: File[]) => {
+  let htmlString = '';
+  files.forEach((file) => {
+    if (file.label) htmlString += `<h4>${file.label}</h4>`;
+    htmlString += `<center>`;
+    const directLinks = file.links?.filter((link) => link.is_direct) ?? [];
+    if (directLinks.length > 1) {
+      htmlString += `<audio>`;
+      directLinks.forEach((link) => {
+        htmlString += `<source src="${link.link}">`;
+      });
+      htmlString += `</audio>`;
+    } else if (directLinks.length === 1) {
+      htmlString += `<audio src="${file.links[0].link}"></audio>`;
+    }
+    htmlString += `</center>`;
+    htmlString += `<ul>`;
+    if (files.length > 1) {
+      if (directLinks.length === 1) {
+        htmlString += `<li><a href="${file.links[0].link}">Download ${
+          file.filetype
+        } from ${file.links[0].host}</a> (${file.size} MB | ${getLengthText(
+          file.length,
+        )})</li>`;
+      } else if (directLinks.length > 1) {
+        htmlString += `<li>Download ${file.filetype} (${
+          file.size
+        } MB | ${getLengthText(file.length)}):`;
+        directLinks.forEach((link, i) => {
+          if (i === 0) htmlString += ` <a href="${link.link}">${link.host}</a>`;
+          else htmlString += ` | <a href="${link.link}">${link.host}</a>`;
+        });
+        htmlString += `</li>`;
+      }
+    } else {
+      directLinks.forEach((link) => {
+        htmlString += `<li><a href="${link.link}">Download from ${link.host}</a></li>`;
+      });
+    }
+    const embedLinks = file.links?.filter((link) => link.is_embed) ?? [];
+    embedLinks.forEach((link) => {
+      htmlString += `<p>${getEmbedCode(link.link)}</p>`;
+    });
+    htmlString += `</ul>`;
+    // if (
+    //   file.label === 'With Music' &&
+    //   resources?.find((resource) => resource.resource_type === 'music')
+    // ) {
+    //   htmlString += `<p><b>Music:</b> <a href="${
+    //     resources.find((resource) => resource.resource_type === 'music')
+    //       ?.link
+    //   }">here</a></p>`;
+    // }
+  });
+  return htmlString;
+};
+
 // hmm yeah chapters also
 // hmmm may need to change order of things if there's multiple authors. but its fiiine
 // TODO: rework for sections
@@ -289,6 +351,7 @@ export const generateHTMLAzdaema = (
   resources: Resource[],
   defaultPodficcer: Podficcer,
   coverArtistProfile?: string,
+  generalFiles?: File[],
 ) => {
   let htmlString = ``;
   htmlString += `<div class="podfic">`;
@@ -321,101 +384,54 @@ export const generateHTMLAzdaema = (
 
     // this changes depending on whether information was given above
     if (filteredFiles.length) {
-      htmlString += `<h3>Streaming & Hosting</h3>`;
-      filteredFiles.forEach((file) => {
-        if (file.label) htmlString += `<h4>${file.label}</h4>`;
-        htmlString += `<center>`;
-        const directLinks = file.links?.filter((link) => link.is_direct) ?? [];
-        if (directLinks.length > 1) {
-          htmlString += `<audio>`;
-          directLinks.forEach((link) => {
-            htmlString += `<source src="${link.link}">`;
-          });
-          htmlString += `</audio>`;
-        } else if (directLinks.length === 1) {
-          htmlString += `<audio src="${file.links[0].link}"></audio>`;
-        }
-        htmlString += `</center>`;
-        htmlString += `<ul>`;
-        if (filteredFiles.length > 1) {
-          if (directLinks.length === 1) {
-            htmlString += `<li><a href="${file.links[0].link}">Download ${
-              file.filetype
-            } from ${file.links[0].host}</a> (${file.size} MB | ${getLengthText(
-              file.length,
-            )})</li>`;
-          } else if (directLinks.length > 1) {
-            htmlString += `<li>Download ${file.filetype} (${
-              file.size
-            } MB | ${getLengthText(file.length)}):`;
-            directLinks.forEach((link, i) => {
-              if (i === 0)
-                htmlString += ` <a href="${link.link}">${link.host}</a>`;
-              else htmlString += ` | <a href="${link.link}">${link.host}</a>`;
-            });
-            htmlString += `</li>`;
-          }
-        } else {
-          directLinks.forEach((link) => {
-            htmlString += `<li><a href="${link.link}">Download from ${link.host}</a></li>`;
-          });
-        }
-        const embedLinks = file.links?.filter((link) => link.is_embed) ?? [];
-        embedLinks.forEach((link) => {
-          htmlString += `<p>${getEmbedCode(link.link)}</p>`;
-        });
-        htmlString += `</ul>`;
-        // if (
-        //   file.label === 'With Music' &&
-        //   resources?.find((resource) => resource.resource_type === 'music')
-        // ) {
-        //   htmlString += `<p><b>Music:</b> <a href="${
-        //     resources.find((resource) => resource.resource_type === 'music')
-        //       ?.link
-        //   }">here</a></p>`;
-        // }
-      });
+      htmlString += '<h3>Streaming & Hosting</h3>';
+      htmlString += getFileHTMLAzdaema(filteredFiles);
     }
   } else {
     if (podfic.section_type === SectionType.CHAPTERS_COMBINE) {
       throw new Error('Error: combining chapters not supported!');
     }
+
+    if (section.number === 1 && generalFiles?.length) {
+      console.log('all chapters add');
+      htmlString += `<h3>All Chapters</h3>`;
+      // TODO: like. embeds and stuff. idc.
+      generalFiles.forEach((file) => {
+        if (file.label) htmlString += `<h4>${file.label}</h4>`;
+        if (file.filetype === FileType.ZIP) {
+          const links = file.links?.filter(Boolean);
+          if (links.length > 1) {
+            // TODO: options to include size/length if available?
+            htmlString += `Download ZIP: `;
+            links.forEach((link, i) => {
+              if (i === 0)
+                htmlString += ` <a href="${link.link}">${link.host}</a>`;
+              else htmlString += ` | <a href="${link.link}">${link.host}</a>`;
+            });
+          } else if (links.length === 1) {
+            htmlString += `<a href="${links[0].link}">Download ZIP from ${links[0].host}</a>`;
+          }
+        }
+      });
+    }
+
     // may need to filter the files for this chapter
     const filteredFiles = files.filter((file) => Boolean(file));
     // TODO: include all chapters html in first chapter
     if (filteredFiles.length) {
       htmlString += `<h3>${getSectionName({
+        title: podfic.title,
         section,
         sectionType: podfic.section_type,
       })}</h3>`;
-      if (filteredFiles.length === 1) {
-        htmlString += `<ul>`;
-        htmlString += `<li><b>Length:</b> ${getLengthText(
-          filteredFiles[0].length,
-        )}</li>`;
-        const filetype = Object.entries(FileType).find(
-          ([, value]) => value === filteredFiles[0].filetype,
-        )?.[0];
-        htmlString += `<li><b>File type:</b> ${filetype} (${filteredFiles[0].size} MB)</li>`;
-        htmlString += `</ul>`;
-        const directLinks =
-          filteredFiles[0].links?.filter((link) => link.is_direct) ?? [];
-        htmlString += `<audio>`;
-        directLinks.forEach((link) => {
-          htmlString += `<source src="${link.link}">`;
-        });
-        htmlString += `</audio>`;
-
-        directLinks.forEach((link) => {
-          htmlString += `<p><a href="${link.link}">Download from ${link.host}</a></p>`;
-        });
-      }
+      htmlString += getFileHTMLAzdaema(files);
     }
   }
 
   htmlString += `<h3>Credits</h3>`;
   htmlString += `<ul>`;
   const sectionName = getSectionName({
+    title: podfic.title,
     section,
     sectionType: podfic.section_type,
   });
@@ -474,6 +490,7 @@ export const generateHTMLBluedreamingChapter = (
   }
   // chapter title but i dont do that rn
   htmlString += `<h3>${getSectionName({
+    title: podfic.title,
     section,
     sectionType: podfic.section_type,
     includeChapterTitle: false,
