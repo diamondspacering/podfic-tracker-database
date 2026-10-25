@@ -7,13 +7,15 @@ import {
   Checkbox,
   FormControlLabel,
   IconButton,
+  ListSubheader,
   Menu,
   MenuItem,
   TextField,
 } from '@mui/material';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import styles from './table.module.css';
 import DatePicker from '../DatePicker';
+import { FilterType } from '@/app/types';
 
 // TODO: correctly determine types
 interface FilterMenuProps {
@@ -48,17 +50,53 @@ export default function FilterMenu({
   const [searchValue, setSearchValue] = useState('');
   const filteredOptions = useMemo(
     () =>
-      options?.filter((o) =>
-        o?.toLowerCase().includes(searchValue.toLowerCase()),
-      ),
-    [options, searchValue],
+      type === FilterType.EVENT
+        ? options.filter(
+            (o) =>
+              o?.event_name
+                ?.toLowerCase()
+                .includes(searchValue.toLowerCase()) ||
+              o?.parent_name?.toLowerCase().includes(searchValue.toLowerCase()),
+          )
+        : options?.filter((o) =>
+            o?.toLowerCase().includes(searchValue.toLowerCase()),
+          ),
+    [options, searchValue, type],
+  );
+
+  const eventGroups: Record<string, string[]> = useMemo(
+    () =>
+      type === FilterType.EVENT
+        ? filteredOptions.reduce(
+            (acc, event) => {
+              if (event.parent_name in acc)
+                acc[event.parent_name] = [
+                  ...acc[event.parent_name],
+                  event.event_name,
+                ];
+              else acc[event.parent_name] = [event.event_name];
+              return acc;
+            },
+            {} as Record<string, string[]>,
+          )
+        : {},
+    [filteredOptions, type],
   );
 
   const removeFromLocalFilter = useCallback(
-    (option) => {
+    (option: string | string[]) => {
       if (localFilter.includes('ALL'))
-        setLocalFilter(options.filter((f) => f !== option));
-      else setLocalFilter(localFilter.filter((f) => f !== option));
+        setLocalFilter(
+          options.filter((f) =>
+            Array.isArray(option) ? !option.includes(f) : f !== option,
+          ),
+        );
+      else
+        setLocalFilter(
+          localFilter.filter((f) =>
+            Array.isArray(option) ? !option.includes(f) : f !== option,
+          ),
+        );
     },
     [localFilter, options],
   );
@@ -88,7 +126,7 @@ export default function FilterMenu({
         disableRestoreFocus
       >
         <div className={styles.flexColumn}>
-          {type === 'date' ? (
+          {type === FilterType.DATE ? (
             <>
               <Accordion
                 defaultExpanded={
@@ -228,26 +266,91 @@ export default function FilterMenu({
                     }
                   />
                 </MenuItem>
-                {filteredOptions.map((option) => (
-                  <MenuItem key={option}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={
-                            localFilter.includes('ALL') ||
-                            localFilter.includes(option)
+                {type === FilterType.EVENT
+                  ? Object.keys(eventGroups).map((eventGroup, i) => (
+                      <>
+                        <ListSubheader key={i}>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                size='small'
+                                checked={
+                                  localFilter.includes('ALL') ||
+                                  eventGroups[eventGroup].every((option) =>
+                                    localFilter.includes(option),
+                                  )
+                                }
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setLocalFilter([
+                                      ...localFilter,
+                                      ...eventGroups[eventGroup].filter(
+                                        (option) =>
+                                          !localFilter.includes(option),
+                                      ),
+                                    ]);
+                                  } else {
+                                    removeFromLocalFilter(
+                                      eventGroups[eventGroup],
+                                    );
+                                  }
+                                }}
+                              />
+                            }
+                            label={eventGroup}
+                          />
+                        </ListSubheader>
+                        {filteredOptions
+                          .filter((option) => option.parent_name === eventGroup)
+                          .map((option) => (
+                            <MenuItem key={option}>
+                              <FormControlLabel
+                                style={{ marginLeft: '0.5rem' }}
+                                control={
+                                  <Checkbox
+                                    checked={
+                                      localFilter.includes('ALL') ||
+                                      localFilter.includes(option.event_name)
+                                    }
+                                    onChange={(e) => {
+                                      if (e.target.checked)
+                                        setLocalFilter([
+                                          ...localFilter,
+                                          option.event_name,
+                                        ]);
+                                      else
+                                        removeFromLocalFilter(
+                                          option.event_name,
+                                        );
+                                    }}
+                                  />
+                                }
+                                label={option.event_name}
+                              />
+                            </MenuItem>
+                          ))}
+                      </>
+                    ))
+                  : filteredOptions.map((option) => (
+                      <MenuItem key={option}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={
+                                localFilter.includes('ALL') ||
+                                localFilter.includes(option)
+                              }
+                              onChange={(e) => {
+                                if (e.target.checked)
+                                  setLocalFilter([...localFilter, option]);
+                                else removeFromLocalFilter(option);
+                              }}
+                            />
                           }
-                          onChange={(e) => {
-                            if (e.target.checked)
-                              setLocalFilter([...localFilter, option]);
-                            else removeFromLocalFilter(option);
-                          }}
+                          label={option}
                         />
-                      }
-                      label={option}
-                    />
-                  </MenuItem>
-                ))}
+                      </MenuItem>
+                    ))}
               </div>
             </>
           )}

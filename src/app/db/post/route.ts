@@ -2,6 +2,7 @@ import { fetchDWMetadata } from '@/app/lib/ao3Loaders';
 import { getDBClient } from '@/app/lib/db-helpers';
 import { getSectionName } from '@/app/lib/html';
 import { getIsPostedChaptered } from '@/app/lib/utils';
+import { LensTwoTone } from '@mui/icons-material';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
@@ -9,6 +10,7 @@ export async function GET(request: NextRequest) {
   console.log({ searchParams });
   const sectionId = searchParams.get('section_id');
   console.log({ sectionId });
+  const eventIds = searchParams.get('event_ids')?.split(',');
   const format = searchParams.get('format');
 
   const client = await getDBClient();
@@ -48,7 +50,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(data);
   } else {
     const result = await client.query(
-      `select number,section.title as section_title,section_type,chaptered,chapter_count,work.wordcount as podfic_wordcount,is_multivoice,section.length,html_string from section
+      `select number,section.title as section_title,podfic.title as podfic_title,section_type,chaptered,chapter_count,work.wordcount as podfic_wordcount,is_multivoice,section.length,html_string from section
       inner join podfic on section.podfic_id = podfic.podfic_id
       inner join work on podfic.work_id = work.work_id
     where section_id = $1
@@ -97,9 +99,33 @@ export async function GET(request: NextRequest) {
       };
     }
 
+    if (eventIds) {
+      const eventRows = await Promise.all(
+        eventIds.map((eventId) =>
+          client.query('select collection from event where event_id = $1', [
+            eventId,
+          ]),
+        ),
+      );
+      const events = eventRows.map((event) => event.rows[0]);
+      const collectionNames = [];
+      events.forEach((event) => {
+        const collectionName = event.collection.match(
+          /archive.+\/collections\/(\w+)/,
+        )?.[1];
+        if (collectionName) collectionNames.push(collectionName);
+      });
+
+      if (collectionNames.length) data = { ...data, collectionNames };
+    }
+
     data = {
       ...data,
-      title: getSectionName({ section, sectionType }),
+      title: getSectionName({
+        title: section.podfic_title,
+        section,
+        sectionType,
+      }),
     };
 
     console.log({ data });

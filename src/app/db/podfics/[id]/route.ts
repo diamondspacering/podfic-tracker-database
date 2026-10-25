@@ -74,9 +74,14 @@ export async function GET(
   const sectionResult = await client.query(
     `select * from section where section.podfic_id = ${id} order by number asc`,
   );
+  const eventResult = await client.query(
+    `select *,event.name as event_name,event_parent.name as parent_name from event inner join event_parent on event.parent_id = event_parent.event_parent_id inner join podfic_event on podfic_event.event_id = event.event_id where podfic_id = $1`,
+    [id],
+  );
   if (podfic) {
     podfic.chapters = chapterResult.rows;
     podfic.sections = sectionResult.rows;
+    podfic.events = eventResult.rows;
   }
 
   if (withSectionChapters) {

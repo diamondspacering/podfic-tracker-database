@@ -8,7 +8,6 @@ import {
   FilterType,
   getDefaultLength,
   PodficStatus,
-  PermissionStatus,
   PartStatus,
   SectionType,
   AuthorPermissionStatus,
@@ -36,6 +35,23 @@ export const arrayIncludesFilter = (row, columnId, filterValue) => {
   return (
     filterValue.includes('ALL') || filterValue.includes(row.getValue(columnId))
   );
+};
+
+export const eventFilter = (row, _columnId, filterValue) => {
+  if (Array.isArray(filterValue)) {
+    if (!filterValue.length || filterValue.includes('ALL')) return true;
+    const value =
+      row.original.events?.map(
+        (event) => `${event.event_name} ${event.year}`,
+      ) ?? [];
+    console.log({
+      value,
+      filterValue,
+      included: value.some((event) => filterValue.includes(event)),
+    });
+    return value.some((event) => filterValue.includes(event));
+  }
+  return true;
 };
 
 export const tagFilter = (row, columnId, filterValue, exclude = false) => {
@@ -91,13 +107,19 @@ export const filterActivated = (column, filterType: FilterType) => {
     );
   }
   if (filterType === FilterType.TYPE) {
-    return !Array.from(column.getFacetedUniqueValues().keys()).every((f) =>
-      (column.getFilterValue() ?? []).includes(f),
+    return !Array.from((column.getFacetedUniqueValues() ?? []).keys()).every(
+      (f) => (column.getFilterValue() ?? []).includes(f),
     );
   }
+  if (filterType === FilterType.EVENT) {
+    return !Array.from((column.getFacetedUniqueValues() ?? []).keys())
+      .filter(Boolean)
+      .map((f: Event) => `${f.event_name} ${f.year}`)
+      .every((f) => (column.getFilterValue() ?? []).includes(f));
+  }
   if (filterType === FilterType.STRING) {
-    return !Array.from(column.getFacetedUniqueValues().keys()).every((f) =>
-      (column.getFilterValue() ?? []).includes(f),
+    return !Array.from((column.getFacetedUniqueValues() ?? []).keys()).every(
+      (f) => (column.getFilterValue() ?? []).includes(f),
     );
   }
 };

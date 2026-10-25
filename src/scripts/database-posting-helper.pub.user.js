@@ -40,6 +40,7 @@ const APP_URL = '';
   const podfic_id = search_params.get('podfic_id');
   const chapter_id = search_params.get('chapter_id');
   const work_link = search_params.get('work_link');
+  const event_ids = search_params.get('event_ids');
 
   console.log({ podfic_id, section_id, chapter_id, work_link });
 
@@ -119,7 +120,7 @@ const APP_URL = '';
   async function fetchDatabaseData() {
     console.log('fetching from db');
     const data = await fetch(
-      `http://${APP_URL}/db/post?section_id=${section_id}&podfic_id=${podfic_id}&chapter_id=${chapter_id}`,
+      `http://${APP_URL}/db/post?section_id=${section_id}&podfic_id=${podfic_id}&chapter_id=${chapter_id}&event_ids=${event_ids}`,
     );
 
     const parsedData = await data.json();
@@ -166,6 +167,7 @@ const APP_URL = '';
       is_multivoice,
       section_type,
       chaptered,
+      collectionNames,
     } = dbData;
 
     const metadata = await getOriginalWorkMetadata();
@@ -255,6 +257,11 @@ const APP_URL = '';
 
     // TODO: notes support as well
     // possibly a template for end notes?
+
+    addTag(
+      $('#work_collection_names_autocomplete')[0],
+      collectionNames.join(', '),
+    );
 
     $('dt.parent input').click();
     $('#work_parent_work_relationships_attributes_0_url').val(work_link);

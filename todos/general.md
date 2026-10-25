@@ -31,10 +31,11 @@
 - [ ] await params for other pages that need it
 - [ ] Support multiple categories (and adjust AO3 tags as well)
 - [ ] Fix the assorted component changing from controlled to uncontrolled errors (provide fallback value for missing values)
-- [ ] Fix adding tags not working in hosted version?
-- [ ] Support multiple events per podfic
+- [x] Fix adding tags not working in hosted version?
+- [x] Support multiple events per podfic
   - list in tables? still filterable, shows comma-separated, expands later?
-- [ ] Support links for events and data that allows for adding collections when posting a work
+  - oh no we might need to support multiple VT projects as well :sob:
+- [x] Support links for events and data that allows for adding collections when posting a work
 - [ ] Improve database posting helper, has some consistent errors
 - [ ] Fix uncontrolled components errors
 - [ ] Increase session length for logging in
@@ -42,6 +43,7 @@
 - [ ] Metadata is not doing fandom mapping correctly (is not mapping)
 - [ ] Remove assorted uses of `any`, correctly type more table things
   - [ ] Custom table meta type
+- [ ] More organized nav - sub-elements?
 
 ## Tables
 

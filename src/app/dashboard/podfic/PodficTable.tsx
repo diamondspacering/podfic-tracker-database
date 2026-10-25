@@ -33,6 +33,7 @@ import { HeaderCell } from '@/app/ui/table/HeaderCell';
 import {
   arrayIncludesFilter,
   dateFilter,
+  eventFilter,
   formatTableDate,
   getIsPostedChaptered,
   getPodficFinishedSectionCount,
@@ -369,16 +370,25 @@ export default function PodficTable() {
         return <span>{Math.round(sum / num)}</span>;
       },
     }),
-    columnHelper.accessor('event_name', {
-      header: (props) => <HeaderCell text='Event' {...props} />,
-      cell: TableCell,
+    columnHelper.accessor('events', {
+      header: (props) => <HeaderCell text='Events' {...props} />,
+      cell: ({ getValue, ...rest }) => (
+        <TableCell
+          getValue={() =>
+            (getValue() ?? [])
+              .map((event) => `${event.event_name} ${event.year}`)
+              .join(', ')
+          }
+          {...rest}
+        />
+      ),
       meta: {
-        type: 'string',
-        filterType: FilterType.STRING,
-        columnName: 'Event',
-        immutable: true,
+        // TODO: make narrower
+        type: 'text',
+        immutable: 'true',
+        filterType: FilterType.EVENT,
       },
-      filterFn: arrayIncludesFilter,
+      filterFn: eventFilter,
     }),
     columnHelper.accessor('type', {
       header: (props) => <HeaderCell text='Type' {...props} />,

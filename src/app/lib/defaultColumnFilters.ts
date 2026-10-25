@@ -97,7 +97,7 @@ export const getResetFilterForColumn = (column: Column<any, any>) => {
       value = {};
       break;
     case FilterType.STRING:
-      value = Array.from(column.getFacetedUniqueValues().keys()).sort();
+      value = Array.from((column.getFacetedUniqueValues() ?? []).keys()).sort();
       break;
     case FilterType.OTHER:
       value = [];
@@ -182,7 +182,25 @@ export const getFilterValues = (column: Column<any, any>) => {
     case FilterType.TYPE:
       return Object.values(PodficType);
     case FilterType.STRING:
-      return Array.from(column.getFacetedUniqueValues().keys()).sort();
+      return Array.from((column.getFacetedUniqueValues() ?? []).keys()).sort();
+    case FilterType.EVENT:
+      const values = Array.from((column.getFacetedUniqueValues() ?? []).keys())
+        .flat()
+        .filter(Boolean)
+        .reduce((acc, event) => {
+          const eventName = `${event.event_name} ${event.year}`;
+          if (
+            !acc.find(
+              (ev) =>
+                ev.event_name === eventName &&
+                ev.parent_name === event.parent_name,
+            )
+          )
+            acc.push({ event_name: eventName, parent_name: event.parent_name });
+          return acc;
+        }, []);
+      values.sort((a, b) => a.event_name.localeCompare(b.event_name));
+      return values;
     default:
       return [];
   }

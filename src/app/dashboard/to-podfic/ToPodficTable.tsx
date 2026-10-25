@@ -4,6 +4,7 @@ import { sourceCodePro } from '@/app/fonts/fonts';
 import { useTags, useToPodficPodfics } from '@/app/lib/swrLoaders';
 import {
   arrayIncludesFilter,
+  eventFilter,
   tagFilter,
   useColorScale,
   useLengthColorScale,
@@ -234,16 +235,25 @@ export default function ToPodficTable() {
         return <span>{getLengthText(sum)}</span>;
       },
     }),
-    columnHelper.accessor('event_name', {
-      header: (props) => <HeaderCell text='Event' {...props} />,
-      cell: TableCell,
+    columnHelper.accessor('events', {
+      header: (props) => <HeaderCell text='Events' {...props} />,
+      cell: ({ getValue, ...rest }) => (
+        <TableCell
+          getValue={() =>
+            (getValue() ?? [])
+              .map((event) => `${event.event_name} ${event.year}`)
+              .join(', ')
+          }
+          {...rest}
+        />
+      ),
       meta: {
         type: 'string',
-        filterType: FilterType.STRING,
-        columnName: 'Event',
+        filterType: FilterType.EVENT,
+        columnName: 'Events',
         immutable: true,
       },
-      filterFn: arrayIncludesFilter,
+      filterFn: eventFilter,
     }),
     columnHelper.accessor('type', {
       header: (props) => <HeaderCell text='Type' {...props} />,
