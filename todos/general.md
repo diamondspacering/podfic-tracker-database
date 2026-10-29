@@ -1,12 +1,6 @@
 # General Todos
 
-- [x] Variable titles per page
 - [ ] Snackbar/toasts for relevant things
-- [x] Make metadata pulling actually set number of chapters as well
-- [x] Make filters update when data is updated (e.g., new author) - prob have more `null` support?
-- [x] Podfic deletion
-- [x] Actually use giftee_id and designating a podficcer who something is gifted to
-- [x] Generic dialog props that get extended
 - [ ] Individual author permission
   - [ ] Basic feature
     - [x] Permission asks for authors
@@ -23,7 +17,7 @@
     - [ ] Filter authors based on provided work id as well as works based on authors/set author manually
     - [ ] In permission ask form, render authors w/ color of status? or display that somewhere? pull their links?
   - [ ] Consider doing the events method of combined headers? it's very sloppy but. useful.
-- [ ] To podfic table crashing when resetting filters bc of tags?
+- [x] To podfic table crashing when resetting filters bc of tags?
 - [x] statusType enum for tables
 - [x] Separate [id] and new pages for all forms (if only for page titles)
 - [ ] Use transactions or something so you stop getting extra elements created by processes failing halfway through

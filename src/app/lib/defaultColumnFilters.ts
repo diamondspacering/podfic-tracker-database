@@ -70,7 +70,10 @@ export const getDefaultFilterForColumn = (
   }
   return {
     id: column.id,
-    value: !!value && Array.isArray(value) ? [...value, null] : value,
+    value:
+      !!value && Array.isArray(value) && filterType !== FilterType.OTHER
+        ? [...value, null]
+        : value,
   };
 };
 
