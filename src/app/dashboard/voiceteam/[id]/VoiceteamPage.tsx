@@ -4,7 +4,6 @@ import { useVoiceteamEvent } from '@/app/lib/swrLoaders';
 import { Save } from '@mui/icons-material';
 import { Box, Tab, Typography } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
-import '@silevis/reactgrid/styles.css';
 import { createUpdateChallenge, createUpdateProject } from '@/app/lib/updaters';
 import { mutate } from 'swr';
 import { LoadingButton, TabContext, TabList, TabPanel } from '@mui/lab';

@@ -1078,6 +1078,17 @@ export const getTopEvents = async (year) => {
   const client = await getDBClient();
 
   const result = await client.query(
+    `select event.name as event_name, event.year as year, count(*) from podfic_event
+      inner join podfic on podfic_event.podfic_id = podfic.podfic_id
+      inner join work on podfic.work_id = work.work_id
+      inner join event on podfic_event.event_id = event.event_id
+    where
+      (date_part('year', posted_date) = $1 or posted_year = $1)
+    group by event.name, event.year
+    order by event_name`,
+    [year],
+  );
+  const resultOld = await client.query(
     `select event.name as event_name, event.year as year, count(*) from podfic
       inner join work on podfic.work_id = work.work_id
       inner join event on podfic.event_id = event.event_id

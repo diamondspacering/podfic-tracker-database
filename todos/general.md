@@ -1,12 +1,6 @@
 # General Todos
 
-- [ ] Variable titles per page
 - [ ] Snackbar/toasts for relevant things
-- [x] Make metadata pulling actually set number of chapters as well
-- [ ] Make filters update when data is updated (e.g., new author) - prob have more `null` support?
-- [x] Podfic deletion
-- [x] Actually use giftee_id and designating a podficcer who something is gifted to
-- [x] Generic dialog props that get extended
 - [ ] Individual author permission
   - [ ] Basic feature
     - [x] Permission asks for authors
@@ -17,13 +11,13 @@
       - preferably still with inline editing
     - [x] Figure out pulling correct permission ask when grabbing for works - consider like an archived field or something?
     - [x] Permission asks for works
-    - [ ] lighter grey for unknown/inactive
+    - [x] lighter grey for unknown/inactive
     - [ ] filtering authors on child permission statuses as well? Like I may want to see authors with open permission asks/ones I still need to ask
-      - this may be complicated
+      - this may be complicated; may need adding like additional filters?
     - [ ] Filter authors based on provided work id as well as works based on authors/set author manually
     - [ ] In permission ask form, render authors w/ color of status? or display that somewhere? pull their links?
   - [ ] Consider doing the events method of combined headers? it's very sloppy but. useful.
-- [ ] To podfic table crashing when resetting filters bc of tags?
+- [x] To podfic table crashing when resetting filters bc of tags?
 - [x] statusType enum for tables
 - [x] Separate [id] and new pages for all forms (if only for page titles)
 - [ ] Use transactions or something so you stop getting extra elements created by processes failing halfway through
@@ -31,15 +25,19 @@
 - [ ] await params for other pages that need it
 - [ ] Support multiple categories (and adjust AO3 tags as well)
 - [ ] Fix the assorted component changing from controlled to uncontrolled errors (provide fallback value for missing values)
-- [ ] Fix adding tags not working in hosted version?
-- [ ] Support multiple events per podfic
+- [x] Fix adding tags not working in hosted version?
+- [x] Support multiple events per podfic
   - list in tables? still filterable, shows comma-separated, expands later?
-- [ ] Support links for events and data that allows for adding collections when posting a work
+  - oh no we might need to support multiple VT projects as well :sob:
+- [x] Support links for events and data that allows for adding collections when posting a work
 - [ ] Improve database posting helper, has some consistent errors
 - [ ] Fix uncontrolled components errors
 - [ ] Increase session length for logging in
 - [ ] Support name of role for podficcer_podfic
 - [ ] Metadata is not doing fandom mapping correctly (is not mapping)
+- [ ] Remove assorted uses of `any`, correctly type more table things
+  - [ ] Custom table meta type
+- [ ] More organized nav - sub-elements?
 
 ## Tables
 
@@ -48,17 +46,14 @@
 - [ ] Custom meta type for tables
 - [ ] Figure out the errors on custom tables
 - [ ] To podfic: Pin "New Podfic" to top of page
-- [ ] Update facet filters when values update
 - [ ] preset filters
 - [x] Be able to set column visibility on subtables as well (for sections)
+- [ ] Fix date filter
 
 ### ChapterTable
 
 - [ ] individual files and resources expanded per chapter
 - [ ] global color scale for wordcount?
-- [x] column show/hide like podfic table
-- [x] chapter columns defined in separate file
-- [x] Show section recording sessions
 
 ### Parts
 
@@ -111,7 +106,7 @@
 - [ ] Only include chapter resources per chapter
   - and don't include chapter resources on whole-podfic posting
 - [ ] Be able to collapse resources - DetailsWrapper from podfic form?
-- [ ] Saving state for HTML save button
+- [ ] Toast for HTML saving
 - [ ] Select podfic/chapter if not already selected
 - [ ] Proper chaptered support
   - is_chapter state variable?
@@ -163,9 +158,7 @@
 ## Bingos
 
 - [ ] Custom CSS?
-- [x] Allow links in square titles
 - [ ] Background images?
-- [x] Width so that two can go side by side
 - [ ] Make bingo vs. blackout styling clearer
 - [ ] Make it easier to take notes?
 

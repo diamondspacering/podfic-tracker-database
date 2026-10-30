@@ -104,6 +104,7 @@ export enum FilterType {
   DATE = 'date',
   STRING = 'string',
   NUMBER = 'number',
+  EVENT = 'event',
   OTHER = 'other',
 }
 

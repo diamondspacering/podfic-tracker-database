@@ -245,6 +245,15 @@ const DisplayCell = ({ value, meta, isExpanded }) => {
           {value}
         </span>
       );
+    case 'list':
+      return (
+        <span
+          className={tableStyles.tableCell}
+          style={{ maxWidth: meta?.maxWidth ?? '500px' }}
+        >
+          {value?.join(',')}
+        </span>
+      );
     case 'colorScale':
       return (
         <span

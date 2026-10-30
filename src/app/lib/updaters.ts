@@ -479,7 +479,7 @@ export const createUpdatePodfic = async (
       await createUpdateWork(podficData);
 
       podficResult = await client.query(
-        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, self_posted, section_type, posted_date, posted_year, updated_at) VALUES (
+        `INSERT INTO podfic (work_id, status, is_private, length, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, self_posted, section_type, posted_date, posted_year, updated_at) VALUES (
         $1,
         $2,
         $3,
@@ -497,8 +497,7 @@ export const createUpdatePodfic = async (
         $15,
         $16,
         $17,
-        $18,
-        $19
+        $18
       )
       RETURNING *
     `,
@@ -507,7 +506,6 @@ export const createUpdatePodfic = async (
           podficData.status,
           podficData.is_private,
           podficData.length,
-          podficData.event_id,
           podficData.ao3_link,
           podficData.exclude_stats,
           podficData.type ?? 'podfic',
@@ -531,7 +529,7 @@ export const createUpdatePodfic = async (
       const work_id = (await createUpdateWork(podficData)).work_id;
 
       podficResult = await client.query(
-        `INSERT INTO podfic (work_id, status, is_private, length, event_id, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, self_posted, section_type, posted_date, posted_year, updated_at) VALUES (
+        `INSERT INTO podfic (work_id, status, is_private, length, ao3_link, exclude_stats, type, giftee_id, deadline, added_date, vt_project_id, series_id, is_multivoice, self_posted, section_type, posted_date, posted_year, updated_at) VALUES (
         $1,
         $2,
         $3,
@@ -549,8 +547,7 @@ export const createUpdatePodfic = async (
         $15,
         $16,
         $17,
-        $18,
-        $19
+        $18
       )
       RETURNING *
     `,
@@ -559,7 +556,6 @@ export const createUpdatePodfic = async (
           podficData.status ?? PodficStatus.PLANNING,
           podficData.is_private,
           podficData.length,
-          podficData.event_id,
           podficData.ao3_link,
           podficData.exclude_stats,
           podficData.type ?? 'podfic',
@@ -723,22 +719,21 @@ export const createUpdatePodfic = async (
       status = $2,
       is_private = $3,
       length = $4,
-      event_id = $5,
-      ao3_link = $6,
-      exclude_stats = $7,
-      type = $8,
-      giftee_id = $9,
-      deadline = $10,
-      added_date = $11,
-      vt_project_id = $12,
-      series_id = $13,
-      is_multivoice = $14,
-      self_posted = $15,
-      section_type = $16,
-      posted_date = $17,
-      posted_year = $18,
-      updated_at = $19
-    WHERE podfic_id = $20
+      ao3_link = $5,
+      exclude_stats = $6,
+      type = $7,
+      giftee_id = $8,
+      deadline = $9,
+      added_date = $10,
+      vt_project_id = $11,
+      series_id = $12,
+      is_multivoice = $13,
+      self_posted = $14,
+      section_type = $15,
+      posted_date = $16,
+      posted_year = $17,
+      updated_at = $18
+    WHERE podfic_id = $19
     RETURNING *
     `,
       [
@@ -746,7 +741,6 @@ export const createUpdatePodfic = async (
         podficData.status,
         podficData.is_private,
         podficData.length,
-        podficData.event_id,
         podficData.ao3_link,
         podficData.exclude_stats,
         podficData.type,
@@ -774,6 +768,13 @@ export const createUpdatePodfic = async (
   if (podficData.tags?.length) {
     await Promise.all(
       podficData.tags.map((tag) => linkTagToPodfic(tag.tag_id, podficId)),
+    );
+  }
+  if (podficData.events?.length) {
+    await Promise.all(
+      podficData.events.map((event) =>
+        linkPodficToEvent(event.event_id, podficId),
+      ),
     );
   }
   return podficResult?.rows[0];
@@ -1745,6 +1746,27 @@ export const linkPodficcerToPodfic = async (
   return result.rows[0];
 };
 
+export const linkPodficToEvent = async (eventId: number, podficId: number) => {
+  const client = await getDBClient();
+  const result = await client.query(
+    `INSERT INTO podfic_event (podfic_id, event_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *`,
+    [podficId, eventId],
+  );
+  return result.rows[0];
+};
+
+export const unlinkPodficFromEvent = async (
+  eventId: number,
+  podficId: number,
+) => {
+  const client = await getDBClient();
+  const result = await client.query(
+    `DELETE FROM podfic_event WHERE event_id = $1 AND podfic_id = $2`,
+    [eventId, podficId],
+  );
+  return result.rows[0];
+};
+
 export const linkTagToPodfic = async (tagId: number, podficId: number) => {
   const client = await getDBClient();
   const result = await client.query(
@@ -1792,6 +1814,9 @@ export const deletePodfic = async (podficId: number, workId?: number) => {
   const client = await getDBClient();
 
   await client.query('DELETE FROM tag_podfic WHERE podfic_id = $1', [podficId]);
+  await client.query('DELETE FROM podfic_event WHERE podfic_id = $1', [
+    podficId,
+  ]);
   await client.query('DELETE FROM podfic_podficcer WHERE podfic_id = $1', [
     podficId,
   ]);

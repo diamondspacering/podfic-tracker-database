@@ -19,6 +19,7 @@ export default function BingoCard({
 }) {
   const { squaresInBingo, blackout } = useSquaresInBingo(card);
 
+  // TODO: stop hardcoding this and just allow proper custom CSS
   const isMixtape = useMemo(() => card.event_id === 25, [card.event_id]);
 
   return (

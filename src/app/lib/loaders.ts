@@ -18,13 +18,19 @@ export const fetchPodficsFull = async (
 ) => {
   const client = await getDBClient();
   const result = await client.query(
-    `select *,fandom.name as fandom_name,event.name as event_name,event_parent.name as parent_name,author.permission_status as author_permission_status from podfic
+    `select *,fandom.name as fandom_name,author.permission_status as author_permission_status from podfic
       inner join work on podfic.work_id = work.work_id
       left join author on work.author_id = author.author_id
       left join fandom on work.fandom_id = fandom.fandom_id
-      left join event on podfic.event_id = event.event_id
-      left join event_parent on event.parent_id = event_parent.event_parent_id
     order by added_date asc;`,
+  );
+  const eventResult = await client.query(
+    `select event.event_id,event.name as event_name,event_parent.name as parent_name,year,to_json(array_agg(podfic_id::TEXT)) as podfic_ids
+    from event
+      left join event_parent on event.parent_id = event_parent.event_parent_id
+      inner join podfic_event on event.event_id = podfic_event.event_id
+    group by event.name,event_parent.name,event.event_id
+      `,
   );
   const coverArtResult = await client.query(
     'select *,status as cover_art_status from cover_art',
@@ -38,7 +44,6 @@ export const fetchPodficsFull = async (
       : 'select * from chapter',
   );
   const partResult = await client.query('select * from part');
-  // console.log('parts', partResult.rows);
   const noteResult = await client.query(
     'select * from note where podfic_id is not null',
   );
@@ -93,6 +98,9 @@ export const fetchPodficsFull = async (
         (resource) => resource.podfic_id === podfic.podfic_id,
       ),
       tags: tagResult.rows.filter((tag) => tag.podfic_id === podfic.podfic_id),
+      events: eventResult.rows.filter((event) =>
+        event.podfic_ids.includes(podfic.podfic_id.toString()),
+      ),
       permission_asks: permissionAsks,
       work_permission_status: permissionStatus,
     };

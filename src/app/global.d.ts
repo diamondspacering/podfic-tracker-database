@@ -78,7 +78,6 @@ interface Podfic {
   length?: any;
   raw_length?: any;
   plain_length?: any;
-  event_id?: number;
   // this is for the whole podfic not a specific section
   ao3_link?: string;
   posted_date?: string;
@@ -103,6 +102,7 @@ interface Podfic {
   notes?: Note[];
   resources?: Resource[];
   tags?: Tag[];
+  events?: (Event & EventParent)[];
 }
 
 interface Section {
@@ -370,6 +370,8 @@ interface Event {
   name?: string;
   event_name?: string;
   year?: string | number;
+  link?: string;
+  collection?: string;
 }
 
 enum ScheduleEventType {

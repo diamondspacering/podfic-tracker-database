@@ -33,7 +33,6 @@ import {
 import { generateHTMLBluedreamingChapter } from '@/app/lib/html';
 import { generateHTMLAzdaema } from '@/app/lib/html';
 import { generateHTMLAudioficArchive } from '@/app/lib/html';
-import { generateAALink } from '@/app/lib/html';
 import { CopyAll, Save } from '@mui/icons-material';
 import CodeMirror, { ReactCodeMirrorRef } from '@uiw/react-codemirror';
 import { html } from '@codemirror/lang-html';
@@ -61,6 +60,7 @@ export default function HtmlPage() {
   const [sectionType, setSectionType] = useState<SectionType | null>(null);
   const [chapter, setChapter] = useState<Chapter>({} as Chapter);
   const [files, setFiles] = useState<File[]>([]);
+  const [generalFiles, setGeneralFiles] = useState<File[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [filteredResources, setFilteredResources] = useState<Resource[]>([]);
 
@@ -74,6 +74,7 @@ export default function HtmlPage() {
   const [sectionLoading, setSectionLoading] = useState(true);
   const [chapterLoading, setChapterLoading] = useState(true);
   const [filesLoading, setFilesLoading] = useState(true);
+  const [generalFilesLoading, setGeneralFilesLoading] = useState(false);
   const [resourcesLoading, setResourcesLoading] = useState(true);
   const isLoading = useMemo(
     () =>
@@ -81,10 +82,12 @@ export default function HtmlPage() {
       sectionLoading ||
       chapterLoading ||
       filesLoading ||
+      generalFilesLoading ||
       resourcesLoading,
     [
       chapterLoading,
       filesLoading,
+      generalFilesLoading,
       podficLoading,
       resourcesLoading,
       sectionLoading,
@@ -138,6 +141,10 @@ export default function HtmlPage() {
     } else {
       const url = new URL('https://archiveofourown.org/works/new');
       searchParams.set('work_link', podfic.link);
+      searchParams.set(
+        'event_ids',
+        podfic.events?.map((event) => event.event_id)?.join(','),
+      );
       url.search = searchParams.toString();
       return url.toString();
     }
@@ -149,6 +156,7 @@ export default function HtmlPage() {
     isPostedChaptered,
     podfic.ao3_link,
     podfic.link,
+    podfic.events,
   ]);
 
   useEffect(() => console.log({ podfic }), [podfic]);
@@ -168,6 +176,7 @@ export default function HtmlPage() {
       const data = await response.json();
       setPodfic(data);
       setPodficLoading(false);
+      console.log({ data });
       return data;
     }
     setPodficLoading(false);
@@ -184,27 +193,45 @@ export default function HtmlPage() {
     setChapterLoading(false);
   }, []);
 
-  const fetchSection = useCallback(async (sectionId) => {
-    setSectionLoading(true);
-    if (sectionId) {
-      const response = await fetch(`/db/sections/${sectionId}`);
+  const fetchGeneralFiles = useCallback(async (podficId) => {
+    setGeneralFilesLoading(true);
+    if (podficId) {
+      console.log('fetchfiles running for general files');
+      const response = await fetch(`/db/files?podfic_id=${podficId}`);
       const data = await response.json();
-      setSection(data);
-      if (data.html_string) {
-        console.log('setting generated html from section');
-        setGeneratedHTML(data.html_string);
-      }
-
-      if (data.podfic_id) {
-        setPodficId(data.podfic_id);
-      }
-
-      if (data.chapters?.length) {
-        setChapterId(data.chapters[0].chapter_id);
-      }
+      setGeneralFiles(data);
     }
-    setSectionLoading(false);
+    setGeneralFilesLoading(false);
   }, []);
+
+  const fetchSection = useCallback(
+    async (sectionId) => {
+      setSectionLoading(true);
+      if (sectionId) {
+        const response = await fetch(`/db/sections/${sectionId}`);
+        const data = await response.json();
+        setSection(data);
+        if (data.html_string) {
+          console.log('setting generated html from section');
+          setGeneratedHTML(data.html_string);
+        }
+
+        if (data.podfic_id) {
+          setPodficId(data.podfic_id);
+        }
+
+        if (data.chapters?.length) {
+          setChapterId(data.chapters[0].chapter_id);
+        }
+
+        if (data.number === 1) {
+          fetchGeneralFiles(data.podfic_id);
+        }
+      }
+      setSectionLoading(false);
+    },
+    [fetchGeneralFiles],
+  );
 
   const fetchFiles = useCallback(async (podficId, sectionId) => {
     setFilesLoading(true);
@@ -348,6 +375,7 @@ export default function HtmlPage() {
         filteredResources,
         defaultPodficcer,
         coverArtist?.profile,
+        generalFiles,
       );
       setGeneratedHTML(beautify.html(generated));
     } else if (selectedTemplate === 'bluedreaming') {
@@ -378,7 +406,15 @@ export default function HtmlPage() {
     }
     // TODO: investigate if this is needed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTemplate, files, resources, podfic, chapter, filteredResources]);
+  }, [
+    selectedTemplate,
+    files,
+    resources,
+    podfic,
+    chapter,
+    filteredResources,
+    generalFiles,
+  ]);
 
   const saveHTML = useCallback(async () => {
     await saveSectionHTML(sectionId, generatedHTML);

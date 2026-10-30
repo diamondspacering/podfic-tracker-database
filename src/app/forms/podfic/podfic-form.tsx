@@ -229,16 +229,18 @@ export default function PodficForm({
 
   const isVoiceteam = useMemo(
     () =>
-      podfic.event_id &&
-      events
-        ?.find((event) => event.event_id === podfic.event_id)
-        ?.parent_name?.includes('Voiceteam'),
-    [podfic.event_id, events],
+      podfic.events?.find((event) => event.parent_name?.includes('Voiceteam')),
+    [podfic.events],
   );
 
+  // TODO: fix this to allow multiple projects
   useEffect(() => {
-    if (isVoiceteam) fetchChallengesAndProjects(podfic.event_id);
-  }, [isVoiceteam, podfic.event_id, fetchChallengesAndProjects]);
+    if (isVoiceteam)
+      fetchChallengesAndProjects(
+        podfic.events?.find((event) => event.parent_name?.includes('Voiceteam'))
+          ?.event_id,
+      );
+  }, [isVoiceteam, fetchChallengesAndProjects, podfic.events]);
 
   useEffect(() => {
     if (isVoiceteam && podfic.vt_project_id && !challengesLoading) {
@@ -769,19 +771,8 @@ export default function PodficForm({
                 size='small'
                 options={events}
                 loading={eventsLoading}
-                isOptionEqualToValue={(option, value) =>
-                  option.event_id === value.event_id
-                }
-                value={
-                  events?.find((event) => event.event_id === podfic.event_id) ??
-                  ({
-                    event_id: 0,
-                    parent_id: 0,
-                    name: '',
-                    year: '',
-                    parent_name: '',
-                  } as Event & EventParent)
-                }
+                multiple
+                value={podfic.events ?? []}
                 sx={{
                   width: '300px',
                 }}
@@ -791,10 +782,10 @@ export default function PodficForm({
                 groupBy={(option: Event & EventParent) =>
                   option?.parent_name ?? '(unknown parent)'
                 }
-                onChange={(_, newValue: Event & EventParent) => {
+                onChange={(_, newValue: (Event & EventParent)[]) => {
                   setPodfic((prev) => ({
                     ...prev,
-                    event_id: newValue?.event_id ?? null,
+                    events: newValue,
                   }));
                 }}
                 renderInput={(params) => (

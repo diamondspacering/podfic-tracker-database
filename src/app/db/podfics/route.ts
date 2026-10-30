@@ -25,7 +25,9 @@ export async function GET(request: NextRequest) {
         inner join work on podfic.work_id = work.work_id
         left join permission on permission.work_id = podfic.work_id
         left join author on work.author_id = author.author_id
-      where event_id = $1 order by added_date`,
+        inner join podfic_event on podfic.podfic_id = podfic_event.podfic_id
+        inner join event on podfic_event.event_id = event.event_id
+      where podfic_event.event_id = $1 order by added_date`,
       [eventId],
     );
     podfics = result.rows;

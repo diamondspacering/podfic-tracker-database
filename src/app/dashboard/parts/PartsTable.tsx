@@ -1,7 +1,11 @@
 'use client';
 
 import { useParts } from '@/app/lib/swrLoaders';
-import { arrayIncludesFilter, useLengthColorScale } from '@/app/lib/utils';
+import {
+  arrayIncludesFilter,
+  eventFilter,
+  useLengthColorScale,
+} from '@/app/lib/utils';
 import { usePersistentState } from '@/app/lib/utilsFrontend';
 import { EditCell } from '@/app/ui/table/EditCell';
 import { TableCell } from '@/app/ui/table/TableCell';
@@ -154,16 +158,24 @@ export default function PartsTable() {
         immutable: true,
       },
     }),
-    columnHelper.accessor('event_name', {
-      header: (props) => <HeaderCell text='Event' {...props} />,
-      cell: TableCell,
+    columnHelper.accessor('events', {
+      header: (props) => <HeaderCell text='Events' {...props} />,
+      cell: ({ getValue, ...rest }) => (
+        <TableCell
+          getValue={() =>
+            (getValue() ?? [])
+              .map((event) => `${event.event_name} ${event.year}`)
+              .join(', ')
+          }
+          {...rest}
+        />
+      ),
       meta: {
-        type: 'string',
-        immutable: true,
-        columnName: 'Event',
-        filterType: FilterType.STRING,
+        type: 'text',
+        immutable: 'true',
+        filterType: FilterType.EVENT,
       },
-      filterFn: arrayIncludesFilter,
+      filterFn: eventFilter,
     }),
     columnHelper.accessor('status', {
       header: (props) => <HeaderCell text='Status' {...props} />,
